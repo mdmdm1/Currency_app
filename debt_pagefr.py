@@ -417,7 +417,7 @@ class DebtPage(QWidget):
 
                 # Insérer la nouvelle dette avec l'ID du client
                 customer_id = customer[0]
-                print(
+                """ print(
                     {
                         "amount": amount,
                         "debt_date": debt_date,
@@ -429,7 +429,7 @@ class DebtPage(QWidget):
                         "updated_by": 1,
                         "updated_at": debt_date,
                     }
-                )
+                ) """
 
                 cursor.execute(
                     """INSERT INTO DEBTS (AMOUNT, DEBT_DATE, PAID_DEBT, CURRENT_DEBT, CUSTOMER_ID, 
@@ -437,11 +437,11 @@ class DebtPage(QWidget):
                    VALUES (:amount, :debt_date, :paid_debt, :current_debt, :customer_id, 
                            :created_by, :created_at, :updated_by, :updated_at)""",
                     {
-                        "amount": amount,
+                        "amount": float(amount),
                         "debt_date": debt_date,
                         "paid_debt": 0,
-                        "current_debt": amount,
-                        "customer_id": customer_id,
+                        "current_debt": float(amount),
+                        "customer_id": int(customer_id),
                         "created_by": 1,  # Remplacez par l'ID de l'utilisateur
                         "created_at": debt_date,
                         "updated_by": 1,
