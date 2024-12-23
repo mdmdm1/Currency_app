@@ -313,9 +313,9 @@ class CurrencyManagementPage(QWidget):
                     "INSERT INTO currencies (name, input, output, balance) VALUES (:name, :input, :output, :balance)",
                     {
                         "name": name,
-                        "input": input_value,
-                        "output": output_value,
-                        "balance": balance,
+                        "input": float(input_value),
+                        "output": float(output_value),
+                        "balance": float(balance),
                     },
                 )
                 connection.commit()
