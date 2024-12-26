@@ -12,6 +12,7 @@ ADMIN USER admin IDENTIFIED BY 2024
 FILE_NAME_CONVERT = ('C:\app\medma\product\21c\oradata\XE\pdbseed\', 
                      'C:\app\medma\product\21c\oradata\XE\MANAGEMENT3\');
 
+
 Open the New Database
 After creation, open the new PDB:
 

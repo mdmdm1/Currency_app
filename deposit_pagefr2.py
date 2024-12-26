@@ -17,7 +17,9 @@ from datetime import datetime
 import os
 from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill
-from AddDepositDialog1 import AddDepositDialog
+
+# from AddDepositDialog1 import AddDepositDialog
+from dialogs.add_deposit_dialog import AddDepositDialog
 
 
 def connect_to_db():
@@ -117,6 +119,7 @@ class DepositPage(QWidget):
             """
             )
             rows = cursor.fetchall()
+            print(f"Rows fetched: {rows}")
             self.table.setRowCount(len(rows))
 
             for row_idx, row in enumerate(rows):
@@ -143,24 +146,6 @@ class DepositPage(QWidget):
     def add_deposit(self):
         dialog = AddDepositDialog()
         if dialog.exec_():
-            person_name, amount, deposit_date = dialog.get_values()
-            released_deposit = float(0.0)
-            with connect_to_db() as connection:
-                cursor = connection.cursor()
-                cursor.execute(
-                    """
-                    INSERT INTO deposits (person_name, amount, deposit_date, released_deposit, current_debt)
-                    VALUES (:person_name, :amount, TRUNC(TO_DATE(:deposit_date, 'DD-MON-YY')), :released_deposit, :current_debt)
-                """,
-                    {
-                        "person_name": person_name,
-                        "amount": amount,
-                        "deposit_date": deposit_date,
-                        "released_deposit": released_deposit,
-                        "current_debt": amount,
-                    },
-                )
-                connection.commit()
 
             self.load_deposit_data()  # Reload data after adding
             # self.save_ids_to_file()  # Save IDs to file

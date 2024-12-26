@@ -1,0 +1,87 @@
+from sqlalchemy import (
+    Column,
+    Identity,
+    Integer,
+    String,
+    Float,
+    ForeignKey,
+    Date,
+    Unicode,
+)
+from sqlalchemy.orm import relationship
+from database.database import Base
+
+
+class Customer(Base):
+    __tablename__ = "CUSTOMER"
+    id = Column(Integer, Identity(start=1, increment=1), primary_key=True, index=True)
+    name = Column(Unicode(255), nullable=False)
+    identite = Column(Unicode(255))
+    telephone = Column(Unicode(20))
+    date_naisse = Column(Date)
+
+    deposits = relationship("Deposit", back_populates="customer")
+    debts = relationship("Debt", back_populates="customer")
+
+
+class Deposit(Base):
+    __tablename__ = "DEPOSITS"
+    id = Column(Integer, Identity(start=1, increment=1), primary_key=True, index=True)
+    person_name = Column(Unicode(255), nullable=False)
+    amount = Column(Float, nullable=False)
+    deposit_date = Column(Date, nullable=False)
+    released_deposit = Column(Float)
+    current_debt = Column(Float)
+    customer_id = Column(Integer, ForeignKey("CUSTOMER.id"))
+
+    customer = relationship("Customer", back_populates="deposits")
+
+
+class Debt(Base):
+    __tablename__ = "DEBTS"
+    id = Column(Integer, Identity(start=1, increment=1), primary_key=True, index=True)
+    customer_id = Column(Integer, ForeignKey("CUSTOMER.id"), nullable=False)
+    amount = Column(Float, nullable=False)
+    debt_date = Column(Date, nullable=False)
+    paid_debt = Column(Float)
+    current_debt = Column(Float)
+    created_by = Column(Integer)
+    created_at = Column(Date)
+    updated_by = Column(Integer)
+    updated_at = Column(Date)
+
+    customer = relationship("Customer", back_populates="debts")
+
+
+class Employee(Base):
+    __tablename__ = "EMPLOYEE"
+    employee_id = Column(
+        Integer, Identity(start=1, increment=1), primary_key=True, index=True
+    )
+    first_name = Column(String(255), nullable=False)
+    last_name = Column(String(255), nullable=False)
+    carte_ident = Column(String(255))
+    telephone = Column(String(20))
+    date_naiss = Column(Date)
+    password = Column(String(255), nullable=False)
+    permission_role = Column(String(50))
+
+
+class TreasuryOperation(Base):
+    __tablename__ = "TREASURY_OPERATIONS"
+    treasury_operations_id = Column(
+        Integer, Identity(start=1, increment=1), primary_key=True, index=True
+    )
+    name = Column(String(255), nullable=False)
+    input = Column(Float)
+    output = Column(Float)
+    balance = Column(Float)
+
+
+class Currency(Base):
+    __tablename__ = "CURRENCIES"
+    id = Column(Integer, Identity(start=1, increment=1), primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    input = Column(Float)
+    output = Column(Float)
+    balance = Column(Float)
