@@ -1,12 +1,9 @@
 from PyQt5.QtWidgets import QLineEdit, QDateEdit, QLabel, QHBoxLayout, QMessageBox
 from PyQt5.QtCore import QDate
+from database.models import Customer, Deposit
 from dialogs.base_dialog import BaseDialog
-import cx_Oracle
-
-
-def connect_to_db():
-    dsn = cx_Oracle.makedsn("localhost", "1521", service_name="MANAGEMENT3")
-    return cx_Oracle.connect(user="admin", password="2024", dsn=dsn)
+from database.database import SessionLocal
+from sqlalchemy.exc import SQLAlchemyError
 
 
 class AddDepositDialog(BaseDialog):
@@ -18,19 +15,24 @@ class AddDepositDialog(BaseDialog):
         # Initialize input fields
         self.person_name_input = QLineEdit()
         self.person_id = QLineEdit()
+        self.telephone_input = QLineEdit()
+        self.date_naisse_input = QDateEdit(self)
+        self.date_naisse_input.setCalendarPopup(True)
+        self.date_naisse_input.setDate(QDate.currentDate())
+        self.date_naisse_input.setDisplayFormat("dd-MM-yyyy")
+
         self.amount_input = QLineEdit()
         self.deposit_date_input = QDateEdit(self)
         self.deposit_date_input.setCalendarPopup(True)
         self.deposit_date_input.setDate(QDate.currentDate())
-
         self.deposit_date_input.setDisplayFormat("dd-MM-yyyy")
-
-        print(self.deposit_date_input.styleSheet())
 
         # Define fields with their labels
         fields = [
             ("Nom de la personne:", self.person_name_input),
             ("Numéro d'identité:", self.person_id),
+            ("Téléphone:", self.telephone_input),
+            ("Date de naissance:", self.date_naisse_input),
             ("Montant:", self.amount_input),
             ("Date du dépôt:", self.deposit_date_input),
         ]
@@ -53,45 +55,66 @@ class AddDepositDialog(BaseDialog):
         return (
             self.person_name_input.text(),
             self.person_id.text(),
+            self.telephone_input.text(),
+            self.date_naisse_input.text(),
             self.amount_input.text(),
             self.deposit_date_input.text(),
         )
 
     def on_submit(self):
-        # Validate inputs
-        name = self.name_input.text().strip()
+        name = self.person_name_input.text().strip()
+        identite = self.person_id.text().strip()
+        telephone = self.telephone_input.text().strip()
+        date_naisse = self.date_naisse_input.date().toPyDate()
+        amount_str = self.amount_input.text().strip()
+        deposit_date = self.deposit_date_input.date().toPyDate()
+
         is_valid_name = self.validate_name(name)
-        is_valid_amount, amount = self.validate_amount(self.amount_input.text().strip())
+        is_valid_amount, amount = self.validate_amount(amount_str)
 
         if not (is_valid_name and is_valid_amount):
             return
 
-        deposit_date = self.date_input.date().toString("dd-MMM-yyyy")
-        released_deposit = 0.0  # Default value for new deposit
-        current_debt = (
-            amount  # Assuming current debt equals the deposit amount initially
-        )
+        released_deposit = 0.0
+        current_debt = amount
 
-        # Insert data into the database
+        session = SessionLocal()
+        import logging
+
+        logging.basicConfig(level=logging.DEBUG)
+
         try:
-            with connect_to_db() as connection:
-                cursor = connection.cursor()
-                cursor.execute(
-                    """
-                    INSERT INTO deposits (person_name, amount, deposit_date, released_deposit, current_debt)
-                    VALUES (:person_name, :amount, TRUNC(TO_DATE(:deposit_date, 'DD-MON-YY')), :released_deposit, :current_debt)
-                    """,
-                    {
-                        "person_name": name,
-                        "amount": float(amount),
-                        "deposit_date": deposit_date,
-                        "released_deposit": float(released_deposit),
-                        "current_debt": float(current_debt),
-                    },
+            customer = session.query(Customer).filter_by(identite=identite).first()
+            if not customer:
+                customer = Customer(
+                    name=name,
+                    identite=identite,
+                    telephone=telephone,
+                    date_naisse=date_naisse,
                 )
-                connection.commit()
+                session.add(customer)
+                session.flush()
+
+            deposit = Deposit(
+                person_name=name,
+                amount=amount,
+                deposit_date=deposit_date,
+                released_deposit=released_deposit,
+                current_debt=current_debt,
+                customer_id=customer.id,
+            )
+            session.add(deposit)
+            session.commit()
 
             QMessageBox.information(self, "Succès", "Dépôt ajouté avec succès.")
-            self.accept()  # Close the dialog
-        except Exception as e:
-            QMessageBox.critical(self, "Erreur", f"Une erreur est survenue: {str(e)}")
+            self.accept()
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
+            import traceback
+
+            print(traceback.format_exc())
+
+        finally:
+            session.close()
