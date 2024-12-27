@@ -19,7 +19,7 @@ class BaseDialog(QDialog):
     def __init__(self, title, parent=None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon("icon.jpg"))
+        self.setWindowIcon(QIcon("edit.png"))
         self.setGeometry(250, 250, 500, 450)
         self.setStyleSheet(
             """
@@ -103,8 +103,8 @@ class BaseDialog(QDialog):
         input_widget.setStyleSheet(self._get_input_style())
         input_widget.setMinimumHeight(35)
 
-        if isinstance(input_widget, QLineEdit):
-            input_widget.setAlignment(Qt.AlignRight)
+        # if isinstance(input_widget, QLineEdit):
+        #    input_widget.setAlignment(Qt.AlignRight)
 
         if reverse:
             row_layout.addWidget(input_widget)

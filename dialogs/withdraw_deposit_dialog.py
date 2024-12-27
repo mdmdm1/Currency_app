@@ -1,0 +1,93 @@
+from PyQt5.QtWidgets import QLineEdit, QDateEdit, QLabel, QHBoxLayout, QMessageBox
+from PyQt5.QtCore import QDate
+from PyQt5.QtGui import QDoubleValidator
+from database.models import Customer, Deposit
+from dialogs.base_dialog import BaseDialog
+from database.database import SessionLocal
+from sqlalchemy.exc import SQLAlchemyError
+
+
+class WithdrawDepositDialog(BaseDialog):
+    def __init__(self, customer_identite, parent=None):
+        super().__init__("Retrait", parent)
+        self.setGeometry(250, 250, 300, 400)
+        self.customer_identite = customer_identite
+
+    def create_form_fields(self):
+        # Input for withdrawal amount
+        self.amount_input = QLineEdit()
+        self.amount_input.setPlaceholderText("Montant à retirer")
+        self.amount_input.setValidator(
+            QDoubleValidator(0, 1e9, 2)
+        )  # Allow only valid numeric input
+        self.create_input_row("Montant:", self.amount_input)
+
+        # Input for withdrawal date
+        self.withdraw_date_input = QDateEdit(QDate.currentDate())
+        self.withdraw_date_input.setCalendarPopup(True)
+        self.create_input_row("Date de retrait:", self.withdraw_date_input)
+
+    def validate_inputs(self):
+        if not self.validate_name(self.person_name_input.text()):
+            return False
+
+        valid, amount = self.validate_amount(self.amount_input.text())
+        if valid:
+            self.amount_input.setText(f"{amount:.2f}")
+            return True
+        return False
+
+    def on_submit(self):
+        # Validate withdrawal amount
+        amount_valid, amount = self.validate_amount(self.amount_input.text())
+        if not amount_valid:
+            return
+
+        # Validate if an amount is specified
+        if amount <= 0:
+            self.show_error("Le montant doit être supérieur à zéro.")
+            return
+
+        try:
+            # Database logic: deduct the amount from the customer's balance
+            from sqlalchemy.orm import Session
+            from sqlalchemy.exc import SQLAlchemyError
+            from database.database import SessionLocal
+            from database.models import Customer
+
+            session = SessionLocal()
+
+            # Retrieve the customer
+            customer = (
+                session.query(Customer)
+                .filter_by(identite=self.customer_identite)
+                .first()
+            )
+            if not customer:
+                self.show_error("Client introuvable.")
+                return
+            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
+            # Check if the customer has sufficient balance
+            if deposit.current_debt < amount:
+                self.show_error("Solde insuffisant pour effectuer ce retrait.")
+                return
+
+            # Deduct the amount and save changes
+            deposit.current_debt -= amount
+            deposit.released_deposit += amount
+            session.commit()
+
+            # Inform the user of success
+            QMessageBox.information(self, "Succès", "Retrait effectué avec succès.")
+
+            # Add any necessary logging or additional logic here
+            # For example, record a transaction log if needed
+            # Comment: Successfully updated the customer's balance in the database.
+
+            self.accept()
+
+        except SQLAlchemyError as e:
+            session.rollback()
+            self.show_error(f"Erreur lors de l'accès à la base de données: {str(e)}")
+        finally:
+            session.close()
