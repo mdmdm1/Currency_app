@@ -1,5 +1,13 @@
-from PyQt5.QtWidgets import QLineEdit, QDateEdit, QLabel, QHBoxLayout, QMessageBox
-from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import (
+    QLineEdit,
+    QWidget,
+    QDateEdit,
+    QLabel,
+    QHBoxLayout,
+    QMessageBox,
+    QPushButton,
+)
+from PyQt5.QtCore import Qt, QDate
 from PyQt5.QtGui import QDoubleValidator
 from database.models import Customer, Deposit
 from dialogs.base_dialog import BaseDialog
@@ -8,10 +16,10 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 class WithdrawDepositDialog(BaseDialog):
-    def __init__(self, customer_identite, parent=None):
+    def __init__(self, customer_id, parent=None):
         super().__init__("Retrait", parent)
         self.setGeometry(250, 250, 300, 400)
-        self.customer_identite = customer_identite
+        self.customer_id = customer_id
 
     def create_form_fields(self):
         # Input for withdrawal amount
@@ -26,6 +34,30 @@ class WithdrawDepositDialog(BaseDialog):
         self.withdraw_date_input = QDateEdit(QDate.currentDate())
         self.withdraw_date_input.setCalendarPopup(True)
         self.create_input_row("Date de retrait:", self.withdraw_date_input)
+
+    def create_buttons(self):
+        self.buttons_widget = QWidget()
+        buttons_layout = QHBoxLayout(self.buttons_widget)
+        buttons_layout.setSpacing(15)
+
+        self.cancel_button = QPushButton("Annuler")
+        self.submit_button = QPushButton("Retirer")
+
+        self.submit_button.setMinimumHeight(45)
+        self.submit_button.setMinimumWidth(120)
+        self.submit_button.setCursor(Qt.PointingHandCursor)
+        self.submit_button.setStyleSheet(self._get_primary_button_style())
+
+        self.cancel_button.setMinimumHeight(45)
+        self.cancel_button.setMinimumWidth(120)
+        self.cancel_button.setCursor(Qt.PointingHandCursor)
+        self.cancel_button.setStyleSheet(self._get_secondary_button_style())
+
+        self.submit_button.clicked.connect(self.on_submit)
+        self.cancel_button.clicked.connect(self.reject)
+
+        buttons_layout.addWidget(self.cancel_button)
+        buttons_layout.addWidget(self.submit_button)
 
     def on_submit(self):
         # Validate withdrawal amount
@@ -47,16 +79,9 @@ class WithdrawDepositDialog(BaseDialog):
 
             session = SessionLocal()
 
-            # Retrieve the customer
-            customer = (
-                session.query(Customer)
-                .filter_by(identite=self.customer_identite)
-                .first()
+            deposit = (
+                session.query(Deposit).filter_by(customer_id=self.customer_id).first()
             )
-            if not customer:
-                self.show_error("Client introuvable.")
-                return
-            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
             # Check if the customer has sufficient balance
             if deposit.current_debt < amount:
                 self.show_error("Solde insuffisant pour effectuer ce retrait.")

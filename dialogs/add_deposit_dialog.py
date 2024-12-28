@@ -7,9 +7,13 @@ from sqlalchemy.exc import SQLAlchemyError
 
 
 class AddDepositDialog(BaseDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, customer_id=None):
         super().__init__("Ajouter un dépôt", parent)
         self.setGeometry(250, 250, 500, 400)
+        self.customer_id = customer_id
+        # self.create_form_fields()
+        if self.customer_id:
+            self.populate_form_fields()
 
     def create_form_fields(self):
         # Initialize input fields
@@ -79,52 +83,125 @@ class AddDepositDialog(BaseDialog):
         current_debt = amount
 
         session = SessionLocal()
-        import logging
+        """import logging
 
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)"""
 
         try:
-            customer = session.query(Customer).filter_by(identite=identite).first()
-            if not customer:
-                customer = Customer(
-                    name=name,
-                    identite=identite,
-                    telephone=telephone,
-                    date_naisse=date_naisse,
+            # Use customer ID if provided; otherwise, find or create a new customer
+            if self.customer_id:
+                customer = (
+                    session.query(Customer).filter_by(id=self.customer_id).first()
                 )
-                session.add(customer)
-                session.flush()
-
-            # Check if a deposit already exists for this customer
-            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
-
-            if deposit:
-                # Update existing deposit
-                deposit.amount += amount  # Add to the initial amount
-                deposit.current_debt += amount  # Add to the current debt
-                deposit.deposit_date = deposit_date  # Update deposit date
             else:
-                # Create a new deposit record
-                deposit = Deposit(
-                    person_name=name,
-                    amount=amount,
-                    deposit_date=deposit_date,
-                    released_deposit=0.0,  # Initial released deposit
-                    current_debt=amount,  # Initial current debt
-                    customer_id=customer.id,
-                )
-                session.add(deposit)
+                customer = session.query(Customer).filter_by(identite=identite).first()
+                if not customer:
+                    print(name)
+                    customer = Customer(
+                        name=name,
+                        identite=identite,
+                        telephone=telephone,
+                        date_naisse=date_naisse,
+                    )
+                    session.add(customer)
+                    session.flush()
+
+            # Update or create deposit
+            self.update_or_create_deposit(session, customer, amount, deposit_date)
 
             session.commit()
-            QMessageBox.information(self, "Succès", "Dépôt mis à jour avec succès.")
             self.accept()
 
         except SQLAlchemyError as e:
             session.rollback()
             QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
-            import traceback
-
-            print(traceback.format_exc())
-
         finally:
             session.close()
+
+    def populate_form_fields(self):
+        """
+        Populate form fields with customer data and handle existing deposits
+        """
+        session = SessionLocal()
+        try:
+            # Get both customer and their latest deposit information
+
+            customer_with_deposit = (
+                session.query(Customer, Deposit)
+                .outerjoin(Deposit, Customer.id == Deposit.customer_id)
+                .filter(Customer.id == self.customer_id)
+                .first()
+            )
+
+            customer, deposit = customer_with_deposit
+
+            # Populate customer information
+            self.person_name_input.setText(customer.name)
+            self.person_id.setText(customer.identite)
+            self.telephone_input.setText(customer.telephone)
+
+            # Convert date_naisse to QDate if it exists
+            if customer.date_naisse:
+                self.date_naisse_input.setDate(customer.date_naisse)
+
+            # Disable customer info fields since we're adding to existing customer
+            self.person_name_input.setEnabled(False)
+            self.person_id.setEnabled(False)
+            self.telephone_input.setEnabled(False)
+            self.date_naisse_input.setEnabled(False)
+
+            # Set today's date for the new deposit
+            self.deposit_date_input.setDate(QDate.currentDate())
+
+            # Focus on the amount field since it's the main field to fill
+            self.amount_input.setFocus()
+
+        except SQLAlchemyError as e:
+            QMessageBox.critical(
+                self, "Erreur", f"Erreur lors de la récupération des données: {str(e)}"
+            )
+            self.reject()
+        finally:
+            session.close()
+
+    def update_or_create_deposit(self, session, customer, amount, deposit_date):
+        """
+        Update an existing deposit or create a new one.
+        """
+        try:
+            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
+
+            if deposit:
+                # Update existing deposit
+                deposit.amount += amount
+                deposit.current_debt += amount
+                # Don't update deposit_date as it should reflect the initial deposit date
+
+                QMessageBox.information(
+                    self,
+                    "Dépôt mis à jour",
+                    f"Le dépôt a été augmenté de {amount:.2f}. "
+                    f"Nouveau total: {deposit.amount:.2f}",
+                )
+            else:
+                # Create new deposit
+                deposit = Deposit(
+                    amount=amount,
+                    deposit_date=deposit_date,
+                    released_deposit=0.0,
+                    current_debt=amount,
+                    customer_id=customer.id,
+                    person_name=customer.name,
+                )
+                session.add(deposit)
+
+                QMessageBox.information(
+                    self,
+                    "Nouveau dépôt",
+                    f"Un nouveau dépôt de {amount:.2f} a été créé.",
+                )
+
+            return deposit
+
+        except SQLAlchemyError as e:
+            raise e

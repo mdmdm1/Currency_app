@@ -69,6 +69,12 @@ class DepositPage(QWidget):
         self.setLayout(layout)
         self.load_deposit_data()
 
+        # After setting up the table headers
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        # Set the actions column to a fixed width
+        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.Fixed)
+        self.table.setColumnWidth(6, 170)
+
     def load_stylesheet(self):
         return """
             QPushButton {
@@ -100,13 +106,13 @@ class DepositPage(QWidget):
         """
 
     def load_deposit_data(self):
-        # print("Loading deposit data from database...")
         session = SessionLocal()
         try:
             deposits = (
                 session.query(Deposit)
                 .join(Customer, Deposit.customer_id == Customer.id)
                 .add_columns(
+                    Customer.id,  # Include Customer.id in the columns
                     Customer.name,
                     Customer.identite,
                     Deposit.deposit_date,
@@ -122,51 +128,111 @@ class DepositPage(QWidget):
 
             for row_idx, row in enumerate(deposits):
                 (
+                    customer_id,  # Extract Customer.id
                     customer_name,
                     identite,
                     deposit_date,
                     amount,
                     released_deposit,
                     current_debt,
-                ) = row[1:]
+                ) = row[
+                    1:
+                ]  # Adjust to include customer_id
                 total_deposited += amount
 
                 row_data = [
                     customer_name,
                     identite,
                     deposit_date.strftime("%Y-%m-%d"),
-                    amount,
-                    released_deposit,
-                    current_debt,
+                    self.format_french_number(amount),
+                    self.format_french_number(released_deposit),
+                    self.format_french_number(current_debt),
                 ]
                 for col_idx, data in enumerate(row_data):
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignCenter)
                     self.table.setItem(row_idx, col_idx, item)
 
-                # Add action buttons
-                self.add_action_buttons(row_idx, identite)
+                # Pass the extracted customer_id to the action buttons
+                self.add_action_buttons(row_idx, customer_id)
 
-            self.total_amount_label.setText(f"Total Déposé: {total_deposited}")
+            self.total_amount_label.setText(
+                f"Total Déposé: {self.format_french_number(total_deposited)}"
+            )
 
         except SQLAlchemyError as e:
             QMessageBox.critical(self, "Erreur", f"Erreur lors du chargement: {str(e)}")
         finally:
             session.close()
 
-    def add_action_buttons(self, row, identite):
-        layout = QVBoxLayout()
-        layout.setContentsMargins(1, 1, 1, 1)  # Remove margins to fit the cell properly
-        layout.setAlignment(Qt.AlignCenter)  # Align the button to the center
+    def add_action_buttons(self, row, customer_id):
+
+        # Set the row height to accommodate the buttons
+        self.table.setRowHeight(row, 50)  # Increased row height
+
+        # Create a horizontal layout
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)  # Adjust margins
+        layout.setSpacing(6)  # Increase spacing between buttons
 
         # Withdraw button
         withdraw_button = QPushButton("Retirer")
-        withdraw_button.setFixedSize(65, 30)
-        withdraw_button.clicked.connect(lambda: self.withdraw(identite))
-        layout.addWidget(withdraw_button)
+        withdraw_button.setFixedSize(70, 35)
+        withdraw_button.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+            QPushButton:pressed {
+                background-color: #bd2130;
+            }
+        """
+        )
+        withdraw_button.clicked.connect(lambda: self.withdraw(customer_id))
 
+        # Add button
+        add_button = QPushButton("Ajouter")
+        add_button.setFixedSize(70, 35)
+        add_button.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+            QPushButton:pressed {
+                background-color: #1e7e34;
+            }
+        """
+        )
+        add_button.clicked.connect(lambda: self.update_deposit(customer_id))
+
+        # Add buttons to layout
+        layout.addWidget(withdraw_button)
+        layout.addWidget(add_button)
+
+        # Create container widget
         button_widget = QWidget()
         button_widget.setLayout(layout)
+
+        # Adjust the column width to better fit the buttons
+        self.table.setColumnWidth(6, 170)  # Adjust the width of the actions column
+
+        # Add the button widget to the table cell
         self.table.setCellWidget(row, 6, button_widget)
 
     def add_deposit(self):
@@ -176,8 +242,26 @@ class DepositPage(QWidget):
             self.load_deposit_data()  # Reload data after adding
             # self.save_ids_to_file()  # Save IDs to file
 
+    def update_deposit(self, customer_id):
+        dialog = AddDepositDialog(customer_id=customer_id)
+        if dialog.exec_():
+
+            self.load_deposit_data()
+
     def withdraw(self, identite):
 
         dialog = WithdrawDepositDialog(identite)
         if dialog.exec_():
             self.load_deposit_data()
+
+    def format_french_number(self, amount):
+        # Convert the number to a string with 2 decimal places
+        integer_part, decimal_part = f"{amount:.2f}".split(".")
+        # Add spaces or periods as group separators
+        integer_part = " ".join(
+            [integer_part[max(i - 3, 0) : i] for i in range(len(integer_part), 0, -3)][
+                ::-1
+            ]
+        )
+        # Combine integer part with the decimal part
+        return f"{integer_part},{decimal_part}"
