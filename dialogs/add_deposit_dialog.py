@@ -95,18 +95,28 @@ class AddDepositDialog(BaseDialog):
                 session.add(customer)
                 session.flush()
 
-            deposit = Deposit(
-                person_name=name,
-                amount=amount,
-                deposit_date=deposit_date,
-                released_deposit=released_deposit,
-                current_debt=current_debt,
-                customer_id=customer.id,
-            )
-            session.add(deposit)
-            session.commit()
+            # Check if a deposit already exists for this customer
+            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
 
-            QMessageBox.information(self, "Succès", "Dépôt ajouté avec succès.")
+            if deposit:
+                # Update existing deposit
+                deposit.amount += amount  # Add to the initial amount
+                deposit.current_debt += amount  # Add to the current debt
+                deposit.deposit_date = deposit_date  # Update deposit date
+            else:
+                # Create a new deposit record
+                deposit = Deposit(
+                    person_name=name,
+                    amount=amount,
+                    deposit_date=deposit_date,
+                    released_deposit=0.0,  # Initial released deposit
+                    current_debt=amount,  # Initial current debt
+                    customer_id=customer.id,
+                )
+                session.add(deposit)
+
+            session.commit()
+            QMessageBox.information(self, "Succès", "Dépôt mis à jour avec succès.")
             self.accept()
 
         except SQLAlchemyError as e:

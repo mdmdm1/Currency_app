@@ -27,16 +27,6 @@ class WithdrawDepositDialog(BaseDialog):
         self.withdraw_date_input.setCalendarPopup(True)
         self.create_input_row("Date de retrait:", self.withdraw_date_input)
 
-    def validate_inputs(self):
-        if not self.validate_name(self.person_name_input.text()):
-            return False
-
-        valid, amount = self.validate_amount(self.amount_input.text())
-        if valid:
-            self.amount_input.setText(f"{amount:.2f}")
-            return True
-        return False
-
     def on_submit(self):
         # Validate withdrawal amount
         amount_valid, amount = self.validate_amount(self.amount_input.text())
@@ -75,6 +65,12 @@ class WithdrawDepositDialog(BaseDialog):
             # Deduct the amount and save changes
             deposit.current_debt -= amount
             deposit.released_deposit += amount
+
+            # if current_debt is 0, delete the deposit
+            if deposit.current_debt == 0:
+                session.delete(deposit)
+
+            # commit changes to the database
             session.commit()
 
             # Inform the user of success
