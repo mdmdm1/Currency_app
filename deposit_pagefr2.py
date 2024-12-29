@@ -75,6 +75,10 @@ class DepositPage(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.Fixed)
         self.table.setColumnWidth(6, 170)
 
+        self.table.setVerticalScrollMode(QTableWidget.ScrollPerPixel)
+
+        self.table.setHorizontalScrollMode(QTableWidget.ScrollPerPixel)
+
     def load_stylesheet(self):
         return """
             QPushButton {
