@@ -1,7 +1,19 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QStackedWidget, QFrame, QLineEdit, QSizePolicy
+from PyQt5.QtWidgets import (
+    QApplication,
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QStackedWidget,
+    QFrame,
+    QLineEdit,
+    QSizePolicy,
+)
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
+
 # Importation des pages (assurez-vous que ces modules sont correctement définis dans votre projet)
 from home_page import HomePage
 from cash_management_page import CashManagementPage
@@ -9,7 +21,9 @@ from debt_management_page import DebtManagementPage
 from currency_management_page import CurrencyManagementPage
 from money_management_page import MoneyManagementPage
 from debt_pagefr import DebtPage
-from deposit_pagefr2 import DepositPage
+
+# from deposit_pagefr2 import DepositPage
+from pages.deposit_page import DepositPage
 from employees_page import EmployeesManagementPage
 
 
@@ -20,13 +34,15 @@ class MainWindow(QWidget):
         # Configuration de la fenêtre principale
         self.setWindowTitle("Moneymanagement")
         self.setGeometry(100, 100, 1000, 600)
-        
+
         # Layout principal horizontal
         main_layout = QHBoxLayout(self)
-        
+
         # ---- Barre latérale ----
         sidebar = QFrame(self)
-        sidebar.setStyleSheet("background-color: #3498db;")  # Couleur bleue pour la barre latérale
+        sidebar.setStyleSheet(
+            "background-color: #3498db;"
+        )  # Couleur bleue pour la barre latérale
         sidebar.setFixedWidth(200)  # Largeur fixe pour la barre latérale
 
         # Layout de la barre latérale
@@ -75,11 +91,19 @@ class MainWindow(QWidget):
 
         # Connecter les boutons aux pages
         btn_home.clicked.connect(lambda: self.stack.setCurrentWidget(self.home_page))
-        btn_currency_management.clicked.connect(lambda: self.stack.setCurrentWidget(self.currency_management_page))
-        btn_money_management.clicked.connect(lambda: self.stack.setCurrentWidget(self.money_management_page))
+        btn_currency_management.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.currency_management_page)
+        )
+        btn_money_management.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.money_management_page)
+        )
         btn_debt.clicked.connect(lambda: self.stack.setCurrentWidget(self.debt_page))
-        btn_deposit.clicked.connect(lambda: self.stack.setCurrentWidget(self.deposit_page))
-        btn_employee.clicked.connect(lambda: self.stack.setCurrentWidget(self.employee_page))
+        btn_deposit.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.deposit_page)
+        )
+        btn_employee.clicked.connect(
+            lambda: self.stack.setCurrentWidget(self.employee_page)
+        )
 
         # ---- Top Bar avec la barre de recherche et l'icône du profil ----
         top_layout = QHBoxLayout()
@@ -117,8 +141,14 @@ class MainWindow(QWidget):
     def add_profile_image(self, layout):
         """Ajoute une image circulaire pour le profil."""
         profile_image = QLabel(self)
-        profile_image.setPixmap(QPixmap("default_profile.png").scaled(50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        profile_image.setStyleSheet("border-radius: 25px; margin: 10px;")  # Style circulaire
+        profile_image.setPixmap(
+            QPixmap("default_profile.png").scaled(
+                50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
+        )
+        profile_image.setStyleSheet(
+            "border-radius: 25px; margin: 10px;"
+        )  # Style circulaire
         layout.addWidget(profile_image)
 
     def create_sidebar_button(self, text, icon):
@@ -126,6 +156,7 @@ class MainWindow(QWidget):
         button = QPushButton(f"{icon}  {text}")
         button.setFixedHeight(40)
         return button
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
