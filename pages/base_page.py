@@ -79,6 +79,24 @@ class BasePage(QWidget):
         self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
 
+    def get_button_colors(self, base_color):
+        """
+        Get hover and pressed colors based on base color
+        Returns tuple of (hover_color, pressed_color)
+        """
+        color_map = {
+            "#007BFF": ("#0056b3", "#004085"),  # Blue (primary)
+            "#28a745": ("#218838", "#1e7e34"),  # Green (success)
+            "#dc3545": ("#c82333", "#bd2130"),  # Red (danger)
+            "#ffc107": ("#e0a800", "#d39e00"),  # Yellow (warning)
+            "#17a2b8": ("#138496", "#117a8b"),  # Cyan (info)
+            "#6c757d": ("#5a6268", "#545b62"),  # Gray (secondary)
+        }
+
+        return color_map.get(
+            base_color, ("#0056b3", "#004085")
+        )  # Default to blue if color not found
+
     def add_action_buttons(self, row, identifier, buttons_config):
         """
         Add action buttons to a table row
@@ -86,49 +104,57 @@ class BasePage(QWidget):
         'text', 'color', 'callback', 'width'
         """
         self.table.setRowHeight(row, 50)
-        layout = QHBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
+
+        # Create container widget with proper alignment
+        container = QWidget()
+        container.setStyleSheet("background-color: transparent;")
+
+        # Create layout with proper centering
+        layout = QHBoxLayout(container)
+        layout.setContentsMargins(2, 2, 2, 2)  # Reduced margins
         layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignCenter)  # Center the layout horizontally
 
         for button_config in buttons_config:
             button = QPushButton(button_config["text"])
             button.setFixedSize(button_config.get("width", 70), 35)
+
+            base_color = button_config["color"]
+            hover_color, pressed_color = self.get_button_colors(base_color)
+
+            # Updated button stylesheet with alignment properties
             button.setStyleSheet(
                 f"""
                 QPushButton {{
-                    background-color: {button_config['color']};
+                    background-color: {base_color};
                     color: white;
                     border: none;
                     border-radius: 5px;
                     font-size: 11px;
                     font-weight: bold;
+                    padding: 0px;
+                    text-align: center;
+                    qproperty-alignment: AlignCenter;
                 }}
                 QPushButton:hover {{
-                    background-color: {self.get_hover_color(button_config['color'])};
+                    background-color: {hover_color};
                 }}
                 QPushButton:pressed {{
-                    background-color: {self.get_pressed_color(button_config['color'])};
+                    background-color: {pressed_color};
                 }}
             """
             )
+
+            # Set size policy to help with centering
+            button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
             button.clicked.connect(
                 lambda checked, i=identifier, c=button_config["callback"]: c(i)
             )
             layout.addWidget(button)
 
-        button_widget = QWidget()
-        button_widget.setLayout(layout)
-        self.table.setCellWidget(row, self.table.columnCount() - 1, button_widget)
-
-    def get_hover_color(self, base_color):
-        """Calculate hover color (slightly darker)"""
-        # Simple implementation - you might want to enhance this
-        return base_color.replace(")", ", 0.9)").replace("rgb", "rgba")
-
-    def get_pressed_color(self, base_color):
-        """Calculate pressed color (even darker)"""
-        # Simple implementation - you might want to enhance this
-        return base_color.replace(")", ", 0.8)").replace("rgb", "rgba")
+        # Set the container as the cell widget
+        self.table.setCellWidget(row, self.table.columnCount() - 1, container)
 
     def format_french_number(self, amount):
         """Format number in French style"""

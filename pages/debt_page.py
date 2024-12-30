@@ -105,7 +105,7 @@ class DebtPage(BasePage):
                         "text": "Supprimer",
                         "color": "#dc3545",
                         "callback": self.delete_debt,
-                        "width": 70,
+                        "width": 76,
                     },
                 ]
                 self.add_action_buttons(row_idx, debt_id, buttons_config)
