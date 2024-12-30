@@ -10,7 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 class AddDebtDialog(BaseDialog):
     def __init__(self, parent=None):
         super().__init__("Ajouter une dette", parent)
-        self.setGeometry(250, 250, 500, 400)
+        self.setGeometry(200, 200, 500, 400)
         # self.create_form_fields()
 
     def create_form_fields(self):
@@ -75,15 +75,24 @@ class AddDebtDialog(BaseDialog):
                 session.flush()  # Get the customer ID for the new customer
 
             # Add debt for the customer
-            debt = Debt(
-                amount=amount,
-                debt_date=debt_date,
-                current_debt=amount,
-                customer_id=customer.id,
-                created_at=datetime.now(),
-                paid_debt=0.0,
-            )
-            session.add(debt)
+            debt = session.query(Debt).filter_by(customer_id=customer.id).first()
+
+            if debt:
+                debt.amount += amount
+                debt.debt_date = debt_date
+                debt.current_debt += amount
+                debt.created_at = datetime.now()
+
+            else:
+                debt = Debt(
+                    amount=amount,
+                    debt_date=debt_date,
+                    current_debt=amount,
+                    customer_id=customer.id,
+                    created_at=datetime.now(),
+                    paid_debt=0.0,
+                )
+                session.add(debt)
 
             session.commit()
             QMessageBox.information(self, "Succès", "Dette ajoutée avec succès.")

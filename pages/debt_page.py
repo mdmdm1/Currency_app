@@ -60,6 +60,7 @@ class DebtPage(BasePage):
                     Debt.paid_debt,
                     Debt.current_debt,
                 )
+                .filter(Debt.current_debt > 0)
                 .all()
             )
 
@@ -95,7 +96,7 @@ class DebtPage(BasePage):
                 # Configure action buttons for this row
                 buttons_config = [
                     {
-                        "text": "Modifier",
+                        "text": "Payer",
                         "color": "#ffc107",
                         "callback": self.pay_debt,
                         "width": 70,
@@ -126,7 +127,7 @@ class DebtPage(BasePage):
         if dialog.exec_():
             self.load_debt_data()
 
-    def delete_debt(self, customer_id):
+    def delete_debt(self, debt_id):
         confirmation = QMessageBox.question(
             self,
             "Confirmer la suppression",
@@ -136,9 +137,7 @@ class DebtPage(BasePage):
         if confirmation == QMessageBox.Yes:
             session = SessionLocal()
             try:
-                debt = (
-                    session.query(Debt).filter(Debt.customer_id == customer_id).first()
-                )
+                debt = session.query(Debt).filter(Debt.id == debt_id).first()
                 if debt:
                     session.delete(debt)
                     session.commit()

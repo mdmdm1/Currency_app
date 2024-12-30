@@ -96,7 +96,6 @@ class AddDepositDialog(BaseDialog):
             else:
                 customer = session.query(Customer).filter_by(identite=identite).first()
                 if not customer:
-                    print(name)
                     customer = Customer(
                         name=name,
                         identite=identite,
