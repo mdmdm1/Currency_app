@@ -35,30 +35,6 @@ class WithdrawDepositDialog(BaseDialog):
         self.withdraw_date_input.setCalendarPopup(True)
         self.create_input_row("Date de retrait:", self.withdraw_date_input)
 
-    def create_buttons(self):
-        self.buttons_widget = QWidget()
-        buttons_layout = QHBoxLayout(self.buttons_widget)
-        buttons_layout.setSpacing(15)
-
-        self.cancel_button = QPushButton("Annuler")
-        self.submit_button = QPushButton("Retirer")
-
-        self.submit_button.setMinimumHeight(45)
-        self.submit_button.setMinimumWidth(120)
-        self.submit_button.setCursor(Qt.PointingHandCursor)
-        self.submit_button.setStyleSheet(self._get_primary_button_style())
-
-        self.cancel_button.setMinimumHeight(45)
-        self.cancel_button.setMinimumWidth(120)
-        self.cancel_button.setCursor(Qt.PointingHandCursor)
-        self.cancel_button.setStyleSheet(self._get_secondary_button_style())
-
-        self.submit_button.clicked.connect(self.on_submit)
-        self.cancel_button.clicked.connect(self.reject)
-
-        buttons_layout.addWidget(self.cancel_button)
-        buttons_layout.addWidget(self.submit_button)
-
     def on_submit(self):
         # Validate withdrawal amount
         amount_valid, amount = self.validate_amount(self.amount_input.text())

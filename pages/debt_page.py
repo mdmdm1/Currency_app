@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt
 from sqlalchemy.exc import SQLAlchemyError
 from dialogs.add_debt_dialog import AddDebtDialog
-from dialogs.edit_debt_dialog import EditDebtDialog
+from dialogs.pay_debt_dialog import PayDebtDialog
 from database.models import Customer, Debt
 from database.database import SessionLocal
 from pages.base_page import BasePage
@@ -52,9 +52,9 @@ class DebtPage(BasePage):
                 session.query(Debt)
                 .join(Customer, Debt.customer_id == Customer.id)
                 .add_columns(
-                    Customer.id,
                     Customer.name,
                     Customer.identite,
+                    Debt.id,
                     Debt.created_at,
                     Debt.amount,
                     Debt.paid_debt,
@@ -68,9 +68,9 @@ class DebtPage(BasePage):
 
             for row_idx, row in enumerate(debts):
                 (
-                    customer_id,
                     customer_name,
                     identite,
+                    debt_id,
                     created_at,
                     total_amount,
                     paid_debt,
@@ -97,7 +97,7 @@ class DebtPage(BasePage):
                     {
                         "text": "Modifier",
                         "color": "#ffc107",
-                        "callback": self.edit_debt,
+                        "callback": self.pay_debt,
                         "width": 70,
                     },
                     {
@@ -107,7 +107,7 @@ class DebtPage(BasePage):
                         "width": 70,
                     },
                 ]
-                self.add_action_buttons(row_idx, customer_id, buttons_config)
+                self.add_action_buttons(row_idx, debt_id, buttons_config)
 
             self.update_total_label(total_debt, "Total Dette")
 
@@ -121,8 +121,8 @@ class DebtPage(BasePage):
         if dialog.exec_():
             self.load_debt_data()
 
-    def edit_debt(self, customer_id):
-        dialog = EditDebtDialog(customer_id=customer_id)
+    def pay_debt(self, debt_id):
+        dialog = PayDebtDialog(debt_id=debt_id)
         if dialog.exec_():
             self.load_debt_data()
 

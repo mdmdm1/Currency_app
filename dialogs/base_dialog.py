@@ -122,7 +122,7 @@ class BaseDialog(QDialog):
         buttons_layout.setSpacing(15)
 
         self.cancel_button = QPushButton("Annuler")
-        self.submit_button = QPushButton("Ajouter")
+        self.submit_button = QPushButton("Effectuer")
 
         self.submit_button.setMinimumHeight(45)
         self.submit_button.setMinimumWidth(120)
@@ -250,3 +250,13 @@ class BaseDialog(QDialog):
                 background-color: #004085;
             }
         """
+
+    def format_french_number(self, amount):
+        """Format number in French style"""
+        integer_part, decimal_part = f"{amount:.2f}".split(".")
+        integer_part = " ".join(
+            [integer_part[max(i - 3, 0) : i] for i in range(len(integer_part), 0, -3)][
+                ::-1
+            ]
+        )
+        return f"{integer_part},{decimal_part}"

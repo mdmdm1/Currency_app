@@ -20,9 +20,10 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 import os
 
 
-def connect_to_db():
-    dsn = cx_Oracle.makedsn("localhost", "1521", service_name="MANAGEMENT3")
+"""def connect_to_db():
+    dsn = cx_Oracle.makedsn("localhost", "1521", service_name="MANAGEMENT4")
     return cx_Oracle.connect(user="admin", password="2024", dsn=dsn)
+"""
 
 
 class CurrencyManagementPage(QWidget):
@@ -80,7 +81,7 @@ class CurrencyManagementPage(QWidget):
         layout.addWidget(self.table)
         self.setLayout(layout)
 
-        self.load_currency_data()
+        #       self.load_currency_data()
         self.table.cellChanged.connect(self.on_cell_changed)
 
         # Center the widget on the parent if present
@@ -169,7 +170,7 @@ class CurrencyManagementPage(QWidget):
             }
         """
 
-    def load_currency_data(self):
+        # def load_currency_data(self):
         with connect_to_db() as connection:
             cursor = connection.cursor()
             cursor.execute(
@@ -291,7 +292,7 @@ class CurrencyManagementPage(QWidget):
         else:
             update_query = "UPDATE CURRENCIES SET output = :value, balance = :balance WHERE name = :name and ID =:c_id"
 
-        with connect_to_db() as connection:
+        """with connect_to_db() as connection:
             cursor = connection.cursor()
             cursor.execute(
                 update_query,
@@ -300,14 +301,14 @@ class CurrencyManagementPage(QWidget):
                 name=operation_name,
                 c_id=currency_id,
             )
-            connection.commit()
+            connection.commit()"""
 
     def add_currency(self):
         dialog = AddCurrencyDialog()
         if dialog.exec_() == QDialog.Accepted:
             name, input_value, output_value, balance = dialog.get_values()
             print(name, input_value, output_value, balance)
-            with connect_to_db() as connection:
+            """with connect_to_db() as connection:
                 cursor = connection.cursor()
                 cursor.execute(
                     "INSERT INTO currencies (name, input, output, balance) VALUES (:name, :input, :output, :balance)",
@@ -319,7 +320,7 @@ class CurrencyManagementPage(QWidget):
                     },
                 )
                 connection.commit()
-            self.load_currency_data()
+            self.load_currency_data()"""
 
     def delete_currency(self):
         selected_row = sorted(
@@ -344,20 +345,20 @@ class CurrencyManagementPage(QWidget):
         reply = msg_box.exec_()  # Store the result in a variable
 
         if reply == QMessageBox.AcceptRole:
-            with connect_to_db() as connection:
-                cursor = connection.cursor()
-                for row in selected_row:
-                    print("row:", row)
-                    currency_id = self.currency_ids.get(row)
-                    if currency_id is None:
-                        # self.load_ids_from_file()
-                        # deposit_id = self.money_ids.get(row)
-                        print("reload currencyid file")
-                    print("currency_id:", currency_id)
-                    cursor.execute(
-                        "DELETE FROM CURRENCIES WHERE ID = :id_c", id_c=currency_id
-                    )
-                connection.commit()
+            """with connect_to_db() as connection:
+            cursor = connection.cursor()
+            for row in selected_row:
+                print("row:", row)
+                currency_id = self.currency_ids.get(row)
+                if currency_id is None:
+                    # self.load_ids_from_file()
+                    # deposit_id = self.money_ids.get(row)
+                    print("reload currencyid file")
+                print("currency_id:", currency_id)
+                cursor.execute(
+                    "DELETE FROM CURRENCIES WHERE ID = :id_c", id_c=currency_id
+                )
+            connection.commit()"""
             self.load_currency_data()
 
     def return_to_previous(self):
