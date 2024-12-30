@@ -20,7 +20,9 @@ from cash_management_page import CashManagementPage
 from debt_management_page import DebtManagementPage
 from currency_management_page import CurrencyManagementPage
 from money_management_page import MoneyManagementPage
-from debt_pagefr import DebtPage
+
+# from debt_pagefr import DebtPage
+from pages.debt_page import DebtPage
 
 # from deposit_pagefr2 import DepositPage
 from pages.deposit_page import DepositPage
@@ -33,7 +35,7 @@ class MainWindow(QWidget):
 
         # Configuration de la fenêtre principale
         self.setWindowTitle("Moneymanagement")
-        self.setGeometry(100, 100, 1000, 600)
+        self.setGeometry(100, 100, 1100, 600)
 
         # Layout principal horizontal
         main_layout = QHBoxLayout(self)
