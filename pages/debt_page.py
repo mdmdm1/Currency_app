@@ -91,8 +91,11 @@ class DebtPage(BasePage):
                 for col_idx, data in enumerate(row_data):
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignCenter)
-                    self.table.setItem(row_idx, col_idx, item)
 
+                    # Disable editing for the item
+                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
+                    self.table.setItem(row_idx, col_idx, item)
                 # Configure action buttons for this row
                 buttons_config = [
                     {

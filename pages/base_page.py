@@ -111,9 +111,9 @@ class BasePage(QWidget):
 
         # Create layout with proper centering
         layout = QHBoxLayout(container)
-        layout.setContentsMargins(2, 2, 2, 2)  # Reduced margins
+        layout.setContentsMargins(2, 2, 2, 2)
         layout.setSpacing(6)
-        layout.setAlignment(Qt.AlignCenter)  # Center the layout horizontally
+        layout.setAlignment(Qt.AlignCenter)
 
         for button_config in buttons_config:
             button = QPushButton(button_config["text"])
@@ -122,7 +122,7 @@ class BasePage(QWidget):
             base_color = button_config["color"]
             hover_color, pressed_color = self.get_button_colors(base_color)
 
-            # Updated button stylesheet with alignment properties
+            # Updated button stylesheet without the invalid property
             button.setStyleSheet(
                 f"""
                 QPushButton {{
@@ -134,7 +134,6 @@ class BasePage(QWidget):
                     font-weight: bold;
                     padding: 0px;
                     text-align: center;
-                    qproperty-alignment: AlignCenter;
                 }}
                 QPushButton:hover {{
                     background-color: {hover_color};
