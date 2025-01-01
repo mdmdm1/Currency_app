@@ -10,6 +10,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship
 from database.database import Base
+import sqlalchemy as sa
 
 
 class Customer(Base):
@@ -46,8 +47,8 @@ class Debt(Base):
     paid_debt = Column(Float)
     current_debt = Column(Float)
     created_by = Column(Integer)
-    created_at = Column(Date)
-    updated_by = Column(Integer)
+    created_at = Column(Date, server_default=sa.func.now())
+    updated_at = Column(Date, server_default=sa.func.now(), onupdate=sa.func.now())
     updated_at = Column(Date)
 
     customer = relationship("Customer", back_populates="debts")
@@ -64,7 +65,7 @@ class Employee(Base):
     telephone = Column(String(20))
     date_naiss = Column(Date)
     password = Column(String(255), nullable=False)
-    permission_role = Column(String(50))
+    permission_role = Column(String(50), default="user")
 
 
 class TreasuryOperation(Base):
@@ -82,6 +83,8 @@ class Currency(Base):
     __tablename__ = "CURRENCIES"
     id = Column(Integer, Identity(start=1, increment=1), primary_key=True, index=True)
     name = Column(String(255), nullable=False)
+    code = Column(String(3), nullable=False, unique=True)
     input = Column(Float)
     output = Column(Float)
     balance = Column(Float)
+    rate = Column(Float, nullable=False, default=1.0)
