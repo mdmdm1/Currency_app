@@ -21,8 +21,8 @@ from debt_management_page import DebtManagementPage
 
 # from currency_management_page import CurrencyManagementPage
 from pages.currency_page import CurrencyPage
-from pages.exchange_page import CurrencyExchangePage
 
+# from pages.exchange_page import CurrencyExchangePage
 from money_management_page import MoneyManagementPage
 
 # from debt_pagefr import DebtPage
@@ -82,7 +82,7 @@ class MainWindow(QWidget):
         # Création des pages pour chaque section
         self.home_page = HomePage(self)
         self.currency_management_page = CurrencyPage(self)
-        self.money_management_page = CurrencyExchangePage(self)
+        self.money_management_page = MoneyManagementPage(self)
         self.debt_page = DebtPage(self)
         self.deposit_page = DepositPage(self)
         self.employee_page = EmployeesManagementPage(self)

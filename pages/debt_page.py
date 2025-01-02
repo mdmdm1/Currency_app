@@ -125,12 +125,12 @@ class DebtPage(BasePage):
         if dialog.exec_():
             self.load_debt_data()
 
-    def pay_debt(self, debt_id):
+    def pay_debt(self, debt_id, row):
         dialog = PayDebtDialog(debt_id=debt_id)
         if dialog.exec_():
             self.load_debt_data()
 
-    def delete_debt(self, debt_id):
+    def delete_debt(self, debt_id, row):
         confirmation = QMessageBox.question(
             self,
             "Confirmer la suppression",

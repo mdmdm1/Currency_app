@@ -148,7 +148,9 @@ class BasePage(QWidget):
             button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
             button.clicked.connect(
-                lambda checked, i=identifier, c=button_config["callback"]: c(i)
+                lambda checked, i=identifier, r=row, c=button_config["callback"]: c(
+                    i, r
+                )
             )
             layout.addWidget(button)
 

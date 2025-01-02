@@ -121,12 +121,12 @@ class DepositPage(BasePage):
         if dialog.exec_():
             self.load_deposit_data()
 
-    def update_deposit(self, customer_id):
+    def update_deposit(self, customer_id, rox):
         dialog = AddDepositDialog(customer_id=customer_id)
         if dialog.exec_():
             self.load_deposit_data()
 
-    def withdraw(self, identite):
+    def withdraw(self, identite, row):
         dialog = WithdrawDepositDialog(identite)
         if dialog.exec_():
             self.load_deposit_data()
