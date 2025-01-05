@@ -174,7 +174,6 @@ class AddDepositDialog(BaseDialog):
                 # Update existing deposit
                 deposit.amount += amount
                 deposit.current_debt += amount
-                # Don't update deposit_date as it should reflect the initial deposit date
 
                 QMessageBox.information(
                     self,
