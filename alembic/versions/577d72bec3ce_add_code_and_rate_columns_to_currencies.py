@@ -1,7 +1,7 @@
 """Add code and rate columns to currencies
 
 Revision ID: 577d72bec3ce
-Revises: 5686ea8fa9c1
+Revises: 0f488fdf6de2
 Create Date: 2025-01-01 13:37:28.943126
 """
 
@@ -11,8 +11,12 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import oracle
 
 # revision identifiers, used by Alembic.
+
 revision: str = "577d72bec3ce"
-down_revision: Union[str, None] = "5686ea8fa9c1"
+
+# down_revision: Union[str, None] = "5686ea8fa9c1"
+down_revision: Union[str, None] = "0f488fdf6de2"
+
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
