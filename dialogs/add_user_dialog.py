@@ -1,18 +1,8 @@
 from PyQt5.QtWidgets import (
-    QDialog,
-    QVBoxLayout,
-    QHBoxLayout,
-    QPushButton,
     QLineEdit,
-    QLabel,
     QComboBox,
-    QFrame,
     QMessageBox,
-    QApplication,
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
-from datetime import datetime
 from sqlalchemy.exc import IntegrityError
 from dialogs.base_dialog import BaseDialog
 from database.models import User
