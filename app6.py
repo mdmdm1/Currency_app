@@ -30,7 +30,9 @@ from pages.debt_page import DebtPage
 
 # from deposit_pagefr2 import DepositPage
 from pages.deposit_page import DepositPage
-from employees_page import EmployeesManagementPage
+
+# from employees_page import EmployeesManagementPage
+from pages.user_management_page import UserManagementPage
 
 
 class MainWindow(QWidget):
@@ -85,7 +87,7 @@ class MainWindow(QWidget):
         self.money_management_page = CurrencyExchangePage(self)
         self.debt_page = DebtPage(self)
         self.deposit_page = DepositPage(self)
-        self.employee_page = EmployeesManagementPage(self)
+        self.employee_page = UserManagementPage(self)
 
         # Ajouter les pages au QStackedWidget
         self.stack.addWidget(self.home_page)

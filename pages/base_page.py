@@ -174,3 +174,7 @@ class BasePage(QWidget):
     def update_total_label(self, total, prefix="Total"):
         """Update the total amount label"""
         self.total_amount_label.setText(f"{prefix}: {self.format_french_number(total)}")
+
+    def hide_total_label(self):
+        """Hide the total amount label."""
+        self.total_amount_label.hide()
