@@ -3,13 +3,15 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QDialog,
     QTableWidgetItem,
+    QMessageBox,
 )
 from PyQt5.QtCore import Qt
 from sqlalchemy.exc import SQLAlchemyError
 from database.database import SessionLocal
-from database.models import User  # Assuming you have a User model in `models`
+from database.models import User
 from dialogs.add_user_dialog import AddUserDialog
 from dialogs.edit_user_dialog import EditUserDialog
+from dialogs.user_history_dialog import UserHistoryDialog
 from pages.base_page import BasePage
 
 
@@ -104,9 +106,28 @@ class UserManagementPage(BasePage):
             self.load_user_data()
 
     def delete_user(self, user_id, row):
-        """Delete the selected user."""
-        print(f"Supprimer l'utilisateur {user_id} à la ligne {row}")
+        confirmation = QMessageBox.question(
+            self,
+            "Confirmer la suppression",
+            "Êtes-vous sûr de vouloir supprimer cette dette ?",
+            QMessageBox.Yes | QMessageBox.No,
+        )
+        if confirmation == QMessageBox.Yes:
+            session = SessionLocal()
+            try:
+                User = session.query(User).filter(User.id == user_id).first()
+                if User:
+                    session.delete(User)
+                    session.commit()
+                    self.load_debt_data()
+            except SQLAlchemyError as e:
+                self.show_error_message(
+                    "Erreur", f"Erreur lors de la suppression: {str(e)}"
+                )
+            finally:
+                session.close()
 
     def view_user_history(self, user_id, row):
-        """View the history of the selected user."""
-        print(f"Voir l'historique pour l'utilisateur {user_id} à la ligne {row}")
+        dialog = UserHistoryDialog(user_id)
+        if dialog.exec_() == QDialog.Accepted:
+            self.load_user_data()
