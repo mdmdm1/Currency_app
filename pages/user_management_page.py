@@ -115,11 +115,11 @@ class UserManagementPage(BasePage):
         if confirmation == QMessageBox.Yes:
             session = SessionLocal()
             try:
-                User = session.query(User).filter(User.id == user_id).first()
-                if User:
-                    session.delete(User)
+                user = session.query(User).get(user_id)
+                if user:
+                    session.delete(user)
                     session.commit()
-                    self.load_debt_data()
+                    self.load_user_data()
             except SQLAlchemyError as e:
                 self.show_error_message(
                     "Erreur", f"Erreur lors de la suppression: {str(e)}"

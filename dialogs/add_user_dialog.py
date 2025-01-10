@@ -8,6 +8,7 @@ from dialogs.base_dialog import BaseDialog
 from database.models import User
 from database.database import SessionLocal
 import re
+import bcrypt
 
 
 class AddUserDialog(BaseDialog):
@@ -75,10 +76,7 @@ class AddUserDialog(BaseDialog):
             self.show_error(f"Échec de la création de l'utilisateur : {str(e)}")
 
     def hash_password(self, password):
-        """Hash the password for secure storage."""
-        import hashlib
-
-        return hashlib.sha256(password.encode()).hexdigest()
+        return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     def save_user_to_db(self, username, hashed_password, role, is_active):
 

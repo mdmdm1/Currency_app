@@ -32,13 +32,15 @@ from pages.debt_page import DebtPage
 from pages.deposit_page import DepositPage
 
 # from employees_page import EmployeesManagementPage
+from pages.login_page import LoginPage
 from pages.user_management_page import UserManagementPage
+from database.database import SessionLocal
 
 
 class MainWindow(QWidget):
-    def __init__(self):
+    def __init__(self, user_id):
         super().__init__()
-
+        self.user_id = user_id
         # Configuration de la fenêtre principale
         self.setWindowTitle("Moneymanagement")
         self.setGeometry(100, 100, 1100, 600)
@@ -168,6 +170,18 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
+    db_session = SessionLocal()  # Initialize your database session
+
+    # Create and show the login page
+    login_page = LoginPage(db_session)
+
+    def show_main_window(user):
+        """Callback to show the main window after login."""
+        main_window = MainWindow(user.id)
+        main_window.show()
+
+    # Connect the login signal to the function
+    login_page.login_successful.connect(show_main_window)
+    login_page.show()
+
     sys.exit(app.exec_())
