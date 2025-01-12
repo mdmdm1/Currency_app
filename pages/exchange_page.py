@@ -21,6 +21,7 @@ from database.models import Currency
 from database.database import SessionLocal
 from dialogs.exchange_confirm_dialog import ConfirmationDialog
 from pages.base_page import BasePage
+from utils.audit_logger import log_audit_entry
 
 
 class CurrencyExchangePage(BasePage):
@@ -178,8 +179,28 @@ class CurrencyExchangePage(BasePage):
             )
 
             if ok:
+                # Record old state for audit log
+                old_data = {
+                    "taux": currency.rate,
+                }
+
                 currency.rate = new_rate
                 session.commit()
+
+                # Log audit entry
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Devise",
+                    operation="MISE A JOUR",
+                    record_id=currency.id,
+                    user_id=self.user_id,
+                    changes={
+                        "old": old_data,
+                        "new": {
+                            "taux": currency.rate,
+                        },
+                    },
+                )
                 self.load_conversion_rates()
                 self.show_message(
                     "Succès", f"Taux pour {currency_code} mis à jour avec succès !"
@@ -278,6 +299,13 @@ class CurrencyExchangePage(BasePage):
                 self.show_error_message("Erreur", "Devises introuvables")
                 return
 
+            # Record old state for audit log
+            old_data = {
+                "source": source_currency_obj.code,
+                "cible": target_currency_obj.code,
+                "solde source": source_currency_obj.balance,
+                "solde cible": source_currency_obj.balance,
+            }
             # Update amounts
             target_currency_obj.balance -= converted_amount
             target_currency_obj.output += converted_amount
@@ -285,6 +313,23 @@ class CurrencyExchangePage(BasePage):
             source_currency_obj.balance += amount
             source_currency_obj.input += amount
 
+            # Log audit entry
+            log_audit_entry(
+                db_session=session,
+                table_name="Devise",
+                operation="ECHANGE",
+                record_id=target_currency_obj.id,
+                user_id=self.user_id,
+                changes={
+                    "old": old_data,
+                    "new": {
+                        "source": source_currency_obj.code,
+                        "cible": target_currency_obj.code,
+                        "solde source": source_currency_obj.balance,
+                        "solde cible": source_currency_obj.balance,
+                    },
+                },
+            )
             session.commit()
 
             QMessageBox.information(self, "Succès", "Échange effectué avec succès")

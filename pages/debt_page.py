@@ -12,11 +12,13 @@ from dialogs.pay_debt_dialog import PayDebtDialog
 from database.models import Customer, Debt
 from database.database import SessionLocal
 from pages.base_page import BasePage
+from utils.audit_logger import log_audit_entry
 
 
 class DebtPage(BasePage):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, title="Gestion des Dettes")
+        self.user_id = parent.user_id
         self.init_ui()
 
     def init_ui(self):
@@ -121,12 +123,12 @@ class DebtPage(BasePage):
             session.close()
 
     def add_debt(self):
-        dialog = AddDebtDialog()
+        dialog = AddDebtDialog(self)
         if dialog.exec_():
             self.load_debt_data()
 
     def pay_debt(self, debt_id, row):
-        dialog = PayDebtDialog(debt_id=debt_id)
+        dialog = PayDebtDialog(self, debt_id=debt_id)
         if dialog.exec_():
             self.load_debt_data()
 
@@ -141,9 +143,33 @@ class DebtPage(BasePage):
             session = SessionLocal()
             try:
                 debt = session.query(Debt).filter(Debt.id == debt_id).first()
+                customer = (
+                    session.query(Customer).filter_by(id=Debt.customer_id).first()
+                )
+
                 if debt:
+                    # Record the deleted data for audit log
+                    deleted_data = {
+                        "name": customer.name,
+                        "montant": debt.amount,
+                        "date du dette": debt.debt_date.strftime("%Y-%m-%d"),
+                        "dette actuelle": debt.current_debt,
+                        "dette payer": debt.paid_debt,
+                        "date du creation": debt.created_at.strftime("%Y-%m-%d"),
+                    }
+
                     session.delete(debt)
                     session.commit()
+
+                    # Log audit entry
+                    log_audit_entry(
+                        db_session=session,
+                        table_name="Dette",
+                        operation="SUPPRESSION",
+                        record_id=debt_id,
+                        user_id=self.user_id,
+                        changes=deleted_data,
+                    )
                     self.load_debt_data()
             except SQLAlchemyError as e:
                 self.show_error_message(

@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QFrame,
     QApplication,
+    QMessageBox,
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QPixmap
@@ -16,6 +17,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import select
 
 from database.models import AuditLog, User
+from utils.audit_logger import log_audit_entry
 
 
 class LoginPage(QMainWindow):
@@ -67,14 +69,14 @@ class LoginPage(QMainWindow):
             placeholder="Nom d'utilisateur",
             icon_path="C:/Users/medma/Desktop/Currency_app/profile.png",
         )
-        print(os.path.abspath("./icons/profile.png"))
+        print(os.path.abspath("./pages/profile.png"))
 
         self.username_input = username_container.input_field  # Access the QLineEdit
         layout.addWidget(username_container)
 
         # Password input
         password_container = self.create_input(
-            "Mot de passe", "./icons/lock.png", is_password=True
+            "Mot de passe", "lock.png", is_password=True
         )
         self.password_input = password_container.input_field  # Access the QLineEdit
         layout.addWidget(password_container)
@@ -142,7 +144,7 @@ class LoginPage(QMainWindow):
         if is_password:
             input_field.setEchoMode(QLineEdit.Password)
 
-        """        # Create icon
+        # Create icon
         icon = QLabel(container)
         pixmap = QPixmap(icon_path)
         if not pixmap.isNull():
@@ -152,7 +154,6 @@ class LoginPage(QMainWindow):
         else:
             icon.setText("📷")  # Placeholder for missing icons
         icon.move(15, 15)
-        """
 
         # Store input_field in the container for access
         container.input_field = input_field
@@ -189,16 +190,17 @@ class LoginPage(QMainWindow):
                 self.show_error("Ce compte a été désactivé.")  # Error in French
                 return
 
-            # Log audit info and emit success signal
-            audit_log = AuditLog(
-                table_name="USERS",
-                operation="LOGIN",
-                record_id=user.id,
-                user_id=user.id,
-                changes="Connexion réussie",
+            """
+            log_audit_entry(
+                    db_session=self.db_session,
+                    table_name="UTILISATEURS",
+                    operation="CONNEXION",
+                    record_id=user.id,
+                    user_id=user.id,
+                    changes="Connexion réussie",
+                    
             )
-            self.db_session.add(audit_log)
-            self.db_session.commit()
+            """
 
             self.login_successful.emit(user)  # Emit success signal
             self.close()  # Close the login window

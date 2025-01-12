@@ -1,26 +1,24 @@
-from database.database import SessionLocal
+from sqlalchemy.orm import Session
+import json
+
 from database.models import AuditLog
-from datetime import datetime
 
 
-def log_user_action(user_id, action, details=""):
-    """
-    Logs user actions to the AuditLog table.
-
-    Args:
-        user_id (int): The ID of the user performing the action.
-        action (str): A short description of the action performed.
-        details (str, optional): Additional details about the action. Defaults to "".
-    """
-    session = SessionLocal()
-    try:
-        audit_log = AuditLog(
-            user_id=user_id, action=action, details=details, timestamp=datetime.now()
-        )
-        session.add(audit_log)
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        print(f"Error logging action: {e}")
-    finally:
-        session.close()
+def log_audit_entry(
+    db_session: Session,
+    table_name: str,
+    operation: str,
+    record_id: int,
+    user_id: int,
+    changes: dict = None,
+):
+    """Log an entry in the audit log."""
+    audit_entry = AuditLog(
+        table_name=table_name,
+        operation=operation,
+        record_id=record_id,
+        user_id=user_id,
+        changes=json.dumps(changes) if changes else None,
+    )
+    db_session.add(audit_entry)
+    db_session.commit()

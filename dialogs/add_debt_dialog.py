@@ -6,10 +6,13 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.audit_logger import log_audit_entry
+
 
 class AddDebtDialog(BaseDialog):
     def __init__(self, parent=None):
         super().__init__("Ajouter une dette", parent)
+        self.user_id = parent.user_id
         self.setGeometry(200, 200, 500, 400)
         # self.create_form_fields()
 
@@ -78,11 +81,31 @@ class AddDebtDialog(BaseDialog):
             debt = session.query(Debt).filter_by(customer_id=customer.id).first()
 
             if debt:
+                old_data = {
+                    "name": customer.name,
+                    "montant du dette": debt.amount,
+                    "dette actuelle": debt.current_debt,
+                }
                 debt.amount += amount
                 debt.debt_date = debt_date
                 debt.current_debt += amount
                 debt.created_at = datetime.now()
 
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Dette",
+                    operation="MISE A JOUR",
+                    record_id=debt.id,
+                    user_id=self.user_id,
+                    changes={
+                        "old": old_data,
+                        "new": {
+                            "name": customer.name,
+                            "montant du dette": debt.amount,
+                            "dette actuelle": debt.current_debt,
+                        },
+                    },
+                )
             else:
                 debt = Debt(
                     amount=amount,
@@ -93,6 +116,16 @@ class AddDebtDialog(BaseDialog):
                     paid_debt=0.0,
                 )
                 session.add(debt)
+                session.commit()
+                # Log audit entry
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Dette",
+                    operation="INSERTION",
+                    record_id=debt.id,
+                    user_id=self.user_id,
+                    changes={"nom": customer.name, "montant": amount},
+                )
 
             session.commit()
             QMessageBox.information(self, "Succès", "Dette ajoutée avec succès.")

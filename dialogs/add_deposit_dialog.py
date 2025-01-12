@@ -5,11 +5,14 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.audit_logger import log_audit_entry
+
 
 class AddDepositDialog(BaseDialog):
-    def __init__(self, parent=None, customer_id=None):
+    def __init__(self, parent, customer_id=None):
         super().__init__("Ajouter un dépôt", parent)
         self.setGeometry(250, 250, 500, 400)
+        self.user_id = parent.user_id
         self.customer_id = customer_id
         # self.create_form_fields()
         if self.customer_id:
@@ -171,9 +174,30 @@ class AddDepositDialog(BaseDialog):
             deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
 
             if deposit:
+                old_data = {
+                    "name": customer.name,
+                    "montant du depot": deposit.amount,
+                    "dette actuelle": deposit.current_debt,
+                }
                 # Update existing deposit
                 deposit.amount += amount
                 deposit.current_debt += amount
+                # Log audit entry
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Dépôt",
+                    operation="MISE A JOUR",
+                    record_id=deposit.id,
+                    user_id=self.user_id,
+                    changes={
+                        "old": old_data,
+                        "new": {
+                            "nom": customer.name,
+                            "montant du depot": deposit.amount,
+                            "dette courant": deposit.current_debt,
+                        },
+                    },
+                )
 
                 QMessageBox.information(
                     self,
@@ -192,7 +216,16 @@ class AddDepositDialog(BaseDialog):
                     person_name=customer.name,
                 )
                 session.add(deposit)
-
+                session.commit()
+                # Log audit entry
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Dépôt",
+                    operation="INSERTION",
+                    record_id=deposit.id,
+                    user_id=self.user_id,
+                    changes={"nom": customer.name, "montant": amount},
+                )
                 QMessageBox.information(
                     self,
                     "Nouveau dépôt",

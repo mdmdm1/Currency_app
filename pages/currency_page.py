@@ -14,11 +14,15 @@ from database.database import SessionLocal
 from database.models import Currency
 from sqlalchemy.exc import SQLAlchemyError
 from pages.base_page import BasePage
+import json
+
+from utils.audit_logger import log_audit_entry
 
 
 class CurrencyPage(BasePage):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, title="Gestion des Devises")
+        self.user_id = parent.user_id
         self.init_ui()
 
     def init_ui(self):
@@ -61,6 +65,7 @@ class CurrencyPage(BasePage):
 
         self.layout.insertWidget(0, top_container)
 
+        print("id=" + str(self.user_id))
         # Load initial data
         self.load_currency_data()
 
@@ -152,6 +157,15 @@ class CurrencyPage(BasePage):
             session.add(new_currency)
             session.commit()
 
+            # Log audit entry
+            log_audit_entry(
+                db_session=session,
+                table_name="Devise",
+                operation="INSERTION",
+                record_id=new_currency.id,
+                user_id=self.user_id,
+                changes={"nom": currency_name, "code": currency_code, "solde": 0},
+            )
             # Clear input fields and reload data
             self.new_currency_input.clear()
             self.new_code_input.clear()
@@ -171,12 +185,20 @@ class CurrencyPage(BasePage):
         try:
             input_amount = float(input_field.text()) if input_field.text() else 0
             output_amount = float(output_field.text()) if output_field.text() else 0
-
+            if input_amount == 0 and output_amount == 0:
+                return
             session = SessionLocal()
             try:
                 currency = session.query(Currency).filter_by(id=currency_id).first()
                 if not currency:
                     raise ValueError("Devise introuvable")
+
+                # Record old state for audit log
+                old_data = {
+                    "input": currency.input,
+                    "output": currency.output,
+                    "solde": currency.balance,
+                }
 
                 # Update amounts
                 currency.input += input_amount
@@ -185,6 +207,23 @@ class CurrencyPage(BasePage):
 
                 session.commit()
 
+                # Log audit entry
+                log_audit_entry(
+                    db_session=session,
+                    table_name="Devise",
+                    operation="MISE A JOUR",
+                    record_id=currency_id,
+                    user_id=self.user_id,
+                    changes={
+                        "old": old_data,
+                        "new": {
+                            "name": currency.name,
+                            "input": currency.input,
+                            "output": currency.output,
+                            "balance": currency.balance,
+                        },
+                    },
+                )
                 # Clear input fields and reload data
                 input_field.clear()
                 output_field.clear()
@@ -216,8 +255,27 @@ class CurrencyPage(BasePage):
                     session.query(Currency).filter(Currency.id == currency_id).first()
                 )
                 if currency:
+
+                    # Record the deleted data for audit log
+                    deleted_data = {
+                        "nom": currency.name,
+                        "code": currency.code,
+                        "solde": currency.balance,
+                        "entree": currency.input,
+                        "sortie": currency.output,
+                    }
                     session.delete(currency)
                     session.commit()
+
+                    # Log audit entry
+                    log_audit_entry(
+                        db_session=session,
+                        table_name="Devise",
+                        operation="SUPPRESSION",
+                        record_id=currency_id,
+                        user_id=self.user_id,
+                        changes=deleted_data,
+                    )
                     self.load_currency_data()
             except SQLAlchemyError as e:
                 self.show_error_message(

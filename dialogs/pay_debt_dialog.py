@@ -6,11 +6,14 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.audit_logger import log_audit_entry
+
 
 class PayDebtDialog(BaseDialog):
-    def __init__(self, debt_id, parent=None):
+    def __init__(self, parent, debt_id):
         super().__init__("Payer une dette", parent)
         self.debt_id = debt_id
+        self.user_id = parent.user_id
         self.setGeometry(200, 200, 500, 400)
         # self.create_form_fields()
         self.populate_form_fields()
@@ -61,10 +64,12 @@ class PayDebtDialog(BaseDialog):
         session = SessionLocal()
         try:
             debt = session.query(Debt).filter_by(id=self.debt_id).first()
+
             if not debt:
                 QMessageBox.critical(self, "Erreur", "Dette introuvable.")
                 return
 
+            customer = session.query(Customer).filter_by(id=debt.customer_id).first()
             if pay_amount > debt.current_debt:
                 QMessageBox.warning(
                     self,
@@ -73,6 +78,11 @@ class PayDebtDialog(BaseDialog):
                 )
                 return
 
+            old_data = {
+                "nom": customer.name,
+                "Dette paye": debt.paid_debt,
+                "dette actuelle": debt.amount,
+            }
             # Update debt fields
             debt.paid_debt = (debt.paid_debt or 0) + pay_amount
             debt.current_debt = debt.amount - debt.paid_debt
@@ -80,6 +90,22 @@ class PayDebtDialog(BaseDialog):
 
             session.commit()
 
+            # Log audit entry
+            log_audit_entry(
+                db_session=session,
+                table_name="Dette",
+                operation="PAYER",
+                record_id=debt.id,
+                user_id=self.user_id,
+                changes={
+                    "old": old_data,
+                    "new": {
+                        "nom": customer.name,
+                        "Dette paye": debt.paid_debt,
+                        "dette actuelle": debt.amount,
+                    },
+                },
+            )
             QMessageBox.information(
                 self,
                 "Succès",

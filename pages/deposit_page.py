@@ -14,8 +14,9 @@ from pages.base_page import BasePage
 
 
 class DepositPage(BasePage):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, title="Gestion des dépôts")
+        self.user_id = parent.user_id
         self.init_ui()
 
     def init_ui(self):
@@ -117,16 +118,16 @@ class DepositPage(BasePage):
             session.close()
 
     def add_deposit(self):
-        dialog = AddDepositDialog()
+        dialog = AddDepositDialog(self)
         if dialog.exec_():
             self.load_deposit_data()
 
     def update_deposit(self, customer_id, rox):
-        dialog = AddDepositDialog(customer_id=customer_id)
+        dialog = AddDepositDialog(self, customer_id=customer_id)
         if dialog.exec_():
             self.load_deposit_data()
 
     def withdraw(self, identite, row):
-        dialog = WithdrawDepositDialog(identite)
+        dialog = WithdrawDepositDialog(self, identite)
         if dialog.exec_():
             self.load_deposit_data()
