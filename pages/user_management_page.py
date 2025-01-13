@@ -16,8 +16,9 @@ from pages.base_page import BasePage
 
 
 class UserManagementPage(BasePage):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, title="Gestion des utilisateurs")
+        self.user_id = parent.user_id
         self.setup_ui()
 
     def setup_ui(self):
@@ -96,12 +97,12 @@ class UserManagementPage(BasePage):
             session.close()
 
     def add_user(self):
-        dialog = AddUserDialog()
+        dialog = AddUserDialog(self)
         if dialog.exec_() == QDialog.Accepted:
             self.load_user_data()
 
     def edit_user(self, user_id, row):
-        dialog = EditUserDialog(user_id)
+        dialog = EditUserDialog(self, user_id)
         if dialog.exec_() == QDialog.Accepted:
             self.load_user_data()
 

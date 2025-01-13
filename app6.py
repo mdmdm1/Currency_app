@@ -8,164 +8,187 @@ from PyQt5.QtWidgets import (
     QLabel,
     QStackedWidget,
     QFrame,
-    QLineEdit,
     QSizePolicy,
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
-
-# Importation des pages (assurez-vous que ces modules sont correctement définis dans votre projet)
 from home_page import HomePage
-from cash_management_page import CashManagementPage
-from debt_management_page import DebtManagementPage
-
-# from currency_management_page import CurrencyManagementPage
 from pages.currency_page import CurrencyPage
 from pages.exchange_page import CurrencyExchangePage
-
-from money_management_page import MoneyManagementPage
-
-# from debt_pagefr import DebtPage
 from pages.debt_page import DebtPage
-
-# from deposit_pagefr2 import DepositPage
 from pages.deposit_page import DepositPage
-
-# from employees_page import EmployeesManagementPage
 from pages.login_page import LoginPage
 from pages.user_management_page import UserManagementPage
 from database.database import SessionLocal
+from database.models import User
+from utils.verify_admin import is_user_admin
 
 
 class MainWindow(QWidget):
     def __init__(self, user_id):
         super().__init__()
         self.user_id = user_id
-        # Configuration de la fenêtre principale
-        self.setWindowTitle("Moneymanagement")
-        self.setGeometry(100, 100, 1100, 600)
+        self.is_admin = is_user_admin(user_id)
+        self.init_ui()
 
-        # Layout principal horizontal
+    def init_ui(self):
+        """Initialize the user interface"""
+        self.setWindowTitle("MoneyManagement")
+        self.setGeometry(95, 90, 1200, 650)
+
+        # Main layout
         main_layout = QHBoxLayout(self)
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ---- Barre latérale ----
-        sidebar = QFrame(self)
-        sidebar.setStyleSheet(
-            "background-color: #3498db;"
-        )  # Couleur bleue pour la barre latérale
-        sidebar.setFixedWidth(200)  # Largeur fixe pour la barre latérale
+        # Create and setup sidebar
+        self.setup_sidebar(main_layout)
 
-        # Layout de la barre latérale
-        sidebar_layout = QVBoxLayout(sidebar)
+        # Setup main content area
+        self.setup_main_content(main_layout)
 
-        # Ajout de l'image circulaire en haut à gauche
-        self.add_profile_image(sidebar_layout)
-
-        # Création des boutons de la barre latérale
-        btn_home = self.create_sidebar_button("Accueil", "🏠")
-        btn_currency_management = self.create_sidebar_button("Devises", "💱")
-        btn_money_management = self.create_sidebar_button("Transactions", "💰")
-        btn_debt = self.create_sidebar_button("Dette", "📝")
-        btn_deposit = self.create_sidebar_button("Dépôt", "🏦")
-        btn_signout = self.create_sidebar_button("Déconnexion", "🔌")
-        btn_employee = self.create_sidebar_button("Mangement ", "🏦")
-
-        # Ajouter les boutons à la barre latérale
-        sidebar_layout.addWidget(btn_home)
-        sidebar_layout.addWidget(btn_currency_management)
-        sidebar_layout.addWidget(btn_money_management)
-        sidebar_layout.addWidget(btn_debt)
-        sidebar_layout.addWidget(btn_deposit)
-        sidebar_layout.addWidget(btn_employee)
-        sidebar_layout.addStretch()  # Ajout d'un espace flexible pour pousser le bouton "Sign Out" en bas
-        sidebar_layout.addWidget(btn_signout)
-
-        # ---- Contenu principal (StackedWidget) ----
-        self.stack = QStackedWidget(self)
-
-        # Création des pages pour chaque section
-        self.home_page = HomePage(self)
-        self.currency_management_page = CurrencyPage(self)
-        self.money_management_page = CurrencyExchangePage(self)
-        self.debt_page = DebtPage(self)
-        self.deposit_page = DepositPage(self)
-        self.employee_page = UserManagementPage(self)
-
-        # Ajouter les pages au QStackedWidget
-        self.stack.addWidget(self.home_page)
-        self.stack.addWidget(self.currency_management_page)
-        self.stack.addWidget(self.money_management_page)
-        self.stack.addWidget(self.debt_page)
-        self.stack.addWidget(self.deposit_page)
-        self.stack.addWidget(self.employee_page)
-
-        # Connecter les boutons aux pages
-        btn_home.clicked.connect(lambda: self.stack.setCurrentWidget(self.home_page))
-        btn_currency_management.clicked.connect(
-            lambda: self.stack.setCurrentWidget(self.currency_management_page)
-        )
-        btn_money_management.clicked.connect(
-            lambda: self.stack.setCurrentWidget(self.money_management_page)
-        )
-        btn_debt.clicked.connect(lambda: self.stack.setCurrentWidget(self.debt_page))
-        btn_deposit.clicked.connect(
-            lambda: self.stack.setCurrentWidget(self.deposit_page)
-        )
-        btn_employee.clicked.connect(
-            lambda: self.stack.setCurrentWidget(self.employee_page)
-        )
-
-        # ---- Top Bar avec la barre de recherche et l'icône du profil ----
-        top_layout = QHBoxLayout()
-        search_bar = QLineEdit(self)
-        search_bar.setPlaceholderText("Search...")
-        search_bar.setFixedHeight(30)
-        search_bar.setStyleSheet("padding: 5px; font-size: 16px;")
-        search_bar.setFixedWidth(400)
-
-        # Icône de profil à droite
-        profile_icon = QLabel("👤", self)
-        profile_icon.setAlignment(Qt.AlignRight)
-        profile_icon.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-
-        top_layout.addWidget(search_bar)
-        top_layout.addWidget(profile_icon)
-
-        # Layout pour la partie droite (barre de recherche + contenu)
-        right_layout = QVBoxLayout()
-        right_layout.addLayout(top_layout)
-        right_layout.addWidget(self.stack)
-
-        # Ajouter la barre latérale et le contenu principal au layout principal
-        main_layout.addWidget(sidebar)
-        main_layout.addLayout(right_layout)
-
-        # Appliquer les styles
+        # Load stylesheet
         self.load_stylesheet("style.css")
 
-    def load_stylesheet(self, filename):
-        """Charge une feuille de style CSS depuis un fichier."""
-        with open(filename, "r") as f:
-            self.setStyleSheet(f.read())
+    def setup_sidebar(self, main_layout):
+        """Setup the sidebar with navigation buttons"""
+        sidebar = QFrame()
+        sidebar.setObjectName("sidebar")
+        sidebar.setFixedWidth(250)
+        sidebar_layout = QVBoxLayout(sidebar)
+        sidebar_layout.setSpacing(10)
+        sidebar_layout.setContentsMargins(15, 20, 15, 20)
 
-    def add_profile_image(self, layout):
-        """Ajoute une image circulaire pour le profil."""
-        profile_image = QLabel(self)
-        profile_image.setPixmap(
-            QPixmap("default_profile.png").scaled(
-                50, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation
-            )
+        # Profile section
+        profile_frame = QFrame()
+        profile_frame.setObjectName("profile-frame")
+        profile_layout = QVBoxLayout(profile_frame)
+
+        # Profile image
+        profile_image = QLabel()
+        profile_pixmap = QPixmap("icons/profile.png").scaled(
+            80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
         )
-        profile_image.setStyleSheet(
-            "border-radius: 25px; margin: 10px;"
-        )  # Style circulaire
-        layout.addWidget(profile_image)
+        profile_image.setPixmap(profile_pixmap)
+        profile_image.setAlignment(Qt.AlignCenter)
+        profile_image.setObjectName("profile-image")
 
-    def create_sidebar_button(self, text, icon):
-        """Crée un bouton pour la barre latérale avec une icône et du texte."""
-        button = QPushButton(f"{icon}  {text}")
-        button.setFixedHeight(40)
-        return button
+        # Username label
+        username = self.get_user_name(self.user_id)
+        username_label = QLabel("Bienvenue, " + str(username))
+        username_label.setAlignment(Qt.AlignCenter)
+        username_label.setObjectName("username-label")
+
+        profile_layout.addWidget(profile_image)
+        profile_layout.addWidget(username_label)
+        sidebar_layout.addWidget(profile_frame)
+
+        # Navigation buttons
+        nav_buttons = [
+            ("🏠 Accueil", self.show_home),
+            ("💱 Devises", self.show_currency),
+            ("💰 Transactions", self.show_transactions),
+            ("📝 Dette", self.show_debt),
+            ("🏦 Dépôt", self.show_deposit),
+        ]
+
+        if self.is_admin:
+            nav_buttons.append(("👥 Gestion des employés", self.show_employees))
+
+        # Create navigation buttons
+        for text, slot in nav_buttons:
+            btn = QPushButton(text)
+            btn.setObjectName("nav-button")
+            btn.clicked.connect(slot)
+            sidebar_layout.addWidget(btn)
+
+        # Add logout button at the bottom
+        sidebar_layout.addStretch()
+        logout_btn = QPushButton("🔌 Déconnexion")
+        logout_btn.setObjectName("logout-button")
+        logout_btn.clicked.connect(self.sign_out)
+        sidebar_layout.addWidget(logout_btn)
+
+        main_layout.addWidget(sidebar)
+
+    def setup_main_content(self, main_layout):
+        """Setup the main content area"""
+        self.stack = QStackedWidget()
+        self.stack.setObjectName("main-content")
+
+        # Initialize pages
+        self.pages = {
+            "home": HomePage(self),
+            "currency": CurrencyPage(self),
+            "transactions": CurrencyExchangePage(self),
+            "debt": DebtPage(self),
+            "deposit": DepositPage(self),
+        }
+
+        if self.is_admin:
+            self.pages["employees"] = UserManagementPage(self)
+
+        # Add pages to stack
+        for page in self.pages.values():
+            self.stack.addWidget(page)
+
+        main_layout.addWidget(self.stack)
+
+    # Navigation methods
+    def show_home(self):
+        self.stack.setCurrentWidget(self.pages["home"])
+
+    def show_currency(self):
+        self.stack.setCurrentWidget(self.pages["currency"])
+
+    def show_transactions(self):
+        self.stack.setCurrentWidget(self.pages["transactions"])
+
+    def show_debt(self):
+        self.stack.setCurrentWidget(self.pages["debt"])
+
+    def show_deposit(self):
+        self.stack.setCurrentWidget(self.pages["deposit"])
+
+    def show_employees(self):
+        if self.is_admin and "employees" in self.pages:
+            self.stack.setCurrentWidget(self.pages["employees"])
+
+    def sign_out(self):
+        """Handle sign-out action"""
+        self.close()
+        self.login_page = LoginPage(SessionLocal())
+        self.login_page.login_successful.connect(self.show_main_window)
+        self.login_page.show()
+
+    @staticmethod
+    def get_user_name(user_id):
+        session = SessionLocal()
+        try:
+            user = session.get(User, user_id)
+            if not user:
+                return False  # User not found
+
+            return user.username
+        except Exception as e:
+            print(f"Error while getting the username: {e}")
+            return False  # Return False in case of an error
+        finally:
+            session.close()
+
+    @staticmethod
+    def show_main_window(user):
+        """Show main window after successful login"""
+        main_window = MainWindow(user.id)
+        main_window.show()
+
+    def load_stylesheet(self, filename):
+        """Load CSS stylesheet"""
+        try:
+            with open(filename, "r") as f:
+                self.setStyleSheet(f.read())
+        except FileNotFoundError:
+            print(f"Warning: Stylesheet {filename} not found")
 
 
 if __name__ == "__main__":

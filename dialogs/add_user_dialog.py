@@ -12,8 +12,9 @@ import bcrypt
 
 
 class AddUserDialog(BaseDialog):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__("Ajouter un nouvel utilisateur", parent)
+        self.current_user_id = parent.user_id
 
     def create_form_fields(self):
         # Initialize input fields
