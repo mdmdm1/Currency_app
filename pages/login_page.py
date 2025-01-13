@@ -15,24 +15,28 @@ from PyQt5.QtGui import QPixmap
 import bcrypt
 from sqlalchemy.orm import Session
 from sqlalchemy import select
-
-from database.models import AuditLog, User
-from utils.audit_logger import log_audit_entry
+from database.models import User
+from pathlib import Path
 
 
 class LoginPage(QMainWindow):
-    login_successful = pyqtSignal(object)  # Signal to notify a successful login
+    login_successful = pyqtSignal(object)
 
     def __init__(self, db_session: Session):
         super().__init__()
         self.db_session = db_session
-        self.setWindowTitle("Banque de Devises - Connexion")  # Window title in French
+        self.setWindowTitle("Banque de Devises - Connexion")
         self.setFixedSize(400, 500)
+
+        # Define resources directory
+        self.icons_dir = Path(__file__).parent.parent / "icons"
+        if not self.icons_dir.exists():
+            self.icons_dir.mkdir(parents=True)
+
         self.setup_ui()
         self.center_on_screen()
 
     def setup_ui(self):
-        # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         layout = QVBoxLayout(central_widget)
@@ -40,7 +44,7 @@ class LoginPage(QMainWindow):
         layout.setContentsMargins(40, 40, 40, 40)
 
         # App title
-        title = QLabel("Banque de Devises")  # French translation for "Currency Bank"
+        title = QLabel("Banque de Devises")
         title.setStyleSheet(
             """
             QLabel {
@@ -54,35 +58,34 @@ class LoginPage(QMainWindow):
         layout.addWidget(title)
 
         # Subtitle
-        subtitle = QLabel(
-            "Bienvenue ! Veuillez vous connecter à votre compte."
-        )  # French subtitle
+        subtitle = QLabel("Bienvenue ! Veuillez vous connecter à votre compte.")
         subtitle.setStyleSheet("color: #7f8c8d; font-size: 14px;")
         subtitle.setAlignment(Qt.AlignCenter)
         layout.addWidget(subtitle)
 
-        # Add some spacing
         layout.addSpacing(20)
 
-        # Username input
-        username_container = self.create_input(
+        # Username input with fallback icon
+        username_container = self.create_input_with_fallback(
             placeholder="Nom d'utilisateur",
-            icon_path="C:/Users/medma/Desktop/Currency_app/profile.png",
+            icon_name="user-icon.png",
+            fallback_text="👤",
         )
-        print(os.path.abspath("./pages/profile.png"))
-
-        self.username_input = username_container.input_field  # Access the QLineEdit
+        self.username_input = username_container.input_field
         layout.addWidget(username_container)
 
-        # Password input
-        password_container = self.create_input(
-            "Mot de passe", "lock.png", is_password=True
+        # Password input with fallback icon
+        password_container = self.create_input_with_fallback(
+            placeholder="Mot de passe",
+            icon_name="lock-icon2.png",
+            fallback_text="🔒",
+            is_password=True,
         )
-        self.password_input = password_container.input_field  # Access the QLineEdit
+        self.password_input = password_container.input_field
         layout.addWidget(password_container)
 
         # Login button
-        self.login_button = QPushButton("Connexion")  # French translation for "Login"
+        self.login_button = QPushButton("Connexion")
         self.login_button.setFixedHeight(50)
         self.login_button.setCursor(Qt.PointingHandCursor)
         self.login_button.setStyleSheet(
@@ -112,7 +115,7 @@ class LoginPage(QMainWindow):
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
 
-        # Set window style
+        # Window style
         self.setStyleSheet(
             """
             QMainWindow {
@@ -132,7 +135,9 @@ class LoginPage(QMainWindow):
         """
         )
 
-    def create_input(self, placeholder, icon_path, is_password=False):
+    def create_input_with_fallback(
+        self, placeholder, icon_name, fallback_text, is_password=False
+    ):
         container = QFrame()
         container.setFixedHeight(50)
 
@@ -144,20 +149,24 @@ class LoginPage(QMainWindow):
         if is_password:
             input_field.setEchoMode(QLineEdit.Password)
 
-        # Create icon
+        # Create icon with fallback
         icon = QLabel(container)
-        pixmap = QPixmap(icon_path)
-        if not pixmap.isNull():
-            icon.setPixmap(
-                pixmap.scaled(20, 20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
-            )
+        icon_path = self.icons_dir / icon_name
+
+        if icon_path.exists():
+            pixmap = QPixmap(str(icon_path))
+            if not pixmap.isNull():
+                icon.setPixmap(
+                    pixmap.scaled(20, 20, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                )
+            else:
+                icon.setText(fallback_text)
         else:
-            icon.setText("📷")  # Placeholder for missing icons
+            icon.setText(fallback_text)
+
         icon.move(15, 15)
 
-        # Store input_field in the container for access
         container.input_field = input_field
-
         return container
 
     def center_on_screen(self):
@@ -171,42 +180,39 @@ class LoginPage(QMainWindow):
         password = self.password_input.text().strip()
 
         if not username or not password:
-            self.show_error(
-                "Veuillez entrer le nom d'utilisateur et le mot de passe."
-            )  # Error in French
+            self.show_error("Veuillez entrer le nom d'utilisateur et le mot de passe.")
             return
 
         try:
-            stmt = select(User).where(User.username == username)
-            user = self.db_session.execute(stmt).scalar_one_or_none()
-
-            if not user or not self.verify_password(password, user.password):
-                self.show_error(
-                    "Nom d'utilisateur ou mot de passe invalide."
-                )  # Error in French
-                return
-
-            if not user.is_active:
-                self.show_error("Ce compte a été désactivé.")  # Error in French
-                return
-
-            """
-            log_audit_entry(
-                    db_session=self.db_session,
-                    table_name="UTILISATEURS",
-                    operation="CONNEXION",
-                    record_id=user.id,
-                    user_id=user.id,
-                    changes="Connexion réussie",
-                    
+            # Optimize database query by selecting only necessary fields
+            stmt = select(User.id, User.password, User.is_active).where(
+                User.username == username
             )
-            """
+            result = self.db_session.execute(stmt).first()
 
-            self.login_successful.emit(user)  # Emit success signal
-            self.close()  # Close the login window
+            if not result:
+                self.show_error("Nom d'utilisateur ou mot de passe invalide.")
+                return
+
+            user_id, hashed_password, is_active = result
+
+            if not is_active:
+                self.show_error("Ce compte a été désactivé.")
+                return
+
+            # Use a separate thread for password verification
+            QApplication.processEvents()  # Keep UI responsive
+            if not self.verify_password(password, hashed_password):
+                self.show_error("Nom d'utilisateur ou mot de passe invalide.")
+                return
+
+            # Construct user object with minimal data
+            user = User(id=user_id, username=username, is_active=is_active)
+            self.login_successful.emit(user)
+            self.close()
 
         except Exception as e:
-            self.show_error(f"Erreur de connexion : {str(e)}")  # Error in French
+            self.show_error(f"Erreur de connexion : {str(e)}")
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         try:
@@ -218,5 +224,4 @@ class LoginPage(QMainWindow):
 
     def show_error(self, message: str):
         self.status_label.setText(message)
-        self.status_label.setStyleSheet("color: #e74c3c; font-size: 14px;")
         QTimer.singleShot(3000, lambda: self.status_label.setText(""))

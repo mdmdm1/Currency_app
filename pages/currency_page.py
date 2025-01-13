@@ -116,7 +116,7 @@ class CurrencyPage(BasePage):
                 self.add_action_buttons(row, currency.id, buttons_config)
 
             # Update the total
-            total = sum(currency.balance for currency in currencies)
+            total = sum(currency.balance / currency.rate for currency in currencies)
             self.update_total_label(total, "Total Disponible")
 
         except SQLAlchemyError as e:

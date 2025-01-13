@@ -1,3 +1,4 @@
+from pathlib import Path
 import sys
 from PyQt5.QtWidgets import (
     QApplication,
@@ -8,11 +9,10 @@ from PyQt5.QtWidgets import (
     QLabel,
     QStackedWidget,
     QFrame,
-    QSizePolicy,
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
-from home_page import HomePage
+from pages.home_page import HomePage
 from pages.currency_page import CurrencyPage
 from pages.exchange_page import CurrencyExchangePage
 from pages.debt_page import DebtPage
@@ -29,12 +29,19 @@ class MainWindow(QWidget):
         super().__init__()
         self.user_id = user_id
         self.is_admin = is_user_admin(user_id)
+        # Define resources directory
+        self.icons_dir = Path(__file__).parent / "icons"
         self.init_ui()
 
     def init_ui(self):
         """Initialize the user interface"""
-        self.setWindowTitle("MoneyManagement")
+        self.setWindowTitle("GestiFin Pro")  # New French name
         self.setGeometry(95, 90, 1200, 650)
+
+        # Set window icon
+        icon_path = self.icons_dir / "icons" / "app_icon.png"
+        if icon_path.exists():
+            self.setWindowIcon(QIcon(str(icon_path)))
 
         # Main layout
         main_layout = QHBoxLayout(self)
@@ -193,6 +200,17 @@ class MainWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    # Set the application icon
+    icons_dir = Path(__file__).parent / "icons"
+    icon_path = icons_dir / "app-icon.png"
+
+    if icon_path.exists():
+        app_icon = QIcon(str(icon_path))
+        app.setWindowIcon(app_icon)
+    else:
+        print(f"Warning: Application icon not found at {icon_path}")
+
     db_session = SessionLocal()  # Initialize your database session
 
     # Create and show the login page

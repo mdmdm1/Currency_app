@@ -25,8 +25,9 @@ from utils.audit_logger import log_audit_entry
 
 
 class CurrencyExchangePage(BasePage):
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent, title="Échange de Devises")
+        self.user_id = parent.user_id
         self.init_currency_exchange_ui()
 
     def init_currency_exchange_ui(self):
@@ -139,7 +140,7 @@ class CurrencyExchangePage(BasePage):
                     row, 3, QTableWidgetItem(f"{conversion_from_others:.6f}")
                 )
 
-                total = sum(currency.balance for currency in currencies)
+                total = sum(currency.balance / currency.rate for currency in currencies)
                 self.update_total_label(total, "Total Disponible")
                 # Add modify button using BasePage's helper method
                 buttons_config = [

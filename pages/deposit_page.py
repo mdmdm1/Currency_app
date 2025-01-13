@@ -77,7 +77,7 @@ class DepositPage(BasePage):
                     released_deposit,
                     current_debt,
                 ) = row[1:]
-                total_deposited += amount
+                total_deposited += current_debt
 
                 row_data = [
                     customer_name,
