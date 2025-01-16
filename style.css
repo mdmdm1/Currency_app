@@ -1,19 +1,335 @@
+/* Base colors and variables */
+* {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+/* Main window styling */
+QMainWindow {
+    background-color: #f0f2f5;
+}
+
+/* Button styling */
 QPushButton {
     color: white;
     background-color: #3498db;
-    font-size: 16px;
-    padding: 10px;
+    font-size: 14px;
+    padding: 8px 16px;
     border: none;
+    border-radius: 6px;
     text-align: left;
     padding-left: 20px;
+    min-height: 20px;
 }
+
 QPushButton:hover {
     background-color: #2980b9;
 }
+
+QPushButton:pressed {
+    background-color: #2472a4;
+}
+
+QPushButton:disabled {
+    background-color: #bdc3c7;
+    color: #7f8c8d;
+}
+
+/* Navigation buttons specific styling */
+QPushButton#nav-button {
+    background-color: transparent;
+    color: #2c3e50;
+    text-align: left;
+    border-radius: 8px;
+    margin: 2px 8px;
+}
+
+QPushButton#nav-button:hover {
+    background-color: #edf2f7;
+}
+
+QPushButton#nav-button:checked {
+    background-color: #e2e8f0;
+    font-weight: bold;
+}
+
+/* Label styling without hover */
 QLabel {
+    font-size: 14px;
+    color: #2c3e50;
+    border: none; /* Ensure no border on hover */
+}
+/* Prevent hover for QLabels inside other widgets */
+
+QLabel#title-label {
     font-size: 24px;
+    font-weight: bold;
+    color: #1a202c;
+    padding: 10px 0;
 }
-QStackedWidget {
+
+QLabel#subtitle-label {
+    font-size: 16px;
+    color: #4a5568;
+}
+
+
+/* Table styling */
+QTableWidget {
+    border: 1px solid #e2e8f0;
+    background-color: #ffffff;
+    alternate-background-color: #f8fafc;
+    gridline-color: #e2e8f0;
+}
+
+QTableWidget::item {
+    padding: 8px;
+}
+
+QTableWidget::item:selected {
+    background-color: #ebf5ff;
+    color: #2c5282;
+}
+
+QTableWidget QHeaderView::section {
+    background-color: #3498db;
+    color: white;
+    font-weight: bold;
+    padding: 12px;
+    border: none;
+    border-right: 1px solid #2980b9;
+}
+
+QTableWidget QHeaderView::section:hover {
+    background-color: #2980b9;
+}
+
+/* Scroll bar styling */
+QScrollBar:vertical {
+    border: none;
+    background: #f7fafc;
+    width: 10px;
+    margin: 0;
+}
+
+QScrollBar::handle:vertical {
+    background: #cbd5e0;
+    border-radius: 5px;
+    min-height: 20px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background: #a0aec0;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+
+/* Frame styling */
+QFrame {
+    background-color: transparent;
+    border: none;
+}
+
+QFrame:hover {
+    border: 1px solid #cbd5e0;
+}
+
+/* Sidebar styling */
+QFrame#sidebar {
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    border-radius: 0;
+}
+
+/* Profile section styling */
+QFrame#profile-frame {
+    border: none;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+#profile-image {
+    margin-bottom: 10px;
+}
+
+#username-label {
+    color: #2d3748;
+    font-weight: 500;
+}
+
+/* Navigation button styling */
+QPushButton#nav-button {
+    background-color: transparent;
+    color: #2d3748;
+    text-align: left;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin: 2px 8px;
+    icon-size: 20px;
+}
+
+QPushButton#nav-button:hover {
+    background-color: #edf2f7;
+}
+
+QPushButton#nav-button[active="true"] {
+    background-color: #e2e8f0;
+    font-weight: bold;
+    color: #2c5282;
+}
+
+/* Logout button specific styling */
+QPushButton#logout-button {
+    background-color: #f56565;
+    color: white;
+    text-align: left;
+    padding: 12px 16px;
+    margin: 2px 8px;
+    icon-size: 20px;
+}
+
+QPushButton#logout-button:hover {
+    background-color: #e53e3e;
+}
+
+/* Specific frame styling */
+QFrame#stat-card:hover {
+    border: 1px solid #cbd5e0;
+}
+
+
+
+/* Statistics card specific styling */
+QFrame#stat-card {
+    padding: 16px;
+}
+
+/* Activity item specific styling */
+QFrame#activity-item {
+    background-color: #f8fafc;
+    border-radius: 6px;
+    margin: 4px 0;
+}
+
+QFrame#activity-item:hover {
+    background-color: #edf2f7;
+}
+
+/* Login container styling */
+QFrame#login-container {
+    background-color: transparent;
+    border: none;
+}
+
+/* Dialog styling */
+QDialog {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+
+/* Input fields styling */
+QLineEdit, QSpinBox, QDoubleSpinBox, QDateEdit {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
     background-color: white;
-    border: 1px solid #e0e0e0;
 }
+
+QLineEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus, QDateEdit:focus {
+    border-color: #3498db;
+    background-color: #ebf8ff;
+}
+
+QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover, QDateEdit:hover {
+    border-color: #cbd5e0;
+}
+
+QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled, QDateEdit:disabled {
+    background-color: #f7fafc;
+    color: #a0aec0;
+}
+
+/* Combobox styling */
+QComboBox {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: white;
+}
+
+QComboBox:hover {
+    border-color: #cbd5e0;
+}
+
+QComboBox::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QComboBox::down-arrow {
+    image: url(down_arrow.png);
+    width: 12px;
+    height: 12px;
+}
+
+/* Message box styling */
+QMessageBox {
+    background-color: white;
+}
+
+QMessageBox QPushButton {
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Statistics card styling */
+QFrame#stat-card {
+    background-color: white;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    padding: 16px;
+}
+
+QFrame#stat-card QLabel {
+    padding: 4px 0;
+}
+
+/* Activity list styling */
+QFrame#activity-item {
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    margin: 4px 0;
+}
+
+QFrame#activity-item:hover {
+    background-color: #edf2f7;
+}
+
+/* Error message styling */
+QLabel[error="true"] {
+    color: #e53e3e;
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+/* Success message styling */
+QLabel[success="true"] {
+    color: #38a169;
+    font-size: 12px;
+    padding: 4px 0;
+}
+
+QLabel {
+    border: none;
+    background: transparent;
+}
+QLabel:hover {
+    border: none;
+    background: transparent;
+}
+
+
+

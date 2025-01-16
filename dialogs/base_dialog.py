@@ -21,14 +21,14 @@ class BaseDialog(QDialog):
         self.setWindowTitle(title)
         self.setWindowIcon(QIcon("edit.png"))
         self.setGeometry(250, 250, 500, 450)
-        self.setStyleSheet(
-            """
+        # self.setStyleSheet(
+        """
             QDialog {
                 background-color: #f8f9fa;
                 border-radius: 10px;
             }
-        """
-        )
+         """
+        # )
 
         self.setup_ui()
         self.center_on_screen()

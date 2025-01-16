@@ -42,9 +42,7 @@ class CurrencyExchangePage(BasePage):
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(
-            4, QHeaderView.ResizeToContents
-        )
+        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
 
         # Create converter widget
         converter_widget = QWidget()

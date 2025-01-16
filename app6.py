@@ -29,6 +29,7 @@ class MainWindow(QWidget):
         super().__init__()
         self.user_id = user_id
         self.is_admin = is_user_admin(user_id)
+        self.active_button = None
         # Define resources directory
         self.icons_dir = Path(__file__).parent / "icons"
         self.init_ui()
@@ -55,7 +56,7 @@ class MainWindow(QWidget):
         self.setup_main_content(main_layout)
 
         # Load stylesheet
-        self.load_stylesheet("style.css")
+        # self.load_stylesheet("style.css")
 
     def setup_sidebar(self, main_layout):
         """Setup the sidebar with navigation buttons"""
@@ -90,33 +91,59 @@ class MainWindow(QWidget):
         profile_layout.addWidget(username_label)
         sidebar_layout.addWidget(profile_frame)
 
-        # Navigation buttons
+        # Navigation buttons with icons
         nav_buttons = [
-            ("🏠 Accueil", self.show_home),
-            ("💱 Devises", self.show_currency),
-            ("💰 Transactions", self.show_transactions),
-            ("📝 Dette", self.show_debt),
-            ("🏦 Dépôt", self.show_deposit),
+            ("Accueil", "home.svg", self.show_home),
+            ("Devises", "currency.svg", self.show_currency),
+            ("Échanges", "exchange.svg", self.show_transactions),
+            ("Dette", "debt.svg", self.show_debt),
+            ("Dépôt", "deposit.svg", self.show_deposit),
         ]
 
         if self.is_admin:
-            nav_buttons.append(("👥 Gestion des employés", self.show_employees))
+            nav_buttons.append(
+                ("Gestion des employés", "users.svg", self.show_employees)
+            )
 
         # Create navigation buttons
-        for text, slot in nav_buttons:
+        self.nav_button_group = []
+        for text, icon_name, slot in nav_buttons:
             btn = QPushButton(text)
             btn.setObjectName("nav-button")
-            btn.clicked.connect(slot)
-            sidebar_layout.addWidget(btn)
 
-        # Add logout button at the bottom
+            # Set icon
+            icon_path = self.icons_dir / icon_name
+            if icon_path.exists():
+                btn.setIcon(QIcon(str(icon_path)))
+
+            btn.clicked.connect(
+                lambda checked, b=btn, s=slot: self.handle_nav_click(b, s)
+            )
+            sidebar_layout.addWidget(btn)
+            self.nav_button_group.append(btn)
+
+        # Logout button with icon
         sidebar_layout.addStretch()
-        logout_btn = QPushButton("🔌 Déconnexion")
+        logout_btn = QPushButton("Déconnexion")
         logout_btn.setObjectName("logout-button")
+        logout_icon_path = self.icons_dir / "logout.svg"
+        if logout_icon_path.exists():
+            logout_btn.setIcon(QIcon(str(logout_icon_path)))
         logout_btn.clicked.connect(self.sign_out)
         sidebar_layout.addWidget(logout_btn)
 
         main_layout.addWidget(sidebar)
+
+    def handle_nav_click(self, button, slot):
+        """Handle navigation button clicks"""
+        # Update active state for all buttons
+        for btn in self.nav_button_group:
+            btn.setProperty("active", btn == button)
+            btn.style().unpolish(btn)
+            btn.style().polish(btn)
+
+        # Call the navigation slot
+        slot()
 
     def setup_main_content(self, main_layout):
         """Setup the main content area"""
@@ -189,18 +216,19 @@ class MainWindow(QWidget):
         main_window = MainWindow(user.id)
         main_window.show()
 
-    def load_stylesheet(self, filename):
-        """Load CSS stylesheet"""
-        try:
-            with open(filename, "r") as f:
-                self.setStyleSheet(f.read())
-        except FileNotFoundError:
-            print(f"Warning: Stylesheet {filename} not found")
+
+def load_stylesheet():
+
+    with open("style.css", "r") as file:
+        return file.read()
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
+    # Load and apply the stylesheet
+    stylesheet = load_stylesheet()
+    app.setStyleSheet(stylesheet)
     # Set the application icon
     icons_dir = Path(__file__).parent / "icons"
     icon_path = icons_dir / "app-icon.png"

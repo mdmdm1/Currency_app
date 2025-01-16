@@ -51,7 +51,7 @@ class UserManagementPage(BasePage):
             for row_idx, user in enumerate(users):
                 last_login = user.created_at.strftime(
                     "%Y-%m-%d"
-                )  # Example: Modify if using a real last login field
+                )  # Modify TO using a real last login field
 
                 row_data = [
                     user.username,
@@ -89,6 +89,7 @@ class UserManagementPage(BasePage):
                         "width": 65,
                     },
                 ]
+
                 self.add_action_buttons(row_idx, user.id, buttons_config)
 
         except SQLAlchemyError as e:

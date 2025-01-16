@@ -5,9 +5,11 @@ from dialogs.base_dialog import BaseDialog
 
 
 class EditUserDialog(BaseDialog):
-    def __init__(self, user_id, parent=None):
+    def __init__(self, parent, user_id):
         super().__init__("Modifier l'utilisateur", parent)
+        self.current_user_id = parent.user_id
         self.user_id = user_id
+
         # self.username_input = None
         # self.role_combobox = None
         self.load_user_data()

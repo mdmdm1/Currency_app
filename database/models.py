@@ -122,7 +122,9 @@ class User(Base):
     is_active = Column(
         Boolean, default=True, nullable=False
     )  # Active or inactive account
-    role = Column(String(50), nullable=False)  # e.g., 'admin', 'user', 'auditor'
+    role = Column(
+        String(50), nullable=False
+    )  # e.g., 'admin', 'user', 'auditor' SUPERADMIN
     created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
     # Relationship to AuditLog table
     audit_logs = relationship("AuditLog", back_populates="user")

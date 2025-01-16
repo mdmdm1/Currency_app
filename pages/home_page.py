@@ -31,7 +31,7 @@ class HomePage(QWidget):
 
     def init_ui(self):
         """Initialize the dashboard UI"""
-        print("Setting up UI")
+        # print("Setting up UI")
 
         # Main layout
         self.main_layout = QVBoxLayout(self)
@@ -46,7 +46,9 @@ class HomePage(QWidget):
         self.activity_frame = self.create_activity_frame()
         self.main_layout.addWidget(self.activity_frame)
 
-        print("UI setup complete")
+        self.stats_frame.setObjectName("stat-card")
+        self.activity_frame.setObjectName("activity-frame")
+        # print("UI setup complete")
 
     def create_stat_widget(self, title, value, subtitle=""):
         """Create a styled widget for displaying statistics"""
@@ -228,7 +230,7 @@ class HomePage(QWidget):
 
     def load_data(self):
         """Load and display all dashboard data"""
-        print("Loading data")
+        # print("Loading data")
         try:
             session = SessionLocal()
             try:

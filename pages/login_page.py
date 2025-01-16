@@ -140,6 +140,7 @@ class LoginPage(QMainWindow):
     ):
         container = QFrame()
         container.setFixedHeight(50)
+        container.setObjectName("login-container")
 
         # Create input field
         input_field = QLineEdit(container)

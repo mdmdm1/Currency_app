@@ -17,13 +17,13 @@ class BasePage(QWidget):
         super().__init__(parent)
         self.parent_window = parent
         self.setWindowTitle(title)
-        self.setStyleSheet(self.load_base_stylesheet())
+        # self.setStyleSheet(self.load_base_stylesheet())
         self.init_base_ui()
 
     def init_base_ui(self):
         """Initialize the base UI elements common to all pages"""
         self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.layout.setContentsMargins(20, 20, 18, 18)
         self.layout.setSpacing(15)
 
         # Table Widget
