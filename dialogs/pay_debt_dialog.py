@@ -6,16 +6,16 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class PayDebtDialog(BaseDialog):
     def __init__(self, parent, debt_id):
-        super().__init__("Payer une dette", parent)
+        super().__init__(TranslationManager.tr("Pay Debt"), parent)
         self.debt_id = debt_id
         self.user_id = parent.user_id
         self.setGeometry(200, 200, 500, 400)
-        # self.create_form_fields()
         self.populate_form_fields()
 
     def create_form_fields(self):
@@ -23,8 +23,8 @@ class PayDebtDialog(BaseDialog):
         self.pay_amount_input = QLineEdit()
 
         fields = [
-            ("Dette actuelle:", self.current_debt_label),
-            ("Montant à payer:", self.pay_amount_input),
+            (TranslationManager.tr("Current Debt:"), self.current_debt_label),
+            (TranslationManager.tr("Amount to Pay:"), self.pay_amount_input),
         ]
 
         for label, widget in fields:
@@ -35,19 +35,24 @@ class PayDebtDialog(BaseDialog):
         try:
             debt = session.query(Debt).filter_by(id=self.debt_id).first()
             if not debt:
-                QMessageBox.critical(self, "Erreur", "Dette introuvable.")
+                QMessageBox.critical(
+                    self,
+                    TranslationManager.tr("Error"),
+                    TranslationManager.tr("Debt not found."),
+                )
                 self.reject()
                 return
 
             # Display the current debt amount
-            # current_debt =
             self.current_debt_label.setText(
                 self.format_french_number(debt.current_debt)
             )
 
         except SQLAlchemyError as e:
             QMessageBox.critical(
-                self, "Erreur", f"Erreur lors du chargement des données: {str(e)}"
+                self,
+                TranslationManager.tr("Error"),
+                TranslationManager.tr("Error loading data:") + f" {str(e)}",
             )
             self.reject()
         finally:
@@ -66,22 +71,28 @@ class PayDebtDialog(BaseDialog):
             debt = session.query(Debt).filter_by(id=self.debt_id).first()
 
             if not debt:
-                QMessageBox.critical(self, "Erreur", "Dette introuvable.")
+                QMessageBox.critical(
+                    self,
+                    TranslationManager.tr("Error"),
+                    TranslationManager.tr("Debt not found."),
+                )
                 return
 
             customer = session.query(Customer).filter_by(id=debt.customer_id).first()
             if pay_amount > debt.current_debt:
                 QMessageBox.warning(
                     self,
-                    "Erreur",
-                    "Le montant payé ne peut pas dépasser la dette actuelle.",
+                    TranslationManager.tr("Error"),
+                    TranslationManager.tr(
+                        "The paid amount cannot exceed the current debt."
+                    ),
                 )
                 return
 
             old_data = {
-                "nom": customer.name,
-                "Dette paye": debt.paid_debt,
-                "dette actuelle": debt.amount,
+                "name": customer.name,
+                "Paid Debt": debt.paid_debt,
+                "Current Debt": debt.amount,
             }
             # Update debt fields
             debt.paid_debt = (debt.paid_debt or 0) + pay_amount
@@ -93,31 +104,38 @@ class PayDebtDialog(BaseDialog):
             # Log audit entry
             log_audit_entry(
                 db_session=session,
-                table_name="Dette",
-                operation="PAYER",
+                table_name="Debt",
+                operation="PAY",
                 record_id=debt.id,
                 user_id=self.user_id,
                 changes={
                     "old": old_data,
                     "new": {
-                        "nom": customer.name,
-                        "Dette paye": debt.paid_debt,
-                        "dette actuelle": debt.amount,
+                        "name": customer.name,
+                        "Paid Debt": debt.paid_debt,
+                        "Current Debt": debt.amount,
                     },
                 },
             )
             QMessageBox.information(
                 self,
-                "Succès",
-                f"La dette a été mise à jour avec succès:\n"
-                f"Dette actuelle: {debt.current_debt:.2f}\n"
-                f"Montant payé: {debt.paid_debt:.2f}",
+                TranslationManager.tr("Success"),
+                TranslationManager.tr("The debt has been successfully updated:")
+                + "\n"
+                + TranslationManager.tr("Current Debt:")
+                + f" {debt.current_debt:.2f}\n"
+                + TranslationManager.tr("Paid Amount:")
+                + f" {debt.paid_debt:.2f}",
             )
             self.accept()
 
         except SQLAlchemyError as e:
             session.rollback()
-            QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
+            QMessageBox.critical(
+                self,
+                TranslationManager.tr("Error"),
+                TranslationManager.tr("SQLAlchemy Error:") + f" {str(e)}",
+            )
         finally:
             session.close()
 
@@ -129,5 +147,9 @@ class PayDebtDialog(BaseDialog):
                 raise ValueError
             return True, amount
         except ValueError:
-            QMessageBox.warning(None, "Erreur", "Veuillez entrer un montant valide.")
+            QMessageBox.warning(
+                None,
+                TranslationManager.tr("Error"),
+                TranslationManager.tr("Please enter a valid amount."),
+            )
             return False, 0.0

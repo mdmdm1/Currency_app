@@ -6,12 +6,13 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class AddDebtDialog(BaseDialog):
     def __init__(self, parent=None):
-        super().__init__("Ajouter une dette", parent)
+        super().__init__(TranslationManager.tr("Ajouter une dette"), parent)
         self.user_id = parent.user_id
         self.setGeometry(200, 200, 500, 400)
         # self.create_form_fields()
@@ -34,12 +35,12 @@ class AddDebtDialog(BaseDialog):
 
         # Define fields with their labels
         fields = [
-            ("Nom de la personne:", self.person_name_input),
-            ("Numéro d'identité:", self.person_id),
-            ("Téléphone:", self.telephone_input),
-            ("Date de naissance:", self.date_naisse_input),
-            ("Montant:", self.amount_input),
-            ("Date du dette:", self.debt_date_input),
+            (TranslationManager.tr("Nom de la personne:"), self.person_name_input),
+            (TranslationManager.tr("Numéro d'identité:"), self.person_id),
+            (TranslationManager.tr("Téléphone:"), self.telephone_input),
+            (TranslationManager.tr("Date de naissance:"), self.date_naisse_input),
+            (TranslationManager.tr("Montant:"), self.amount_input),
+            (TranslationManager.tr("Date du dette:"), self.debt_date_input),
         ]
 
         # Create rows for input fields
@@ -82,9 +83,9 @@ class AddDebtDialog(BaseDialog):
 
             if debt:
                 old_data = {
-                    "name": customer.name,
-                    "montant du dette": debt.amount,
-                    "dette actuelle": debt.current_debt,
+                    TranslationManager.tr("name"): customer.name,
+                    TranslationManager.tr("montant du dette"): debt.amount,
+                    TranslationManager.tr("dette actuelle"): debt.current_debt,
                 }
                 debt.amount += amount
                 debt.debt_date = debt_date
@@ -93,16 +94,16 @@ class AddDebtDialog(BaseDialog):
 
                 log_audit_entry(
                     db_session=session,
-                    table_name="Dette",
-                    operation="MISE A JOUR",
+                    table_name=TranslationManager.tr("Dette"),
+                    operation=TranslationManager.tr("MISE A JOUR"),
                     record_id=debt.id,
                     user_id=self.user_id,
                     changes={
                         "old": old_data,
                         "new": {
-                            "name": customer.name,
-                            "montant du dette": debt.amount,
-                            "dette actuelle": debt.current_debt,
+                            TranslationManager.tr("name"): customer.name,
+                            TranslationManager.tr("montant du dette"): debt.amount,
+                            TranslationManager.tr("dette actuelle"): debt.current_debt,
                         },
                     },
                 )
@@ -120,19 +121,37 @@ class AddDebtDialog(BaseDialog):
                 # Log audit entry
                 log_audit_entry(
                     db_session=session,
-                    table_name="Dette",
-                    operation="INSERTION",
+                    table_name=TranslationManager.tr("Dette"),
+                    operation=TranslationManager.tr("INSERTION"),
                     record_id=debt.id,
                     user_id=self.user_id,
-                    changes={"nom": customer.name, "montant": amount},
+                    changes={
+                        TranslationManager.tr("nom"): customer.name,
+                        TranslationManager.tr("montant"): amount,
+                    },
                 )
 
             session.commit()
-            QMessageBox.information(self, "Succès", "Dette ajoutée avec succès.")
+            QMessageBox.information(
+                self,
+                TranslationManager.tr("Succès"),
+                TranslationManager.tr("Dette ajoutée avec succès."),
+            )
             self.accept()
 
         except SQLAlchemyError as e:
             session.rollback()
-            QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
+            QMessageBox.critical(
+                self,
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur SQLAlchemy')}: {str(e)}",
+            )
         finally:
             session.close()
+
+    def retranslate_ui(self):
+        self.setWindowTitle(TranslationManager.tr("Ajouter une dette"))
+        self.customer_label.setText(TranslationManager.tr("Client:"))
+        self.amount_label.setText(TranslationManager.tr("Montant:"))
+        self.date_label.setText(TranslationManager.tr("Date:"))
+        self.submit_button.setText(TranslationManager.tr("Ajouter"))

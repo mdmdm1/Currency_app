@@ -20,18 +20,17 @@ from database.models import (
     AuditLog,
     User,
 )
+from utils.translation_manager import TranslationManager
 
 
 class HomePage(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        print("Initializing HomePage")
         self.init_ui()
         self.load_data()
 
     def init_ui(self):
         """Initialize the dashboard UI"""
-        # print("Setting up UI")
 
         # Main layout
         self.main_layout = QVBoxLayout(self)
@@ -48,7 +47,6 @@ class HomePage(QWidget):
 
         self.stats_frame.setObjectName("stat-card")
         self.activity_frame.setObjectName("activity-frame")
-        # print("UI setup complete")
 
     def create_stat_widget(self, title, value, subtitle=""):
         """Create a styled widget for displaying statistics"""
@@ -69,13 +67,13 @@ class HomePage(QWidget):
         layout = QVBoxLayout(widget)
         layout.setContentsMargins(15, 15, 15, 15)
 
-        # Title label with ID for easy finding
-        title_label = QLabel(title)
+        # Title label
+        title_label = QLabel(TranslationManager.tr(title))
         title_label.setObjectName("title_label")
         title_label.setStyleSheet("color: #666; font-size: 14px;")
 
-        # Value label with ID for easy finding
-        value_label = QLabel(str(value))
+        # Value label
+        value_label = QLabel(str(TranslationManager.tr(value)))
         value_label.setObjectName("value_label")
         value_label.setStyleSheet("font-size: 24px; font-weight: bold; color: #007BFF;")
 
@@ -83,7 +81,7 @@ class HomePage(QWidget):
         layout.addWidget(value_label)
 
         if subtitle:
-            subtitle_label = QLabel(subtitle)
+            subtitle_label = QLabel(TranslationManager.tr(subtitle))
             subtitle_label.setStyleSheet("color: #888; font-size: 12px;")
             layout.addWidget(subtitle_label)
 
@@ -131,7 +129,7 @@ class HomePage(QWidget):
         outer_layout.setContentsMargins(15, 15, 15, 15)
 
         # Title
-        title = QLabel("Activités Récentes")
+        title = QLabel(TranslationManager.tr("Activités Récentes"))
         title.setStyleSheet(
             "font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;"
         )
@@ -157,7 +155,9 @@ class HomePage(QWidget):
         self.activity_list_layout.setSpacing(5)
 
         # Add a placeholder message
-        placeholder = QLabel("Chargement des activités récentes...")
+        placeholder = QLabel(
+            TranslationManager.tr("Chargement des activités récentes...")
+        )
         placeholder.setAlignment(Qt.AlignCenter)
         self.activity_list_layout.addWidget(placeholder)
 
@@ -216,7 +216,9 @@ class HomePage(QWidget):
 
         except Exception as e:
             print(f"Error creating activity item: {e}")
-            error_label = QLabel("Erreur lors du chargement de l'activité")
+            error_label = QLabel(
+                TranslationManager.tr("Erreur lors du chargement de l'activité")
+            )
             error_label.setStyleSheet("color: red; font-size: 12px;")
             layout.addWidget(error_label)
 
@@ -316,6 +318,44 @@ class HomePage(QWidget):
         except Exception as e:
             print(f"Error formatting number: {e}")
             return str(amount)
+
+    def retranslate_ui(self):
+        """Update all static texts in the UI when the language changes"""
+        tr = TranslationManager.tr
+
+        # Update statistics widgets
+        self.stats_widgets["currency"].findChild(QLabel, "title_label").setText(
+            tr("Total des Devises")
+        )
+        self.stats_widgets["debt"].findChild(QLabel, "title_label").setText(
+            tr("Total des Dettes")
+        )
+        self.stats_widgets["deposit"].findChild(QLabel, "title_label").setText(
+            tr("Total des Dépôts")
+        )
+        self.stats_widgets["customers"].findChild(QLabel, "title_label").setText(
+            tr("Nombre de Clients")
+        )
+
+        # Update recent activities title
+        recent_activities_title = self.activity_frame.findChild(QLabel)
+        if recent_activities_title:
+            recent_activities_title.setText(tr("Activités Récentes"))
+
+        # Update placeholder text in the activity list
+        placeholder = self.activity_list.findChild(QLabel)
+        if placeholder:
+            placeholder.setText(tr("Chargement des activités récentes..."))
+
+        # Update error messages (if any)
+        error_label = self.findChild(QLabel)
+        if error_label and error_label.text().startswith("Erreur"):
+            error_label.setText(tr("Erreur lors du chargement des données."))
+
+        # Update no activity message
+        no_activity_label = self.activity_list.findChild(QLabel)
+        if no_activity_label and no_activity_label.text() == "Aucune activité récente":
+            no_activity_label.setText(tr("Aucune activité récente"))
 
     def show_error_message(self, title, message):
         """Show error message"""

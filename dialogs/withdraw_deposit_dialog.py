@@ -14,12 +14,13 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class WithdrawDepositDialog(BaseDialog):
     def __init__(self, parent, customer_id):
-        super().__init__("Retrait", parent)
+        super().__init__(TranslationManager.tr("Withdrawal"), parent)
         self.setGeometry(250, 250, 300, 400)
         self.user_id = parent.user_id
         self.customer_id = customer_id
@@ -27,16 +28,20 @@ class WithdrawDepositDialog(BaseDialog):
     def create_form_fields(self):
         # Input for withdrawal amount
         self.amount_input = QLineEdit()
-        self.amount_input.setPlaceholderText("Montant à retirer")
+        self.amount_input.setPlaceholderText(
+            TranslationManager.tr("Amount to withdraw")
+        )
         self.amount_input.setValidator(
             QDoubleValidator(0, 1e9, 2)
         )  # Allow only valid numeric input
-        self.create_input_row("Montant:", self.amount_input)
+        self.create_input_row(TranslationManager.tr("Amount:"), self.amount_input)
 
         # Input for withdrawal date
         self.withdraw_date_input = QDateEdit(QDate.currentDate())
         self.withdraw_date_input.setCalendarPopup(True)
-        self.create_input_row("Date de retrait:", self.withdraw_date_input)
+        self.create_input_row(
+            TranslationManager.tr("Withdrawal Date:"), self.withdraw_date_input
+        )
 
     def on_submit(self):
         # Validate withdrawal amount
@@ -46,16 +51,12 @@ class WithdrawDepositDialog(BaseDialog):
 
         # Validate if an amount is specified
         if amount <= 0:
-            self.show_error("Le montant doit être supérieur à zéro.")
+            self.show_error(
+                TranslationManager.tr("The amount must be greater than zero.")
+            )
             return
 
         try:
-            # Database logic: deduct the amount from the customer's balance
-            from sqlalchemy.orm import Session
-            from sqlalchemy.exc import SQLAlchemyError
-            from database.database import SessionLocal
-            from database.models import Customer
-
             session = SessionLocal()
 
             deposit = (
@@ -64,13 +65,15 @@ class WithdrawDepositDialog(BaseDialog):
             customer = session.query(Customer).filter_by(id=self.customer_id).first()
             # Check if the customer has sufficient balance
             if deposit.current_debt < amount:
-                self.show_error("Solde insuffisant pour effectuer ce retrait.")
+                self.show_error(
+                    TranslationManager.tr("Insufficient balance for withdrawal.")
+                )
                 return
 
             old_data = {
-                "nom": customer.name,
-                "Depot libere": deposit.released_deposit,
-                "dette actuelle": deposit.current_debt,
+                TranslationManager.tr("Name"): customer.name,
+                TranslationManager.tr("Released Deposit"): deposit.released_deposit,
+                TranslationManager.tr("Current Debt"): deposit.current_debt,
             }
 
             # Deduct the amount and save changes
@@ -80,16 +83,18 @@ class WithdrawDepositDialog(BaseDialog):
             # Log audit entry
             log_audit_entry(
                 db_session=session,
-                table_name="Dépôt",
-                operation="RETIRER",
+                table_name=TranslationManager.tr("Deposit"),
+                operation=TranslationManager.tr("WITHDRAW"),
                 record_id=deposit.id,
                 user_id=self.user_id,
                 changes={
                     "old": old_data,
                     "new": {
-                        "nom": customer.name,
-                        "depot libere": deposit.released_deposit,
-                        "dette courant": deposit.current_debt,
+                        TranslationManager.tr("Name"): customer.name,
+                        TranslationManager.tr(
+                            "Released Deposit"
+                        ): deposit.released_deposit,
+                        TranslationManager.tr("Current Debt"): deposit.current_debt,
                     },
                 },
             )
@@ -101,16 +106,18 @@ class WithdrawDepositDialog(BaseDialog):
             session.commit()
 
             # Inform the user of success
-            QMessageBox.information(self, "Succès", "Retrait effectué avec succès.")
-
-            # Add any necessary logging or additional logic here
-            # For example, record a transaction log if needed
-            # Comment: Successfully updated the customer's balance in the database.
+            QMessageBox.information(
+                self,
+                TranslationManager.tr("Success"),
+                TranslationManager.tr("Withdrawal completed successfully."),
+            )
 
             self.accept()
 
         except SQLAlchemyError as e:
             session.rollback()
-            self.show_error(f"Erreur lors de l'accès à la base de données: {str(e)}")
+            self.show_error(
+                f"{TranslationManager.tr('Error accessing the database:')} {str(e)}"
+            )
         finally:
             session.close()

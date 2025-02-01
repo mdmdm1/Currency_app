@@ -12,12 +12,13 @@ from dialogs.pay_debt_dialog import PayDebtDialog
 from database.models import Customer, Debt
 from database.database import SessionLocal
 from pages.base_page import BasePage
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class DebtPage(BasePage):
     def __init__(self, parent):
-        super().__init__(parent, title="Gestion des Dettes")
+        super().__init__(parent, title=TranslationManager.tr("Gestion des Dettes"))
         self.user_id = parent.user_id
         self.init_ui()
 
@@ -25,13 +26,13 @@ class DebtPage(BasePage):
         # Set up table headers
         self.setup_table_headers(
             [
-                "Nom",
-                "NNI",
-                "Date de création",
-                "Montant total",
-                "Montant payé",
-                "Dette actuelle",
-                "Actions",
+                TranslationManager.tr("Nom"),
+                TranslationManager.tr("NNI"),
+                TranslationManager.tr("Date de création"),
+                TranslationManager.tr("Montant total"),
+                TranslationManager.tr("Montant payé"),
+                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Actions"),
             ]
         )
 
@@ -40,10 +41,10 @@ class DebtPage(BasePage):
         self.table.setColumnWidth(6, 170)
 
         # Add debt button
-        add_button = QPushButton("Ajouter une dette")
-        add_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        add_button.clicked.connect(self.add_debt)
-        self.layout.addWidget(add_button, alignment=Qt.AlignBottom | Qt.AlignRight)
+        self.add_button = QPushButton(TranslationManager.tr("Ajouter une dette"))
+        self.add_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.add_button.clicked.connect(self.add_debt)
+        self.layout.addWidget(self.add_button, alignment=Qt.AlignBottom | Qt.AlignRight)
 
         self.load_debt_data()
 
@@ -101,13 +102,13 @@ class DebtPage(BasePage):
                 # Configure action buttons for this row
                 buttons_config = [
                     {
-                        "text": "Payer",
+                        "text": TranslationManager.tr("Payer"),
                         "color": "#ffc107",
                         "callback": self.pay_debt,
                         "width": 70,
                     },
                     {
-                        "text": "Supprimer",
+                        "text": TranslationManager.tr("Supprimer"),
                         "color": "#dc3545",
                         "callback": self.delete_debt,
                         "width": 76,
@@ -115,10 +116,14 @@ class DebtPage(BasePage):
                 ]
                 self.add_action_buttons(row_idx, debt_id, buttons_config)
 
-            self.update_total_label(total_debt, "Total Dette")
+            self.total_prefix = TranslationManager.tr("Total Dette")
+            self.update_total_label(total_debt, TranslationManager.tr("Total Dette"))
 
         except SQLAlchemyError as e:
-            self.show_error_message("Erreur", f"Erreur lors du chargement: {str(e)}")
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
+            )
         finally:
             session.close()
 
@@ -135,8 +140,8 @@ class DebtPage(BasePage):
     def delete_debt(self, debt_id, row):
         confirmation = QMessageBox.question(
             self,
-            "Confirmer la suppression",
-            "Êtes-vous sûr de vouloir supprimer cette dette ?",
+            TranslationManager.tr("Confirmer la suppression"),
+            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette dette ?"),
             QMessageBox.Yes | QMessageBox.No,
         )
         if confirmation == QMessageBox.Yes:
@@ -150,12 +155,16 @@ class DebtPage(BasePage):
                 if debt:
                     # Record the deleted data for audit log
                     deleted_data = {
-                        "name": customer.name,
-                        "montant": debt.amount,
-                        "date du dette": debt.debt_date.strftime("%Y-%m-%d"),
-                        "dette actuelle": debt.current_debt,
-                        "dette payer": debt.paid_debt,
-                        "date du creation": debt.created_at.strftime("%Y-%m-%d"),
+                        TranslationManager.tr("name"): customer.name,
+                        TranslationManager.tr("montant"): debt.amount,
+                        TranslationManager.tr("date du dette"): debt.debt_date.strftime(
+                            "%Y-%m-%d"
+                        ),
+                        TranslationManager.tr("dette actuelle"): debt.current_debt,
+                        TranslationManager.tr("dette payer"): debt.paid_debt,
+                        TranslationManager.tr(
+                            "date du creation"
+                        ): debt.created_at.strftime("%Y-%m-%d"),
                     }
 
                     session.delete(debt)
@@ -164,8 +173,8 @@ class DebtPage(BasePage):
                     # Log audit entry
                     log_audit_entry(
                         db_session=session,
-                        table_name="Dette",
-                        operation="SUPPRESSION",
+                        table_name=TranslationManager.tr("Dette"),
+                        operation=TranslationManager.tr("SUPPRESSION"),
                         record_id=debt_id,
                         user_id=self.user_id,
                         changes=deleted_data,
@@ -173,7 +182,34 @@ class DebtPage(BasePage):
                     self.load_debt_data()
             except SQLAlchemyError as e:
                 self.show_error_message(
-                    "Erreur", f"Erreur lors de la suppression: {str(e)}"
+                    TranslationManager.tr("Erreur"),
+                    f"{TranslationManager.tr('Erreur lors de la suppression')}: {str(e)}",
                 )
             finally:
                 session.close()
+
+    def retranslate_ui(self):
+        # Update the window title
+        self.setWindowTitle(TranslationManager.tr("Gestion des Dettes"))
+
+        # Update table headers
+        self.setup_table_headers(
+            [
+                TranslationManager.tr("Nom"),
+                TranslationManager.tr("NNI"),
+                TranslationManager.tr("Date de création"),
+                TranslationManager.tr("Montant total"),
+                TranslationManager.tr("Montant payé"),
+                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Actions"),
+            ]
+        )
+
+        # Update the Add Debt button text
+        for widget in self.layout.children():
+            if isinstance(widget, QPushButton) and widget.text() != "":
+                widget.setText(TranslationManager.tr("buttons.Update Debt"))
+
+        self.add_button.setText(TranslationManager.tr("Ajouter une dette"))
+
+        self.load_debt_data()

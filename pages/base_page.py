@@ -9,7 +9,9 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QLabel,
 )
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QLocale
+
+from utils.translation_manager import TranslationManager
 
 
 class BasePage(QWidget):
@@ -157,15 +159,16 @@ class BasePage(QWidget):
         # Set the container as the cell widget
         self.table.setCellWidget(row, self.table.columnCount() - 1, container)
 
-    def format_french_number(self, amount):
-        """Format number in French style"""
-        integer_part, decimal_part = f"{amount:.2f}".split(".")
-        integer_part = " ".join(
-            [integer_part[max(i - 3, 0) : i] for i in range(len(integer_part), 0, -3)][
-                ::-1
-            ]
-        )
-        return f"{integer_part},{decimal_part}"
+    def format_french_number(self, number):
+        """Format a number according to the current locale."""
+        locale = QLocale()
+        if (
+            self.parent_window.translation_manager.current_language == "ar"
+        ):  # Check if the current language is Arabic
+            locale = QLocale(
+                QLocale.French, QLocale.France
+            )  # Use Arabic locale for RTL
+        return locale.toString(float(number), "f", 2)  # Format with 2 decimal places
 
     def show_error_message(self, title, message):
         """Show error message dialog"""

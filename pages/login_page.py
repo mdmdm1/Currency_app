@@ -18,6 +18,9 @@ from sqlalchemy import select
 from database.models import User
 from pathlib import Path
 
+from utils.language_switcher import LanguageSwitcher
+from utils.translation_manager import TranslationManager
+
 
 class LoginPage(QMainWindow):
     login_successful = pyqtSignal(object)
@@ -25,7 +28,11 @@ class LoginPage(QMainWindow):
     def __init__(self, db_session: Session):
         super().__init__()
         self.db_session = db_session
-        self.setWindowTitle("Banque de Devises - Connexion")
+
+        # Get existing TranslationManager instance instead of creating new one
+        self.translation_manager = TranslationManager()
+
+        self.setWindowTitle(TranslationManager.tr("GestiFin Pro - Connexion"))
         self.setFixedSize(400, 500)
 
         # Define resources directory
@@ -33,6 +40,7 @@ class LoginPage(QMainWindow):
         if not self.icons_dir.exists():
             self.icons_dir.mkdir(parents=True)
 
+        self.setup_language_switcher()
         self.setup_ui()
         self.center_on_screen()
 
@@ -44,7 +52,7 @@ class LoginPage(QMainWindow):
         layout.setContentsMargins(40, 40, 40, 40)
 
         # App title
-        title = QLabel("Banque de Devises")
+        title = QLabel("GestiFin Pro")
         title.setStyleSheet(
             """
             QLabel {
@@ -58,34 +66,36 @@ class LoginPage(QMainWindow):
         layout.addWidget(title)
 
         # Subtitle
-        subtitle = QLabel("Bienvenue ! Veuillez vous connecter à votre compte.")
-        subtitle.setStyleSheet("color: #7f8c8d; font-size: 14px;")
-        subtitle.setAlignment(Qt.AlignCenter)
-        layout.addWidget(subtitle)
+        self.subtitle = QLabel(
+            TranslationManager.tr("Bienvenue ! Veuillez vous connecter à votre compte.")
+        )
+        self.subtitle.setStyleSheet("color: #7f8c8d; font-size: 14px;")
+        self.subtitle.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.subtitle)
 
         layout.addSpacing(20)
 
         # Username input with fallback icon
-        username_container = self.create_input_with_fallback(
-            placeholder="Nom d'utilisateur",
+        self.username_container = self.create_input_with_fallback(
+            placeholder=TranslationManager.tr("Nom d'utilisateur"),
             icon_name="user-icon.png",
             fallback_text="👤",
         )
-        self.username_input = username_container.input_field
-        layout.addWidget(username_container)
+        self.username_input = self.username_container.input_field
+        layout.addWidget(self.username_container)
 
         # Password input with fallback icon
-        password_container = self.create_input_with_fallback(
-            placeholder="Mot de passe",
+        self.password_container = self.create_input_with_fallback(
+            placeholder=TranslationManager.tr("Mot de passe"),
             icon_name="lock-icon2.png",
             fallback_text="🔒",
             is_password=True,
         )
-        self.password_input = password_container.input_field
-        layout.addWidget(password_container)
+        self.password_input = self.password_container.input_field
+        layout.addWidget(self.password_container)
 
         # Login button
-        self.login_button = QPushButton("Connexion")
+        self.login_button = QPushButton(TranslationManager.tr("Connexion"))
         self.login_button.setFixedHeight(50)
         self.login_button.setCursor(Qt.PointingHandCursor)
         self.login_button.setStyleSheet(
@@ -97,6 +107,7 @@ class LoginPage(QMainWindow):
                 border-radius: 8px;
                 font-size: 16px;
                 font-weight: bold;
+                text-align: center;
             }
             QPushButton:hover {
                 background-color: #2980b9;
@@ -109,6 +120,7 @@ class LoginPage(QMainWindow):
         self.login_button.clicked.connect(self.handle_login)
         layout.addWidget(self.login_button)
 
+        layout.addWidget(self.language_switcher)
         # Status message
         self.status_label = QLabel("")
         self.status_label.setStyleSheet("color: #e74c3c; font-size: 14px;")
@@ -181,7 +193,11 @@ class LoginPage(QMainWindow):
         password = self.password_input.text().strip()
 
         if not username or not password:
-            self.show_error("Veuillez entrer le nom d'utilisateur et le mot de passe.")
+            self.show_error(
+                TranslationManager.tr(
+                    "Veuillez entrer le nom d'utilisateur et le mot de passe."
+                )
+            )
             return
 
         try:
@@ -192,19 +208,23 @@ class LoginPage(QMainWindow):
             result = self.db_session.execute(stmt).first()
 
             if not result:
-                self.show_error("Nom d'utilisateur ou mot de passe invalide.")
+                self.show_error(
+                    TranslationManager.tr("Nom d'utilisateur ou mot de passe invalide.")
+                )
                 return
 
             user_id, hashed_password, is_active = result
 
             if not is_active:
-                self.show_error("Ce compte a été désactivé.")
+                self.show_error(TranslationManager.tr("Ce compte a été désactivé."))
                 return
 
             # Use a separate thread for password verification
             QApplication.processEvents()  # Keep UI responsive
             if not self.verify_password(password, hashed_password):
-                self.show_error("Nom d'utilisateur ou mot de passe invalide.")
+                self.show_error(
+                    TranslationManager.tr("Nom d'utilisateur ou mot de passe invalide.")
+                )
                 return
 
             # Construct user object with minimal data
@@ -213,7 +233,7 @@ class LoginPage(QMainWindow):
             self.close()
 
         except Exception as e:
-            self.show_error(f"Erreur de connexion : {str(e)}")
+            self.show_error(TranslationManager.tr("Erreur de connexion : ") + str(e))
 
     def verify_password(self, plain_password: str, hashed_password: str) -> bool:
         try:
@@ -223,6 +243,43 @@ class LoginPage(QMainWindow):
         except Exception:
             return False
 
+    def setup_language_switcher(self):
+        """Initialize the language switcher"""
+        self.language_switcher = LanguageSwitcher(self.translation_manager)
+        self.language_switcher.language_changed.connect(self.retranslate_ui)
+
     def show_error(self, message: str):
         self.status_label.setText(message)
         QTimer.singleShot(3000, lambda: self.status_label.setText(""))
+
+    def retranslate_ui(self):
+        """Update all UI texts when language changes"""
+        tr = TranslationManager.tr
+
+        self.setWindowTitle(tr("GestiFin Pro - Connexion"))
+        self.subtitle.setText(tr("Bienvenue ! Veuillez vous connecter à votre compte."))
+        self.username_container.input_field.setPlaceholderText(tr("Nom d'utilisateur"))
+        self.password_container.input_field.setPlaceholderText(tr("Mot de passe"))
+        self.login_button.setText(tr("Connexion"))
+
+        # Clear any existing error message
+        if self.status_label.text():
+            current_error = self.status_label.text()
+            # Translate common error messages
+            if (
+                current_error
+                == "Veuillez entrer le nom d'utilisateur et le mot de passe."
+            ):
+                self.status_label.setText(
+                    tr("Veuillez entrer le nom d'utilisateur et le mot de passe.")
+                )
+            elif current_error == "Nom d'utilisateur ou mot de passe invalide.":
+                self.status_label.setText(
+                    tr("Nom d'utilisateur ou mot de passe invalide.")
+                )
+            elif current_error == "Ce compte a été désactivé.":
+                self.status_label.setText(tr("Ce compte a été désactivé."))
+            elif current_error.startswith("Erreur de connexion : "):
+                self.status_label.setText(
+                    tr("Erreur de connexion : ") + current_error.split(": ", 1)[1]
+                )

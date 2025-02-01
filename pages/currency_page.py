@@ -16,12 +16,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from pages.base_page import BasePage
 import json
 
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class CurrencyPage(BasePage):
     def __init__(self, parent):
-        super().__init__(parent, title="Gestion des Devises")
+        super().__init__(parent, title=TranslationManager.tr("Gestion des Devises"))
         self.user_id = parent.user_id
         self.init_ui()
 
@@ -29,12 +30,12 @@ class CurrencyPage(BasePage):
         # Define table headers, including the new 'Code' column
         self.setup_table_headers(
             [
-                "Devise",
-                "Code",
-                "Montant Disponible",
-                "Entrée",
-                "Sortie",
-                "Actions",
+                TranslationManager.tr("Devise"),
+                TranslationManager.tr("Code"),
+                TranslationManager.tr("Montant Disponible"),
+                TranslationManager.tr("Entrée"),
+                TranslationManager.tr("Sortie"),
+                TranslationManager.tr("Actions"),
             ]
         )
 
@@ -48,15 +49,15 @@ class CurrencyPage(BasePage):
 
         self.new_currency_input = QLineEdit()
         self.new_currency_input.setPlaceholderText(
-            "Entrez une nouvelle devise (ex. : Euro)"
+            TranslationManager.tr("Entrez une nouvelle devise (ex. : Euro)")
         )
 
         self.new_code_input = QLineEdit()
         self.new_code_input.setPlaceholderText(
-            "Entrez le code de la devise (ex. : EUR)"
+            TranslationManager.tr("Entrez le code de la devise (ex. : EUR)")
         )
 
-        add_button = QPushButton("Ajouter une Devise")
+        add_button = QPushButton(TranslationManager.tr("Ajouter une Devise"))
         add_button.clicked.connect(self.add_new_currency)
 
         top_layout.addWidget(self.new_currency_input)
@@ -90,24 +91,28 @@ class CurrencyPage(BasePage):
 
                 # Input field
                 input_field = QLineEdit()
-                input_field.setPlaceholderText("Montant à ajouter")
+                input_field.setPlaceholderText(
+                    TranslationManager.tr("Montant à ajouter")
+                )
                 self.table.setCellWidget(row, 3, input_field)
 
                 # Output field
                 output_field = QLineEdit()
-                output_field.setPlaceholderText("Montant à soustraire")
+                output_field.setPlaceholderText(
+                    TranslationManager.tr("Montant à soustraire")
+                )
                 self.table.setCellWidget(row, 4, output_field)
 
                 # Configure action buttons for this row
                 buttons_config = [
                     {
-                        "text": "Mettre à jour",
+                        "text": TranslationManager.tr("Mettre à jour"),
                         "color": "#ffc107",
                         "callback": self.update_currency,
                         "width": 80,
                     },
                     {
-                        "text": "Supprimer",
+                        "text": TranslationManager.tr("Supprimer"),
                         "color": "#dc3545",
                         "callback": self.delete_currency,
                         "width": 80,
@@ -115,13 +120,17 @@ class CurrencyPage(BasePage):
                 ]
                 self.add_action_buttons(row, currency.id, buttons_config)
 
-            # Update the total
-            total = sum(currency.balance / currency.rate for currency in currencies)
-            self.update_total_label(total, "Total Disponible")
+                total = sum(currency.balance / currency.rate for currency in currencies)
+
+            self.total_prefix = TranslationManager.tr("Total Disponible")
+            self.update_total_label(total, self.total_prefix)
 
         except SQLAlchemyError as e:
             self.show_error_message(
-                "Erreur", f"Erreur lors du chargement des devises : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    "Erreur lors du chargement des devises : {0}"
+                ).format(str(e)),
             )
         finally:
             session.close()
@@ -132,12 +141,14 @@ class CurrencyPage(BasePage):
 
         if not currency_name or not currency_code:
             self.show_error_message(
-                "Erreur", "Veuillez entrer un nom et un code de devise"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Veuillez entrer un nom et un code de devise"),
             )
             return
         if len(currency_code) != 3:
             self.show_error_message(
-                "Erreur", "Code doit être composé de trois caractères"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Code doit être composé de trois caractères"),
             )
             return
         session = SessionLocal()
@@ -147,7 +158,10 @@ class CurrencyPage(BasePage):
                 session.query(Currency).filter_by(name=currency_name).first()
                 or session.query(Currency).filter_by(code=currency_code).first()
             ):
-                self.show_error_message("Erreur", "Cette devise ou ce code existe déjà")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Cette devise ou ce code existe déjà"),
+                )
                 return
 
             # Add a new currency
@@ -174,7 +188,10 @@ class CurrencyPage(BasePage):
         except SQLAlchemyError as e:
             session.rollback()
             self.show_error_message(
-                "Erreur", f"Échec de l'ajout de la devise : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Échec de l'ajout de la devise : {0}").format(
+                    str(e)
+                ),
             )
         finally:
             session.close()
@@ -191,7 +208,7 @@ class CurrencyPage(BasePage):
             try:
                 currency = session.query(Currency).filter_by(id=currency_id).first()
                 if not currency:
-                    raise ValueError("Devise introuvable")
+                    raise ValueError(TranslationManager.tr("Devise introuvable"))
 
                 # Record old state for audit log
                 old_data = {
@@ -231,21 +248,28 @@ class CurrencyPage(BasePage):
 
             except SQLAlchemyError as e:
                 session.rollback()
-                self.show_error_message("Erreur", f"Échec de la mise à jour : {str(e)}")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Échec de la mise à jour : {0}").format(
+                        str(e)
+                    ),
+                )
             finally:
                 session.close()
 
         except ValueError as e:
             self.show_error_message(
-                "Erreur",
-                "Veuillez entrer des montants valides pour l'entrée et la sortie",
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    "Veuillez entrer des montants valides pour l'entrée et la sortie"
+                ),
             )
 
     def delete_currency(self, currency_id, row):
         confirmation = QMessageBox.question(
             self,
-            "Confirmer la Suppression",
-            "Êtes-vous sûr de vouloir supprimer cette devise ?",
+            TranslationManager.tr("Confirmer la Suppression"),
+            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette devise ?"),
             QMessageBox.Yes | QMessageBox.No,
         )
         if confirmation == QMessageBox.Yes:
@@ -279,7 +303,67 @@ class CurrencyPage(BasePage):
                     self.load_currency_data()
             except SQLAlchemyError as e:
                 self.show_error_message(
-                    "Erreur", f"Erreur lors de la suppression : {str(e)}"
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Erreur lors de la suppression : {0}").format(
+                        str(e)
+                    ),
                 )
             finally:
                 session.close()
+
+    def retranslate_ui(self):
+        # Update the window title
+        self.setWindowTitle(TranslationManager.tr("Gestion des Devises"))
+
+        # Update table headers
+        self.setup_table_headers(
+            [
+                TranslationManager.tr("Devise"),
+                TranslationManager.tr("Code"),
+                TranslationManager.tr("Montant Disponible"),
+                TranslationManager.tr("Entrée"),
+                TranslationManager.tr("Sortie"),
+                TranslationManager.tr("Actions"),
+            ]
+        )
+
+        # Update placeholder text for input fields
+        self.new_currency_input.setPlaceholderText(
+            TranslationManager.tr("Entrez une nouvelle devise (ex. : Euro)")
+        )
+        self.new_code_input.setPlaceholderText(
+            TranslationManager.tr("Entrez le code de la devise (ex. : EUR)")
+        )
+
+        # Update the "Add Currency" button text
+        self.layout.itemAt(0).widget().layout().itemAt(2).widget().setText(
+            TranslationManager.tr("Ajouter une Devise")
+        )
+
+        # Update placeholder text and button labels in the table
+        for row in range(self.table.rowCount()):
+            # Input field
+            input_field = self.table.cellWidget(row, 3)
+            if input_field:
+                input_field.setPlaceholderText(
+                    TranslationManager.tr("Montant à ajouter")
+                )
+
+            # Output field
+            output_field = self.table.cellWidget(row, 4)
+            if output_field:
+                output_field.setPlaceholderText(
+                    TranslationManager.tr("Montant à soustraire")
+                )
+
+            # Action buttons
+            button_layout = self.table.cellWidget(row, 5).layout()
+            if button_layout:
+                update_button = button_layout.itemAt(0).widget()
+                update_button.setText(TranslationManager.tr("Mettre à jour"))
+
+                delete_button = button_layout.itemAt(1).widget()
+                delete_button.setText(TranslationManager.tr("Supprimer"))
+
+        self.total_prefix = TranslationManager.tr("Total Disponible")
+        self.load_currency_data

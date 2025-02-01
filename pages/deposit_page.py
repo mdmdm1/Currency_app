@@ -11,11 +11,12 @@ from database.models import Customer, Deposit
 from database.database import SessionLocal
 from dialogs.withdraw_deposit_dialog import WithdrawDepositDialog
 from pages.base_page import BasePage
+from utils.translation_manager import TranslationManager
 
 
 class DepositPage(BasePage):
     def __init__(self, parent):
-        super().__init__(parent, title="Gestion des dépôts")
+        super().__init__(parent, title=TranslationManager.tr("Gestion des dépôts"))
         self.user_id = parent.user_id
         self.init_ui()
 
@@ -23,13 +24,13 @@ class DepositPage(BasePage):
         # Set up table headers
         self.setup_table_headers(
             [
-                "Nom",
-                "NNI",
-                "Date de dépôt",
-                "Montant initial",
-                "Dépôt libéré",
-                "Dette actuelle",
-                "Actions",
+                TranslationManager.tr("Nom"),
+                TranslationManager.tr("NNI"),
+                TranslationManager.tr("Date de dépôt"),
+                TranslationManager.tr("Montant initial"),
+                TranslationManager.tr("Dépôt libéré"),
+                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Actions"),
             ]
         )
 
@@ -38,10 +39,10 @@ class DepositPage(BasePage):
         self.table.setColumnWidth(6, 170)
 
         # Add deposit button
-        add_button = QPushButton("Ajouter un dépôt")
-        add_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-        add_button.clicked.connect(self.add_deposit)
-        self.layout.addWidget(add_button, alignment=Qt.AlignBottom | Qt.AlignRight)
+        self.add_button = QPushButton(TranslationManager.tr("Ajouter un dépôt"))
+        self.add_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.add_button.clicked.connect(self.add_deposit)
+        self.layout.addWidget(self.add_button, alignment=Qt.AlignBottom | Qt.AlignRight)
 
         self.load_deposit_data()
 
@@ -91,29 +92,36 @@ class DepositPage(BasePage):
                 for col_idx, data in enumerate(row_data):
                     item = QTableWidgetItem(str(data))
                     item.setTextAlignment(Qt.AlignCenter)
+
+                    # Disable editing for the item
+                    item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsSelectable)
+
                     self.table.setItem(row_idx, col_idx, item)
 
                 # Configure buttons for this row
                 buttons_config = [
                     {
-                        "text": "Retirer",
+                        "text": TranslationManager.tr("Retirer"),
                         "color": "#dc3545",
                         "callback": self.withdraw,
                         "width": 70,
                     },
                     {
-                        "text": "Ajouter",
+                        "text": TranslationManager.tr("Ajouter"),
                         "color": "#28a745",
                         "callback": self.update_deposit,
                         "width": 70,
                     },
                 ]
                 self.add_action_buttons(row_idx, customer_id, buttons_config)
-
-            self.update_total_label(total_deposited, "Total Déposé")
+            self.total_prefix = TranslationManager.tr("Total Déposé")
+            self.update_total_label(total_deposited, self.total_prefix)
 
         except SQLAlchemyError as e:
-            self.show_error_message("Erreur", f"Erreur lors du chargement: {str(e)}")
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
+            )
         finally:
             session.close()
 
@@ -122,7 +130,7 @@ class DepositPage(BasePage):
         if dialog.exec_():
             self.load_deposit_data()
 
-    def update_deposit(self, customer_id, rox):
+    def update_deposit(self, customer_id, row):
         dialog = AddDepositDialog(self, customer_id=customer_id)
         if dialog.exec_():
             self.load_deposit_data()
@@ -131,3 +139,26 @@ class DepositPage(BasePage):
         dialog = WithdrawDepositDialog(self, identite)
         if dialog.exec_():
             self.load_deposit_data()
+
+    def retranslate_ui(self):
+
+        # Update page title
+        self.setWindowTitle(TranslationManager.tr("Gestion des dépôts"))
+
+        # Update table headers
+        self.setup_table_headers(
+            [
+                TranslationManager.tr("Nom"),
+                TranslationManager.tr("NNI"),
+                TranslationManager.tr("Date de dépôt"),
+                TranslationManager.tr("Montant initial"),
+                TranslationManager.tr("Dépôt libéré"),
+                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Actions"),
+            ]
+        )
+
+        self.add_button.setText(TranslationManager.tr("Ajouter un dépôt"))
+
+        self.total_prefix = TranslationManager.tr("Total Déposé")
+        self.load_deposit_data()

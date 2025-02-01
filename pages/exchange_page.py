@@ -21,12 +21,13 @@ from database.models import Currency
 from database.database import SessionLocal
 from dialogs.exchange_confirm_dialog import ConfirmationDialog
 from pages.base_page import BasePage
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class CurrencyExchangePage(BasePage):
     def __init__(self, parent):
-        super().__init__(parent, title="Échange de Devises")
+        super().__init__(parent, title=TranslationManager.tr("Échange de Devises"))
         self.user_id = parent.user_id
         self.init_currency_exchange_ui()
 
@@ -34,7 +35,13 @@ class CurrencyExchangePage(BasePage):
         """Initialize the currency exchange UI."""
         # Use the table from BasePage
         self.setup_table_headers(
-            ["Devise", "Solde", "1 MRU à Autres", "1 Autres à MRU", "Actions"]
+            [
+                TranslationManager.tr("Devise"),
+                TranslationManager.tr("Solde"),
+                TranslationManager.tr("1 MRU à Autres"),
+                TranslationManager.tr("1 Autres à MRU"),
+                TranslationManager.tr("Actions"),
+            ]
         )
         self.table.horizontalHeader().setSectionResizeMode(
             0, QHeaderView.ResizeToContents
@@ -51,7 +58,7 @@ class CurrencyExchangePage(BasePage):
 
         # Input fields
         self.amount_input = QLineEdit()
-        self.amount_input.setPlaceholderText("Entrez le montant")
+        self.amount_input.setPlaceholderText(TranslationManager.tr("Entrez le montant"))
         self.amount_input.setValidator(
             QDoubleValidator(0.0, 1e10, 2, notation=QDoubleValidator.StandardNotation)
         )
@@ -65,17 +72,21 @@ class CurrencyExchangePage(BasePage):
         # Form layout for input fields
         form_layout = QFormLayout()
         form_layout.setSpacing(10)
-        form_layout.addRow("Montant :", self.amount_input)
-        form_layout.addRow("De devise :", self.source_currency_combo)
-        form_layout.addRow("À devise :", self.target_currency_combo)
+        form_layout.addRow(TranslationManager.tr("Montant :"), self.amount_input)
+        form_layout.addRow(
+            TranslationManager.tr("De devise :"), self.source_currency_combo
+        )
+        form_layout.addRow(
+            TranslationManager.tr("À devise :"), self.target_currency_combo
+        )
 
         # Convert button
-        self.convert_button = QPushButton("Convertir")
+        self.convert_button = QPushButton(TranslationManager.tr("Convertir"))
         self.convert_button.setFixedWidth(200)
         self.convert_button.clicked.connect(self.perform_conversion)
 
         # Result Label
-        self.result_label = QLabel("Résultat : ")
+        self.result_label = QLabel(TranslationManager.tr("Résultat : "))
         self.result_label.setStyleSheet("font-weight: bold; font-size: 14px;")
 
         # Add widgets to converter layout
@@ -105,7 +116,10 @@ class CurrencyExchangePage(BasePage):
 
         except Exception as e:
             self.show_error_message(
-                "Erreur", f"Impossible de charger les devises : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Impossible de charger les devises : {0}").format(
+                    str(e)
+                ),
             )
         finally:
             session.close()
@@ -139,21 +153,25 @@ class CurrencyExchangePage(BasePage):
                 )
 
                 total = sum(currency.balance / currency.rate for currency in currencies)
-                self.update_total_label(total, "Total Disponible")
+
                 # Add modify button using BasePage's helper method
                 buttons_config = [
                     {
-                        "text": "Modifier Taux",
+                        "text": TranslationManager.tr("Modifier Taux"),
                         "color": "#007BFF",
                         "callback": lambda id, r: self.modify_rate(id),
                         "width": 100,
                     }
                 ]
                 self.add_action_buttons(row, currency.code, buttons_config)
-
+            self.total_prefix = TranslationManager.tr("Total Disponible")
+            self.update_total_label(total, self.total_prefix)
         except Exception as e:
             self.show_error_message(
-                "Erreur", f"Impossible de charger les taux de conversion : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    "Impossible de charger les taux de conversion : {0}"
+                ).format(str(e)),
             )
         finally:
             session.close()
@@ -164,33 +182,53 @@ class CurrencyExchangePage(BasePage):
         try:
             currency = session.query(Currency).filter_by(code=currency_code).first()
             if not currency:
-                self.show_error_message("Erreur", f"Devise {currency_code} introuvable")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Devise {0} introuvable").format(
+                        currency_code
+                    ),
+                )
                 return
 
-            new_rate, ok = QInputDialog.getDouble(
-                self,
-                "Modifier Taux",
-                f"Entrez un nouveau taux pour {currency_code} :",
-                value=currency.rate,
-                decimals=6,
-                min=0.000001,
-                max=1000000.0,
+            dialog = QInputDialog(self)
+            dialog.setWindowTitle(TranslationManager.tr("Modifier Taux"))
+            dialog.setLabelText(
+                TranslationManager.tr("Entrez un nouveau taux pour {0} :").format(
+                    currency_code
+                )
             )
+            dialog.setTextValue(str(currency.rate))
 
-            if ok:
-                # Record old state for audit log
-                old_data = {
-                    "taux": currency.rate,
-                }
+            # Use a validator to allow only valid double values
+            validator = QDoubleValidator(0.000001, 1000000.0, 6, self)
+            line_edit = dialog.findChild(QLineEdit)
+            if line_edit:
+                line_edit.setValidator(validator)
 
-                currency.rate = new_rate
-                session.commit()
+            ok = dialog.exec()
+            new_rate_text = dialog.textValue()
+
+            if ok and new_rate_text:
+                try:
+                    new_rate = float(new_rate_text)
+
+                    # Record old state for audit log
+                    old_data = {"taux": currency.rate}
+
+                    currency.rate = new_rate
+                    session.commit()
+                except ValueError:
+                    QMessageBox.warning(
+                        self,
+                        TranslationManager.tr("Erreur"),
+                        TranslationManager.tr("Veuillez entrer un nombre valide."),
+                    )
 
                 # Log audit entry
                 log_audit_entry(
                     db_session=session,
-                    table_name="Devise",
-                    operation="MISE A JOUR",
+                    table_name=TranslationManager.tr("Devise"),
+                    operation=TranslationManager.tr("MISE A JOUR"),
                     record_id=currency.id,
                     user_id=self.user_id,
                     changes={
@@ -202,12 +240,18 @@ class CurrencyExchangePage(BasePage):
                 )
                 self.load_conversion_rates()
                 self.show_message(
-                    "Succès", f"Taux pour {currency_code} mis à jour avec succès !"
+                    TranslationManager.tr("Succès"),
+                    TranslationManager.tr(
+                        "Taux pour {0} mis à jour avec succès !"
+                    ).format(currency_code),
                 )
 
         except Exception as e:
             self.show_error_message(
-                "Erreur", f"Échec de la modification du taux : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Échec de la modification du taux : {0}").format(
+                    str(e)
+                ),
             )
         finally:
             session.close()
@@ -218,7 +262,10 @@ class CurrencyExchangePage(BasePage):
         try:
             # Validate input
             if not self.amount_input.text():
-                self.show_error_message("Erreur", "Veuillez entrer un montant")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Veuillez entrer un montant"),
+                )
                 return
 
             amount = float(self.amount_input.text())
@@ -227,7 +274,9 @@ class CurrencyExchangePage(BasePage):
 
             if source_currency == target_currency:
                 self.result_label.setText(
-                    f"Résultat : {self.format_french_number(amount)} {target_currency}"
+                    TranslationManager.tr("Résultat : {0} {1}").format(
+                        self.format_french_number(amount), target_currency
+                    )
                 )
                 return
 
@@ -240,7 +289,10 @@ class CurrencyExchangePage(BasePage):
             )
 
             if not source_currency_obj or not target_currency_obj:
-                self.show_error_message("Erreur", "Taux de change introuvables")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Taux de change introuvables"),
+                )
                 return
 
             # Perform conversion
@@ -252,8 +304,13 @@ class CurrencyExchangePage(BasePage):
             if converted_amount > target_currency_obj.balance:
                 QMessageBox.warning(
                     self,
-                    "Solde insuffisant",
-                    f"Le solde disponible en {target_currency} ({self.format_french_number(target_currency_obj.balance)}) est insuffisant pour cette opération.",
+                    TranslationManager.tr("Solde insuffisant"),
+                    TranslationManager.tr(
+                        "Le solde disponible en {0} ({1}) est insuffisant pour cette opération."
+                    ).format(
+                        target_currency,
+                        self.format_french_number(target_currency_obj.balance),
+                    ),
                 )
                 return
 
@@ -271,13 +328,21 @@ class CurrencyExchangePage(BasePage):
                 )
                 # Update result label after successful conversion
                 self.result_label.setText(
-                    f"Résultat : {self.format_french_number(converted_amount)} {target_currency}"
+                    TranslationManager.tr("Résultat : {0} {1}").format(
+                        self.format_french_number(converted_amount), target_currency
+                    )
                 )
 
         except ValueError:
-            self.show_error_message("Erreur", "Montant invalide")
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Montant invalide"),
+            )
         except Exception as e:
-            self.show_error_message("Erreur", f"Échec de la conversion : {str(e)}")
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Échec de la conversion : {0}").format(str(e)),
+            )
         finally:
             session.close()
 
@@ -295,7 +360,10 @@ class CurrencyExchangePage(BasePage):
             )
 
             if not source_currency_obj or not target_currency_obj:
-                self.show_error_message("Erreur", "Devises introuvables")
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Devises introuvables"),
+                )
                 return
 
             # Record old state for audit log
@@ -303,7 +371,7 @@ class CurrencyExchangePage(BasePage):
                 "source": source_currency_obj.code,
                 "cible": target_currency_obj.code,
                 "solde source": source_currency_obj.balance,
-                "solde cible": source_currency_obj.balance,
+                "solde cible": target_currency_obj.balance,
             }
             # Update amounts
             target_currency_obj.balance -= converted_amount
@@ -315,8 +383,8 @@ class CurrencyExchangePage(BasePage):
             # Log audit entry
             log_audit_entry(
                 db_session=session,
-                table_name="Devise",
-                operation="ECHANGE",
+                table_name=TranslationManager.tr("Devise"),
+                operation=TranslationManager.tr("ECHANGE"),
                 record_id=target_currency_obj.id,
                 user_id=self.user_id,
                 changes={
@@ -325,19 +393,63 @@ class CurrencyExchangePage(BasePage):
                         "source": source_currency_obj.code,
                         "cible": target_currency_obj.code,
                         "solde source": source_currency_obj.balance,
-                        "solde cible": source_currency_obj.balance,
+                        "solde cible": target_currency_obj.balance,
                     },
                 },
             )
             session.commit()
 
-            QMessageBox.information(self, "Succès", "Échange effectué avec succès")
+            QMessageBox.information(
+                self,
+                TranslationManager.tr("Succès"),
+                TranslationManager.tr("Échange effectué avec succès"),
+            )
             self.load_conversion_rates()
 
         except Exception as e:
             session.rollback()
             self.show_error_message(
-                "Erreur", f"Impossible d'enregistrer les changements : {str(e)}"
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    "Impossible d'enregistrer les changements : {0}"
+                ).format(str(e)),
             )
         finally:
             session.close()
+
+    def retranslate_ui(self):
+        """Retranslate the UI elements for the CurrencyExchangePage."""
+        # Update page title
+        self.setWindowTitle(TranslationManager.tr("Échange de Devises"))
+
+        # Update table headers
+        self.setup_table_headers(
+            [
+                TranslationManager.tr("Devise"),
+                TranslationManager.tr("Solde"),
+                TranslationManager.tr("1 MRU à Autres"),
+                TranslationManager.tr("1 Autres à MRU"),
+                TranslationManager.tr("Actions"),
+            ]
+        )
+
+        # Update placeholders and labels
+        self.amount_input.setPlaceholderText(TranslationManager.tr("Entrez le montant"))
+        self.convert_button.setText(TranslationManager.tr("Convertir"))
+        self.result_label.setText(TranslationManager.tr("Résultat : "))
+
+        """         # Update form layout labels
+        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
+            0
+        ).widget().setText(TranslationManager.tr("Montant :"))
+        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
+            2
+        ).widget().setText(TranslationManager.tr("De devise :"))
+        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
+            4
+        ).widget().setText(TranslationManager.tr("À devise :"))
+        """
+
+        # Update any dynamically populated content
+        self.load_currencies_from_db()
+        self.load_conversion_rates()

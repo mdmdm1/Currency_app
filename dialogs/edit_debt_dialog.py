@@ -5,18 +5,18 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.translation_manager import TranslationManager
+
 
 class EditDebtDialog(BaseDialog):
     def __init__(self, parent=None, customer_id=None):
-        super().__init__("Ajouter un dépôt", parent)
+        super().__init__(TranslationManager.tr("Ajouter un dépôt"), parent)
         self.setGeometry(250, 250, 500, 400)
         self.customer_id = customer_id
-        # self.create_form_fields()
         if self.customer_id:
             self.populate_form_fields()
 
     def create_form_fields(self):
-        # Initialize input fields
         self.person_name_input = QLineEdit()
         self.person_id = QLineEdit()
         self.telephone_input = QLineEdit()
@@ -24,46 +24,29 @@ class EditDebtDialog(BaseDialog):
         self.date_naisse_input.setCalendarPopup(True)
         self.date_naisse_input.setDate(QDate.currentDate())
         self.date_naisse_input.setDisplayFormat("dd-MM-yyyy")
-
         self.amount_input = QLineEdit()
         self.deposit_date_input = QDateEdit(self)
         self.deposit_date_input.setCalendarPopup(True)
         self.deposit_date_input.setDate(QDate.currentDate())
         self.deposit_date_input.setDisplayFormat("dd-MM-yyyy")
 
-        # Define fields with their labels
         fields = [
-            ("Nom de la personne:", self.person_name_input),
-            ("Numéro d'identité:", self.person_id),
-            ("Téléphone:", self.telephone_input),
-            ("Date de naissance:", self.date_naisse_input),
-            ("Montant:", self.amount_input),
-            ("Date du dépôt:", self.deposit_date_input),
+            (
+                TranslationManager.tr("Nom de la personne:"),
+                self.person_name_input,
+            ),
+            (TranslationManager.tr("Numéro d'identité:"), self.person_id),
+            (TranslationManager.tr("Téléphone:"), self.telephone_input),
+            (
+                TranslationManager.tr("Date de naissance:"),
+                self.date_naisse_input,
+            ),
+            (TranslationManager.tr("Montant:"), self.amount_input),
+            (TranslationManager.tr("Date du dépôt:"), self.deposit_date_input),
         ]
 
-        # Create rows with modern styling
         for label, widget in fields:
             self.create_input_row(label, widget)
-
-    def validate_inputs(self):
-        if not self.validate_name(self.person_name_input.text()):
-            return False
-
-        valid, amount = self.validate_amount(self.amount_input.text())
-        if valid:
-            self.amount_input.setText(f"{amount:.2f}")
-            return True
-        return False
-
-    def get_values(self):
-        return (
-            self.person_name_input.text(),
-            self.person_id.text(),
-            self.telephone_input.text(),
-            self.date_naisse_input.text(),
-            self.amount_input.text(),
-            self.deposit_date_input.text(),
-        )
 
     def on_submit(self):
         name = self.person_name_input.text().strip()
@@ -73,22 +56,15 @@ class EditDebtDialog(BaseDialog):
         amount_str = self.amount_input.text().strip()
         deposit_date = self.deposit_date_input.date().toPyDate()
 
-        is_valid_name = self.validate_name(name)
+        if not self.validate_name(name):
+            return
         is_valid_amount, amount = self.validate_amount(amount_str)
 
-        if not (is_valid_name and is_valid_amount):
+        if not is_valid_amount:
             return
 
-        released_deposit = 0.0
-        current_debt = amount
-
-        session = SessionLocal()
-        """import logging
-
-        logging.basicConfig(level=logging.DEBUG)"""
-
         try:
-            # Use customer ID if provided; otherwise, find or create a new customer
+            session = SessionLocal()
             if self.customer_id:
                 customer = (
                     session.query(Customer).filter_by(id=self.customer_id).first()
@@ -96,7 +72,6 @@ class EditDebtDialog(BaseDialog):
             else:
                 customer = session.query(Customer).filter_by(identite=identite).first()
                 if not customer:
-                    print(name)
                     customer = Customer(
                         name=name,
                         identite=identite,
@@ -106,17 +81,11 @@ class EditDebtDialog(BaseDialog):
                     session.add(customer)
                     session.flush()
 
-            # Update or create deposit
             self.update_or_create_deposit(session, customer, amount, deposit_date)
-
             session.commit()
             self.accept()
-
         except SQLAlchemyError as e:
-            session.rollback()
-            QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
-        finally:
-            session.close()
+            QMessageBox.critical(self, TranslationManager.tr("Erreur"), str(e))
 
     def populate_form_fields(self):
         """
@@ -158,7 +127,11 @@ class EditDebtDialog(BaseDialog):
 
         except SQLAlchemyError as e:
             QMessageBox.critical(
-                self, "Erreur", f"Erreur lors de la récupération des données: {str(e)}"
+                self,
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    f"Erreur lors de la récupération des données: {str(e)}"
+                ),
             )
             self.reject()
         finally:
@@ -179,9 +152,9 @@ class EditDebtDialog(BaseDialog):
 
                 QMessageBox.information(
                     self,
-                    "Dépôt mis à jour",
-                    f"Le dépôt a été augmenté de {amount:.2f}. "
-                    f"Nouveau total: {deposit.amount:.2f}",
+                    TranslationManager.tr("Dépôt mis à jour"),
+                    TranslationManager.tr(f"Le dépôt a été augmenté de {amount:.2f}. "),
+                    TranslationManager.tr(f"Nouveau total: {deposit.amount:.2f}"),
                 )
             else:
                 # Create new deposit
@@ -197,8 +170,10 @@ class EditDebtDialog(BaseDialog):
 
                 QMessageBox.information(
                     self,
-                    "Nouveau dépôt",
-                    f"Un nouveau dépôt de {amount:.2f} a été créé.",
+                    TranslationManager.tr("Nouveau dépôt"),
+                    TranslationManager.tr(
+                        f"Un nouveau dépôt de {amount:.2f} a été créé."
+                    ),
                 )
 
             return deposit

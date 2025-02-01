@@ -13,23 +13,33 @@ from dialogs.add_user_dialog import AddUserDialog
 from dialogs.edit_user_dialog import EditUserDialog
 from dialogs.user_history_dialog import UserHistoryDialog
 from pages.base_page import BasePage
+from utils.translation_manager import TranslationManager
 
 
 class UserManagementPage(BasePage):
     def __init__(self, parent):
-        super().__init__(parent, title="Gestion des utilisateurs")
+        super().__init__(
+            parent, title=TranslationManager.tr("Gestion des utilisateurs")
+        )
         self.user_id = parent.user_id
         self.setup_ui()
 
     def setup_ui(self):
         """Initialize the UI for user management."""
         # Set up table headers
-        headers = ["Nom d'utilisateur", "Rôle", "Dernière connexion", "Actions"]
+        headers = [
+            TranslationManager.tr("Nom d'utilisateur"),
+            TranslationManager.tr("Rôle"),
+            TranslationManager.tr("Dernière connexion"),
+            TranslationManager.tr("Actions"),
+        ]
         self.setup_table_headers(headers)
 
         # Add a button for adding new users
         button_layout = QHBoxLayout()
-        self.add_user_button = QPushButton("Ajouter un utilisateur")
+        self.add_user_button = QPushButton(
+            TranslationManager.tr("Ajouter un utilisateur")
+        )
         self.add_user_button.clicked.connect(self.add_user)
         button_layout.addWidget(self.add_user_button, alignment=Qt.AlignLeft)
 
@@ -71,19 +81,19 @@ class UserManagementPage(BasePage):
                 # Add action buttons for each user
                 buttons_config = [
                     {
-                        "text": "Modifier",
+                        "text": TranslationManager.tr("Modifier"),
                         "color": "#28a745",
                         "callback": self.edit_user,
                         "width": 65,
                     },
                     {
-                        "text": "Supprimer",
+                        "text": TranslationManager.tr("Supprimer"),
                         "color": "#dc3545",
                         "callback": self.delete_user,
                         "width": 65,
                     },
                     {
-                        "text": "Historique",
+                        "text": TranslationManager.tr("Historique"),
                         "color": "#17a2b8",
                         "callback": self.view_user_history,
                         "width": 65,
@@ -93,7 +103,10 @@ class UserManagementPage(BasePage):
                 self.add_action_buttons(row_idx, user.id, buttons_config)
 
         except SQLAlchemyError as e:
-            self.show_error_message("Erreur", f"Erreur lors du chargement: {str(e)}")
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
+            )
         finally:
             session.close()
 
@@ -110,8 +123,10 @@ class UserManagementPage(BasePage):
     def delete_user(self, user_id, row):
         confirmation = QMessageBox.question(
             self,
-            "Confirmer la suppression",
-            "Êtes-vous sûr de vouloir supprimer cette dette ?",
+            TranslationManager.tr("Confirmer la suppression"),
+            TranslationManager.tr(
+                "Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
+            ),
             QMessageBox.Yes | QMessageBox.No,
         )
         if confirmation == QMessageBox.Yes:
@@ -124,7 +139,8 @@ class UserManagementPage(BasePage):
                     self.load_user_data()
             except SQLAlchemyError as e:
                 self.show_error_message(
-                    "Erreur", f"Erreur lors de la suppression: {str(e)}"
+                    TranslationManager.tr("Erreur"),
+                    f"{TranslationManager.tr('Erreur lors de la suppression')}: {str(e)}",
                 )
             finally:
                 session.close()

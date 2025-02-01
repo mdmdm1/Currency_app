@@ -5,18 +5,25 @@ from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
 from sqlalchemy.exc import SQLAlchemyError
 
+from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
 
 
 class AddDepositDialog(BaseDialog):
     def __init__(self, parent, customer_id=None):
-        super().__init__("Ajouter un dépôt", parent)
+        super().__init__(TranslationManager.tr("Ajouter un dépôt"), parent)
         self.setGeometry(250, 250, 500, 400)
         self.user_id = parent.user_id
         self.customer_id = customer_id
-        # self.create_form_fields()
         if self.customer_id:
-            self.populate_form_fields()
+            try:
+                self.populate_form_fields()
+            except Exception as e:
+                QMessageBox.warning(
+                    self,
+                    TranslationManager.tr("Erreur"),
+                    f"{TranslationManager.tr('Échec de récupération des données:')} {str(e)}",
+                )
 
     def create_form_fields(self):
         # Initialize input fields
@@ -36,12 +43,12 @@ class AddDepositDialog(BaseDialog):
 
         # Define fields with their labels
         fields = [
-            ("Nom de la personne:", self.person_name_input),
-            ("Numéro d'identité:", self.person_id),
-            ("Téléphone:", self.telephone_input),
-            ("Date de naissance:", self.date_naisse_input),
-            ("Montant:", self.amount_input),
-            ("Date du dépôt:", self.deposit_date_input),
+            (TranslationManager.tr("Nom de la personne:"), self.person_name_input),
+            (TranslationManager.tr("Numéro d'identité:"), self.person_id),
+            (TranslationManager.tr("Téléphone:"), self.telephone_input),
+            (TranslationManager.tr("Date de naissance:"), self.date_naisse_input),
+            (TranslationManager.tr("Montant:"), self.amount_input),
+            (TranslationManager.tr("Date du dépôt:"), self.deposit_date_input),
         ]
 
         # Create rows with modern styling
@@ -86,12 +93,8 @@ class AddDepositDialog(BaseDialog):
         current_debt = amount
 
         session = SessionLocal()
-        """import logging
-
-        logging.basicConfig(level=logging.DEBUG)"""
 
         try:
-            # Use customer ID if provided; otherwise, find or create a new customer
             if self.customer_id:
                 customer = (
                     session.query(Customer).filter_by(id=self.customer_id).first()
@@ -108,7 +111,6 @@ class AddDepositDialog(BaseDialog):
                     session.add(customer)
                     session.flush()
 
-            # Update or create deposit
             self.update_or_create_deposit(session, customer, amount, deposit_date)
 
             session.commit()
@@ -116,18 +118,17 @@ class AddDepositDialog(BaseDialog):
 
         except SQLAlchemyError as e:
             session.rollback()
-            QMessageBox.critical(self, "Erreur", f"Erreur SQLAlchemy: {str(e)}")
+            QMessageBox.critical(
+                self,
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur SQLAlchemy:')} {str(e)}",
+            )
         finally:
             session.close()
 
     def populate_form_fields(self):
-        """
-        Populate form fields with customer data and handle existing deposits
-        """
         session = SessionLocal()
         try:
-            # Get both customer and their latest deposit information
-
             customer_with_deposit = (
                 session.query(Customer, Deposit)
                 .outerjoin(Deposit, Customer.id == Deposit.customer_id)
@@ -137,76 +138,69 @@ class AddDepositDialog(BaseDialog):
 
             customer, deposit = customer_with_deposit
 
-            # Populate customer information
             self.person_name_input.setText(customer.name)
             self.person_id.setText(customer.identite)
             self.telephone_input.setText(customer.telephone)
 
-            # Convert date_naisse to QDate if it exists
             if customer.date_naisse:
                 self.date_naisse_input.setDate(customer.date_naisse)
 
-            # Disable customer info fields since we're adding to existing customer
             self.person_name_input.setEnabled(False)
             self.person_id.setEnabled(False)
             self.telephone_input.setEnabled(False)
             self.date_naisse_input.setEnabled(False)
 
-            # Set today's date for the new deposit
             self.deposit_date_input.setDate(QDate.currentDate())
-
-            # Focus on the amount field since it's the main field to fill
             self.amount_input.setFocus()
 
         except SQLAlchemyError as e:
             QMessageBox.critical(
-                self, "Erreur", f"Erreur lors de la récupération des données: {str(e)}"
+                self,
+                TranslationManager.tr("Erreur"),
+                f"{TranslationManager.tr('Erreur lors de la récupération des données:')} {str(e)}",
             )
             self.reject()
         finally:
             session.close()
 
     def update_or_create_deposit(self, session, customer, amount, deposit_date):
-        """
-        Update an existing deposit or create a new one.
-        """
         try:
             deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
 
             if deposit:
                 old_data = {
-                    "name": customer.name,
-                    "montant du depot": deposit.amount,
-                    "dette actuelle": deposit.current_debt,
+                    TranslationManager.tr("nom"): customer.name,
+                    TranslationManager.tr("montant du dépôt"): deposit.amount,
+                    TranslationManager.tr("dette actuelle"): deposit.current_debt,
                 }
-                # Update existing deposit
+
                 deposit.amount += amount
                 deposit.current_debt += amount
-                # Log audit entry
+
                 log_audit_entry(
                     db_session=session,
-                    table_name="Dépôt",
-                    operation="MISE A JOUR",
+                    table_name=TranslationManager.tr("Dépôt"),
+                    operation=TranslationManager.tr("MISE A JOUR"),
                     record_id=deposit.id,
                     user_id=self.user_id,
                     changes={
-                        "old": old_data,
-                        "new": {
-                            "nom": customer.name,
-                            "montant du depot": deposit.amount,
-                            "dette courant": deposit.current_debt,
+                        TranslationManager.tr("old"): old_data,
+                        TranslationManager.tr("new"): {
+                            TranslationManager.tr("nom"): customer.name,
+                            TranslationManager.tr("montant du dépôt"): deposit.amount,
+                            TranslationManager.tr(
+                                "dette courante"
+                            ): deposit.current_debt,
                         },
                     },
                 )
 
                 QMessageBox.information(
                     self,
-                    "Dépôt mis à jour",
-                    f"Le dépôt a été augmenté de {amount:.2f}. "
-                    f"Nouveau total: {deposit.amount:.2f}",
+                    TranslationManager.tr("Dépôt mis à jour"),
+                    f"{TranslationManager.tr('Le dépôt a été augmenté de')} {amount:.2f}. {TranslationManager.tr('Nouveau total:')} {deposit.amount:.2f}",
                 )
             else:
-                # Create new deposit
                 deposit = Deposit(
                     amount=amount,
                     deposit_date=deposit_date,
@@ -217,19 +211,23 @@ class AddDepositDialog(BaseDialog):
                 )
                 session.add(deposit)
                 session.commit()
-                # Log audit entry
+
                 log_audit_entry(
                     db_session=session,
-                    table_name="Dépôt",
-                    operation="INSERTION",
+                    table_name=TranslationManager.tr("Dépôt"),
+                    operation=TranslationManager.tr("INSERTION"),
                     record_id=deposit.id,
                     user_id=self.user_id,
-                    changes={"nom": customer.name, "montant": amount},
+                    changes={
+                        TranslationManager.tr("nom"): customer.name,
+                        TranslationManager.tr("montant"): amount,
+                    },
                 )
+
                 QMessageBox.information(
                     self,
-                    "Nouveau dépôt",
-                    f"Un nouveau dépôt de {amount:.2f} a été créé.",
+                    TranslationManager.tr("Nouveau dépôt"),
+                    f"{TranslationManager.tr('Un nouveau dépôt de')} {amount:.2f} {TranslationManager.tr('a été créé.')}",
                 )
 
             return deposit
