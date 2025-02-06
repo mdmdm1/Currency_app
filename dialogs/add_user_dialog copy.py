@@ -23,10 +23,6 @@ class AddUserDialog(BaseDialog):
         self.current_user_id = parent.user_id
 
     def create_form_fields(self):
-
-        for i in reversed(range(self.form_layout.count())):
-            self.form_layout.itemAt(i).widget().deleteLater()
-
         # Initialize input fields
         self.username_input = QLineEdit()
         self.password_input = QLineEdit()
@@ -48,15 +44,15 @@ class AddUserDialog(BaseDialog):
         )
 
         # Define fields with their labels
-        self.fields = [
+        fields = [
             (TranslationManager.tr("Nom d'utilisateur:"), self.username_input),
             (TranslationManager.tr("Mot de passe:"), self.password_input),
-            (TranslationManager.tr("Role:"), self.role_dropdown),
+            (TranslationManager.tr("Rôle:"), self.role_dropdown),
             (TranslationManager.tr("Statut du compte:"), self.is_active_input),
         ]
 
         # Create rows for each field
-        for label, widget in self.fields:
+        for label, widget in fields:
             self.create_input_row(label, widget)
 
     def create_buttons(self):

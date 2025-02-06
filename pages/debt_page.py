@@ -212,4 +212,8 @@ class DebtPage(BasePage):
 
         self.add_button.setText(TranslationManager.tr("Ajouter une dette"))
 
+        # Update the AddDebtDialog if it's open
+        # if hasattr(self, "add_debt_dialog"):
+        #    self.add_debt_dialog.retranslate_ui()
+
         self.load_debt_data()

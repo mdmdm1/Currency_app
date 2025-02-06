@@ -149,3 +149,21 @@ class UserManagementPage(BasePage):
         dialog = UserHistoryDialog(user_id)
         if dialog.exec_() == QDialog.Accepted:
             self.load_user_data()
+
+    def retranslate_ui(self):
+
+        # Update page title
+        self.setWindowTitle(TranslationManager.tr("Gestion des utilisateurs"))
+
+        # Update table headers
+        self.setup_table_headers(
+            [
+                TranslationManager.tr("Nom d'utilisateur"),
+                TranslationManager.tr("Rôle"),
+                TranslationManager.tr("Dernière connexion"),
+                TranslationManager.tr("Actions"),
+            ]
+        )
+        self.add_user_button.setText(TranslationManager.tr("Ajouter un utilisateur"))
+
+        self.load_user_data()

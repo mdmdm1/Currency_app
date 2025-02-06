@@ -7,7 +7,7 @@ from utils.translation_manager import TranslationManager
 
 class EditUserDialog(BaseDialog):
     def __init__(self, parent, user_id):
-        super().__init__(TranslationManager.tr("Edit User"), parent)
+        super().__init__(TranslationManager.tr("Modifier l'utilisateur"), parent)
         self.current_user_id = parent.user_id
         self.user_id = user_id
 
@@ -16,7 +16,9 @@ class EditUserDialog(BaseDialog):
     def create_form_fields(self):
         """Create the form fields for editing user details."""
         self.username_input = QLineEdit()
-        self.create_input_row(TranslationManager.tr("Username:"), self.username_input)
+        self.create_input_row(
+            TranslationManager.tr("Nom d'utilisateur:"), self.username_input
+        )
 
         self.role_combobox = QComboBox()
         self.role_combobox.addItems(
@@ -34,14 +36,16 @@ class EditUserDialog(BaseDialog):
         new_role = self.role_combobox.currentText()
 
         if not new_username:
-            self.show_error(TranslationManager.tr("Username cannot be empty."))
+            self.show_error(
+                TranslationManager.tr("Le nom d'utilisateur ne pas être vide.")
+            )
             return
 
         session = SessionLocal()
         try:
             user = session.query(User).get(self.user_id)
             if not user:
-                self.show_error(TranslationManager.tr("User not found."))
+                self.show_error(TranslationManager.tr("Utilisateur introuvable."))
                 self.reject()
                 return
 
@@ -51,15 +55,18 @@ class EditUserDialog(BaseDialog):
 
             QMessageBox.information(
                 self,
-                TranslationManager.tr("Success"),
-                TranslationManager.tr("User successfully updated."),
+                TranslationManager.tr("Succès"),
+                TranslationManager.tr(
+                    "Les modifications ont été enregistrées avec succès."
+                ),
             )
             self.accept()
 
         except Exception as e:
             session.rollback()
             self.show_error(
-                TranslationManager.tr("Error saving changes:") + f" {str(e)}"
+                TranslationManager.tr("Erreur dans le sauvegarde les modifications:")
+                + f" {str(e)}"
             )
 
         finally:
@@ -71,7 +78,7 @@ class EditUserDialog(BaseDialog):
         try:
             user = session.query(User).get(self.user_id)
             if not user:
-                self.show_error(TranslationManager.tr("User not found."))
+                self.show_error(TranslationManager.tr("Utilisateur introuvable."))
                 self.reject()
                 return
 
@@ -79,7 +86,9 @@ class EditUserDialog(BaseDialog):
             self.role_combobox.setCurrentText(user.role)
 
         except Exception as e:
-            self.show_error(TranslationManager.tr("Error loading data:") + f" {str(e)}")
+            self.show_error(
+                TranslationManager.tr("Erreur de chargement de données:") + f" {str(e)}"
+            )
             self.reject()
 
         finally:

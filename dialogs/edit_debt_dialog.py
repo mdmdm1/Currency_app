@@ -1,5 +1,13 @@
-from PyQt5.QtWidgets import QLineEdit, QDateEdit, QLabel, QHBoxLayout, QMessageBox
-from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import (
+    QLineEdit,
+    QDateEdit,
+    QLabel,
+    QHBoxLayout,
+    QMessageBox,
+    QWidget,
+    QPushButton,
+)
+from PyQt5.QtCore import QDate, Qt
 from database.models import Customer, Deposit
 from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal

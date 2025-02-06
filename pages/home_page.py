@@ -243,14 +243,14 @@ class HomePage(QWidget):
                 )
                 self.update_stat_widget(
                     self.stats_widgets["currency"],
-                    f"{self.format_french_number(currency_total)} MRU",
+                    f"{self.format_french_number(currency_total)} {TranslationManager.tr('MRU')}",
                 )
 
                 # Debt statistics
                 debt_total = session.query(func.sum(Debt.current_debt)).scalar() or 0
                 self.update_stat_widget(
                     self.stats_widgets["debt"],
-                    f"{self.format_french_number(debt_total)} MRU",
+                    f"{self.format_french_number(debt_total)} {TranslationManager.tr('MRU')}",
                 )
 
                 # Deposit statistics
@@ -259,7 +259,7 @@ class HomePage(QWidget):
                 )
                 self.update_stat_widget(
                     self.stats_widgets["deposit"],
-                    f"{self.format_french_number(deposit_total)} MRU",
+                    f"{self.format_french_number(deposit_total)} {TranslationManager.tr('MRU')}",
                 )
 
                 # Customer count
@@ -301,7 +301,10 @@ class HomePage(QWidget):
         except Exception as e:
             print(f"Error loading data: {e}")
             self.show_error_message(
-                "Erreur", "Une erreur est survenue lors du chargement des données."
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr(
+                    "Une erreur est survenue lors du chargement des données."
+                ),
             )
 
     def format_french_number(self, amount):

@@ -251,6 +251,85 @@ QLineEdit:disabled, QSpinBox:disabled, QDoubleSpinBox:disabled, QDateEdit:disabl
     color: #a0aec0;
 }
 
+/* QDateEdit styling */
+QDateEdit {
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background-color: white;
+}
+
+QDateEdit:focus {
+    border-color: #3498db;
+    background-color: #ebf8ff;
+}
+
+QDateEdit:hover {
+    border-color: #cbd5e0;
+}
+
+QDateEdit::drop-down {
+    border: none;
+    width: 20px;
+}
+
+QDateEdit::down-arrow {
+    image: url(down_arrow.png);
+    width: 12px;
+    height: 12px;
+}
+
+/* Calendar popup styling */
+QCalendarWidget {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+}
+
+QCalendarWidget QToolButton {
+    color: #2c3e50;
+    background-color: #f0f2f5;
+    border: none;
+    border-radius: 4px;
+    margin: 5px;
+    padding: 5px;
+}
+
+QCalendarWidget QToolButton:hover {
+    background-color: #e2e8f0;
+}
+
+QCalendarWidget QMenu {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+}
+
+QCalendarWidget QSpinBox {
+    background-color: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    padding: 5px;
+}
+
+QCalendarWidget QSpinBox::up-button, QCalendarWidget QSpinBox::down-button {
+    background-color: #f0f2f5;
+    border: none;
+}
+
+QCalendarWidget QSpinBox::up-button:hover, QCalendarWidget QSpinBox::down-button:hover {
+    background-color: #e2e8f0;
+}
+
+QCalendarWidget QWidget#qt_calendar_navigationbar {
+    background-color: #f0f2f5;
+}
+
+QCalendarWidget QAbstractItemView {
+    background-color: white;
+    selection-background-color: #3498db;
+    selection-color: white;
+}
+
 /* Combobox styling */
 QComboBox {
     padding: 8px;
@@ -332,4 +411,75 @@ QLabel:hover {
 }
 
 
+/* style.css */
+[layoutDirection="rtl"] QLabel {
+    text-align: right;
+}
 
+[layoutDirection="rtl"] QLineEdit, 
+[layoutDirection="rtl"] QDateEdit {
+    text-align: right;
+}
+
+/* Dialog styling */
+QDialog {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid #e2e8f0;
+}
+
+/* Title label for the dialog */
+QLabel#dialog-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #1a202c;
+    margin-bottom: 15px;
+}
+
+/* Form input fields */
+QLineEdit, QDateEdit {
+    background-color: #ffffff;
+    border: 1px solid #cbd5e0;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 14px;
+    color: #2c503f;
+}
+
+QLineEdit:focus, QDateEdit:focus {
+    border: 1px solid #3498db;
+    outline: none;
+}
+
+/* Buttons inside the dialog */
+QPushButton#submit-button {
+    background-color: #3498db;
+    color: white;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+}
+
+QPushButton#submit-button:hover {
+    background-color: #2980b9;
+}
+
+QPushButton#cancel-button {
+    background-color: #f56565;
+    color: white;
+    font-size: 14px;
+    padding: 10px 20px;
+    border-radius: 6px;
+    border: none;
+}
+
+QPushButton#cancel-button:hover {
+    background-color: #e53e3e;
+}
+
+/* Form Layout */
+QFormLayout {
+    margin-bottom: 15px;
+}

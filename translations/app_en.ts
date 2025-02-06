@@ -1,892 +1,1040 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1">
+<TS version="2.1" language="en" sourcelanguage="fr">
 <context>
     <name>TranslationManager</name>
+    
     <message>
         <location filename="../pages/currency_page.py" line="25"/>
         <source>Gestion des Devises</source>
-        <translation type="unfinished"></translation>
+        <translation>Currency Management</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="373"/>
         <source>Devise</source>
-        <translation type="unfinished"></translation>
+        <translation>Currency</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="31"/>
         <source>Code</source>
-        <translation type="unfinished"></translation>
+        <translation>Code</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="31"/>
         <source>Montant Disponible</source>
-        <translation type="unfinished"></translation>
+        <translation>Available Amount</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="31"/>
         <source>Entrée</source>
-        <translation type="unfinished"></translation>
+        <translation>Input</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="31"/>
         <source>Sortie</source>
-        <translation type="unfinished"></translation>
+        <translation>Output</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="34"/>
         <source>Actions</source>
-        <translation type="unfinished"></translation>
+        <translation>Actions</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="51"/>
         <source>Entrez une nouvelle devise (ex. : Euro)</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter a new currency (e.g., Euro)</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="56"/>
         <source>Entrez le code de la devise (ex. : EUR)</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter the currency code (e.g., EUR)</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="60"/>
         <source>Ajouter une Devise</source>
-        <translation type="unfinished"></translation>
+        <translation>Add a Currency</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="94"/>
         <source>Montant à ajouter</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount to Add</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="101"/>
         <source>Montant à soustraire</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount to Subtract</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="109"/>
         <source>Mettre à jour</source>
-        <translation type="unfinished"></translation>
+        <translation>Update</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="90"/>
         <source>Supprimer</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="156"/>
         <source>Total Disponible</source>
-        <translation type="unfinished"></translation>
+        <translation>Total Available</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="129"/>
         <source>Erreur</source>
-        <translation type="unfinished"></translation>
+        <translation>Error</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="128"/>
         <source>Erreur lors du chargement des devises : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Error while loading currencies: {0}</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="142"/>
         <source>Veuillez entrer un nom et un code de devise</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter a currency name and code</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="148"/>
         <source>Code doit être composé de trois caractères</source>
-        <translation type="unfinished"></translation>
+        <translation>Code must be three characters long</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="160"/>
         <source>Cette devise ou ce code existe déjà</source>
-        <translation type="unfinished"></translation>
+        <translation>This currency or code already exists</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="189"/>
-        <source>Échec de l'ajout de la devise : {0}</source>
-        <translation type="unfinished"></translation>
+        <source>Échec de l&apos;ajout de la devise : {0}</source>
+        <translation>Failed to add currency: {0}</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="210"/>
         <source>Devise introuvable</source>
-        <translation type="unfinished"></translation>
+        <translation>Currency not found</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="250"/>
         <source>Échec de la mise à jour : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to update: {0}</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="260"/>
-        <source>Veuillez entrer des montants valides pour l'entrée et la sortie</source>
-        <translation type="unfinished"></translation>
+        <source>Veuillez entrer des montants valides pour l&apos;entrée et la sortie</source>
+        <translation>Please enter valid amounts for input and output</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="268"/>
         <source>Confirmer la Suppression</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirm Deletion</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="268"/>
         <source>Êtes-vous sûr de vouloir supprimer cette devise ?</source>
-        <translation type="unfinished"></translation>
+        <translation>Are you sure you want to delete this currency?</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="304"/>
         <source>Erreur lors de la suppression : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Error while deleting: {0}</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="21"/>
         <source>Gestion des Dettes</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt Management</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>Nom</source>
-        <translation type="unfinished"></translation>
+        <translation>Name</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>NNI</source>
-        <translation type="unfinished"></translation>
+        <translation>National ID</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="27"/>
         <source>Date de création</source>
-        <translation type="unfinished"></translation>
+        <translation>Creation Date</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="27"/>
         <source>Montant total</source>
-        <translation type="unfinished"></translation>
+        <translation>Total Amount</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="27"/>
         <source>Montant payé</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount Paid</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>Dette actuelle</source>
-        <translation type="unfinished"></translation>
+        <translation>Current Debt</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="15"/>
         <source>Ajouter une dette</source>
-        <translation type="unfinished"></translation>
+        <translation>Add a Debt</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="105"/>
         <source>Payer</source>
-        <translation type="unfinished"></translation>
+        <translation>Pay</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="119"/>
         <source>Total Dette</source>
-        <translation type="unfinished"></translation>
+        <translation>Total Debt</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="22"/>
+        <source>Ajouter un nouvel utilisateur</source>
+        <translation>Add a New User</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="37"/>
+        <source>admin</source>
+        <translation>Admin</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="38"/>
+        <source>utilisateur</source>
+        <translation>User</translation>    
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="39"/>
+        <source>auditeur</source>
+        <translation>Auditor</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="45"/>
+        <source>Actif</source>
+        <translation>Active</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="45"/>
+        <source>Inactif</source>
+        <translation>Inactive</translation>
+
+    </message>    
+    <message>
+        <location filename="../pages/add_user_dialog.py" line="52"/>
+        <source>Nom d&apos;utilisateur</source>
+        <translation>Username</translation>
+    </message>
+    <message>
+        <location filename="../pages/add_user_dialog.py" line="53"/>
+        <source>Mot de passe:</source>
+        <translation>Password</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="54"/>
+        <source>Rôle:</source>
+        <translation>Role:</translation> 
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="55"/>
+        <source>Statut du compte:</source>
+        <translation>Account Status</translation> 
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="124"/>
         <source>Confirmer la suppression</source>
-        <translation type="unfinished"></translation>
+        <translation>Confirm Deletion</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="140"/>
         <source>Êtes-vous sûr de vouloir supprimer cette dette ?</source>
-        <translation type="unfinished"></translation>
+        <translation>Are you sure you want to delete this debt?</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="95"/>
         <source>name</source>
-        <translation type="unfinished"></translation>
+        <translation>Name</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="215"/>
         <source>montant</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="159"/>
         <source>date du dette</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt Date</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="174"/>
         <source>dette actuelle</source>
-        <translation type="unfinished"></translation>
+        <translation>Current Debt</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="163"/>
         <source>dette payer</source>
-        <translation type="unfinished"></translation>
+        <translation>Pay Debt</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="164"/>
         <source>date du creation</source>
-        <translation type="unfinished"></translation>
+        <translation>Creation Date</translation>
     </message>
     <message>
         <location filename="../app6.py" line="102"/>
         <source>Dette</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt</translation>
     </message>
     <message>
         <location filename="../pages/debt_page.py" line="173"/>
         <source>SUPPRESSION</source>
-        <translation type="unfinished"></translation>
+        <translation>Delete</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="19"/>
         <source>Gestion des dépôts</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit Management</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>Date de dépôt</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit Date</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>Montant initial</source>
-        <translation type="unfinished"></translation>
+        <translation>Initial Amount</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="25"/>
         <source>Dépôt libéré</source>
-        <translation type="unfinished"></translation>
+        <translation>Released Deposit</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="13"/>
         <source>Ajouter un dépôt</source>
-        <translation type="unfinished"></translation>
+        <translation>Add a Deposit</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="104"/>
         <source>Retirer</source>
-        <translation type="unfinished"></translation>
+        <translation>Withdraw</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="110"/>
         <source>Ajouter</source>
-        <translation type="unfinished"></translation>
+        <translation>Add</translation>
     </message>
     <message>
         <location filename="../pages/deposit_page.py" line="118"/>
         <source>Total Déposé</source>
-        <translation type="unfinished"></translation>
+        <translation>Total Deposited</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="30"/>
         <source>Échange de Devises</source>
-        <translation type="unfinished"></translation>
+        <translation>Currency Exchange</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="37"/>
         <source>Solde</source>
-        <translation type="unfinished"></translation>
+        <translation>Balance</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="37"/>
         <source>1 MRU à Autres</source>
-        <translation type="unfinished"></translation>
+        <translation>1 MRU to Others</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="37"/>
         <source>1 Autres à MRU</source>
-        <translation type="unfinished"></translation>
+        <translation>1 Others to MRU</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="61"/>
         <source>Entrez le montant</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter the Amount</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="75"/>
         <source>Montant :</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount:</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="76"/>
         <source>De devise :</source>
-        <translation type="unfinished"></translation>
+        <translation>From Currency:</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="79"/>
         <source>À devise :</source>
-        <translation type="unfinished"></translation>
+        <translation>To Currency:</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="84"/>
         <source>Convertir</source>
-        <translation type="unfinished"></translation>
+        <translation>Convert</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="89"/>
         <source>Résultat : </source>
-        <translation type="unfinished"></translation>
+        <translation>Result:</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="118"/>
         <source>Impossible de charger les devises : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to load currencies: {0}</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="195"/>
         <source>Modifier Taux</source>
-        <translation type="unfinished"></translation>
+        <translation>Modify Rate</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="172"/>
         <source>Impossible de charger les taux de conversion : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to load conversion rates: {0}</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="187"/>
         <source>Devise {0} introuvable</source>
-        <translation type="unfinished"></translation>
+        <translation>Currency {0} not found</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="195"/>
         <source>Entrez un nouveau taux pour {0} :</source>
-        <translation type="unfinished"></translation>
+        <translation>Enter a new rate for {0}:</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="180"/>
         <source>MISE A JOUR</source>
-        <translation type="unfinished"></translation>
+        <translation>Update</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="135"/>
         <source>Succès</source>
-        <translation type="unfinished"></translation>
+        <translation>Success</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="231"/>
         <source>Taux pour {0} mis à jour avec succès !</source>
-        <translation type="unfinished"></translation>
+        <translation>Rate for {0} updated successfully!</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="239"/>
         <source>Échec de la modification du taux : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to modify rate: {0}</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="254"/>
         <source>Veuillez entrer un montant</source>
-        <translation type="unfinished"></translation>
+        <translation>Please enter an amount</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="319"/>
         <source>Résultat : {0} {1}</source>
-        <translation type="unfinished"></translation>
+        <translation>Result: {0} {1}</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="281"/>
         <source>Taux de change introuvables</source>
-        <translation type="unfinished"></translation>
+        <translation>Exchange rates not found</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="294"/>
         <source>Solde insuffisant</source>
-        <translation type="unfinished"></translation>
+        <translation>Insufficient Balance</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="294"/>
         <source>Le solde disponible en {0} ({1}) est insuffisant pour cette opération.</source>
-        <translation type="unfinished"></translation>
+        <translation>The available balance in {0} ({1}) is insufficient for this operation.</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="326"/>
         <source>Montant invalide</source>
-        <translation type="unfinished"></translation>
+        <translation>Invalid Amount</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="331"/>
         <source>Échec de la conversion : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Conversion failed: {0}</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="352"/>
         <source>Devises introuvables</source>
-        <translation type="unfinished"></translation>
+        <translation>Currencies not found</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="373"/>
         <source>ECHANGE</source>
-        <translation type="unfinished"></translation>
+        <translation>Exchange</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="391"/>
         <source>Échange effectué avec succès</source>
-        <translation type="unfinished"></translation>
+        <translation>Exchange completed successfully</translation>
     </message>
     <message>
         <location filename="../pages/exchange_page.py" line="400"/>
         <source>Impossible d&apos;enregistrer les changements : {0}</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to save changes: {0}</translation>
     </message>
     <message>
         <location filename="../pages/home_page.py" line="132"/>
         <source>Activités Récentes</source>
-        <translation type="unfinished"></translation>
+        <translation>Recent Activities</translation>
     </message>
     <message>
         <location filename="../pages/home_page.py" line="158"/>
         <source>Chargement des activités récentes...</source>
-        <translation type="unfinished"></translation>
+        <translation>Loading recent activities...</translation>
     </message>
     <message>
         <location filename="../pages/home_page.py" line="219"/>
-        <source>Erreur lors du chargement de l'activité</source>
-        <translation type="unfinished"></translation>
+        <source>Erreur lors du chargement de l&apos;activité</source>
+        <translation>Error while loading activity</translation>
     </message>
     <message>
         <location filename="../pages/login_page.py" line="30"/>
         <source>GestiFin Pro - Connexion</source>
-        <translation type="unfinished"></translation>
+        <translation>GestiFin Pro - Login</translation>
     </message>
     <message>
-        <location filename="../pages/login_page.py" line="63"/>
+        <location filename="../pages/login_page.py" line="60"/>
         <source>Bienvenue ! Veuillez vous connecter à votre compte.</source>
-        <translation type="unfinished"></translation>
+        <translation>Welcome! Please log in to your account.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="70"/>
+        <source>Nom d&apos;utilisateur</source>
+        <translation>Username</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="80"/>
+        <source>Mot de passe</source>
+        <translation>Password</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="90"/>
+        <source>Connexion</source>
+        <translation>Login</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="150"/>
+        <source>Veuillez entrer le nom d&apos;utilisateur et le mot de passe.</source>
+        <translation>Please enter the username and password.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="160"/>
+        <source>Nom d&apos;utilisateur ou mot de passe invalide.</source>
+        <translation>Invalid username or password.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="170"/>
+        <source>Ce compte a été désactivé.</source>
+        <translation>This account has been disabled.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="180"/>
+        <source>Erreur de connexion : </source>
+        <translation>Connection error: </translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="31"/>
         <source>Nom d&apos;utilisateur</source>
-        <translation type="unfinished"></translation>
+        <translation>Username</translation>
     </message>
     <message>
         <location filename="../pages/login_page.py" line="82"/>
         <source>Mot de passe</source>
-        <translation type="unfinished"></translation>
+        <translation>Password</translation>
     </message>
     <message>
         <location filename="../pages/login_page.py" line="92"/>
         <source>Connexion</source>
-        <translation type="unfinished"></translation>
+        <translation>Login</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="21"/>
         <source>Gestion des utilisateurs</source>
-        <translation type="unfinished"></translation>
+        <translation>User Management</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="32"/>
         <source>Rôle</source>
-        <translation type="unfinished"></translation>
+        <translation>Role</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="33"/>
         <source>Dernière connexion</source>
-        <translation type="unfinished"></translation>
+        <translation>Last Login</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="40"/>
         <source>Ajouter un utilisateur</source>
-        <translation type="unfinished"></translation>
+        <translation>Add a User</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="84"/>
         <source>Modifier</source>
-        <translation type="unfinished"></translation>
+        <translation>Edit</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="96"/>
         <source>Historique</source>
-        <translation type="unfinished"></translation>
+        <translation>History</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="124"/>
         <source>Êtes-vous sûr de vouloir supprimer cet utilisateur ?</source>
-        <translation type="unfinished"></translation>
+        <translation>Are you sure you want to delete this user?</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="34"/>
         <source>Nom de la personne:</source>
-        <translation type="unfinished"></translation>
+        <translation>Person's Name:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="38"/>
-        <source>Numéro d'identité:</source>
-        <translation type="unfinished"></translation>
+        <source>Numéro d&apos;identité:</source>
+        <translation>ID Number:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="39"/>
         <source>Téléphone:</source>
-        <translation type="unfinished"></translation>
+        <translation>Phone:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="40"/>
         <source>Date de naissance:</source>
-        <translation type="unfinished"></translation>
+        <translation>Date of Birth:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="44"/>
         <source>Montant:</source>
-        <translation type="unfinished"></translation>
+        <translation>Amount:</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="43"/>
         <source>Date du dette:</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt Date:</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="95"/>
         <source>montant du dette</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt Amount</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="215"/>
         <source>INSERTION</source>
-        <translation type="unfinished"></translation>
+        <translation>Insertion</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="215"/>
         <source>nom</source>
-        <translation type="unfinished"></translation>
+        <translation>Name</translation>
     </message>
     <message>
         <location filename="../dialogs/add_debt_dialog.py" line="135"/>
         <source>Dette ajoutée avec succès.</source>
-        <translation type="unfinished"></translation>
+        <translation>Debt added successfully.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="45"/>
         <source>Date du dépôt:</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit Date:</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="180"/>
         <source>montant du dépôt</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit Amount</translation>
     </message>
     <message>
         <location filename="../app6.py" line="103"/>
         <source>Dépôt</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="180"/>
         <source>old</source>
-        <translation type="unfinished"></translation>
+        <translation>Old</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="180"/>
         <source>new</source>
-        <translation type="unfinished"></translation>
+        <translation>New</translation>
     </message>
     <message>
         <location filename="../dialogs/add_deposit_dialog.py" line="180"/>
         <source>dette courante</source>
-        <translation type="unfinished"></translation>
+        <translation>Current Debt</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="153"/>
         <source>Dépôt mis à jour</source>
-        <translation type="unfinished"></translation>
+        <translation>Deposit Updated</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="171"/>
         <source>Nouveau dépôt</source>
-        <translation type="unfinished"></translation>
+        <translation>New Deposit</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="129"/>
         <source>Erreur lors de la récupération des données: {str(e)}</source>
-        <translation type="unfinished"></translation>
+        <translation>Error while retrieving data: {str(e)}</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="153"/>
         <source>Le dépôt a été augmenté de {amount:.2f}. </source>
-        <translation type="unfinished"></translation>
+        <translation>The deposit has been increased by {amount:.2f}.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="153"/>
         <source>Nouveau total: {deposit.amount:.2f}</source>
-        <translation type="unfinished"></translation>
+        <translation>New Total: {deposit.amount:.2f}</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="171"/>
         <source>Un nouveau dépôt de {amount:.2f} a été créé.</source>
-        <translation type="unfinished"></translation>
+        <translation>A new deposit of {amount:.2f} has been created.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="10"/>
-        <source>Edit User</source>
-        <translation type="unfinished"></translation>
+        <source>Modifier l&apos;utilisateur </source>
+        <translation>Edit User</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="19"/>
-        <source>Username:</source>
-        <translation type="unfinished"></translation>
+        <source>Nom d&apos;utilisateur:</source>
+        <translation>Username:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="22"/>
         <source>Admin</source>
-        <translation type="unfinished"></translation>
+        <translation>Admin</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="22"/>
-        <source>User</source>
-        <translation type="unfinished"></translation>
+        <source>Utilisateur</source>
+        <translation>User</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="22"/>
         <source>Visitor</source>
-        <translation type="unfinished"></translation>
+        <translation>Visitor</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="29"/>
         <source>Role:</source>
-        <translation type="unfinished"></translation>
+        <translation>Role:</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="37"/>
-        <source>Username cannot be empty.</source>
-        <translation type="unfinished"></translation>
+        <source>le Nom d&apos;utilisateur ne pas être vide.</source>
+        <translation>Username cannot be empty.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="74"/>
-        <source>User not found.</source>
-        <translation type="unfinished"></translation>
+        <source>Utilisateur introuvable.</source>
+        <translation>User not found.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="109"/>
-        <source>Success</source>
-        <translation type="unfinished"></translation>
+        <source>Succès</source>
+        <translation>Success</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="52"/>
-        <source>User successfully updated.</source>
-        <translation type="unfinished"></translation>
+        <source>Les modifications ont été enregistrées avec succès.</source>
+        <translation>Changes have been saved successfully.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="61"/>
-        <source>Error saving changes:</source>
-        <translation type="unfinished"></translation>
+        <source>Erreur dans le sauvegarde les modifications:</source>
+        <translation>Error while saving changes:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="52"/>
-        <source>Error loading data:</source>
-        <translation type="unfinished"></translation>
+        <source>Erreur de chargement de données:</source>
+        <translation>Error while loading data:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="27"/>
-        <source>Confirm Exchange</source>
-        <translation type="unfinished"></translation>
+        <source>Confirmer l&apos;échange</source>
+        <translation>Confirm Exchange</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="34"/>
-        <source>Source Currency:</source>
-        <translation type="unfinished"></translation>
+        <source>Devise source:</source>
+        <translation>Source Currency:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="37"/>
-        <source>Target Currency:</source>
-        <translation type="unfinished"></translation>
+        <source>Devise cible:</source>
+        <translation>Target Currency:</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="37"/>
-        <source>Amount:</source>
-        <translation type="unfinished"></translation>
+        <source>Montant:</source>
+        <translation>Amount:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="43"/>
-        <source>Converted Amount:</source>
-        <translation type="unfinished"></translation>
+        <source>Montant converti:</source>
+        <translation>Converted Amount:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="52"/>
-        <source>Confirm</source>
-        <translation type="unfinished"></translation>
+        <source>Confirmer</source>
+        <translation>Confirm</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="53"/>
-        <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <source>Annuler</source>
+        <translation>Cancel</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="15"/>
-        <source>Pay Debt</source>
-        <translation type="unfinished"></translation>
+        <source>Payer la dette</source>
+        <translation>Pay Debt</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>Current Debt:</source>
-        <translation type="unfinished"></translation>
+        <source>Dette actuelle:</source>
+        <translation>Current Debt:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="27"/>
-        <source>Amount to Pay:</source>
-        <translation type="unfinished"></translation>
+        <source>Montant à payer:</source>
+        <translation>Amount to Pay:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="150"/>
-        <source>Error</source>
-        <translation type="unfinished"></translation>
+        <source>Erreur</source>
+        <translation>Error</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="74"/>
-        <source>Debt not found.</source>
-        <translation type="unfinished"></translation>
+        <source>Dette non trouvée.</source>
+        <translation>Debt not found.</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="83"/>
-        <source>The paid amount cannot exceed the current debt.</source>
-        <translation type="unfinished"></translation>
+        <source>Le montant payé ne peut pas dépasser la dette actuelle.</source>
+        <translation>The amount paid cannot exceed the current debt.</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>The debt has been successfully updated:</source>
-        <translation type="unfinished"></translation>
+        <source>La dette a été mise à jour avec succès:</source>
+        <translation>The debt has been updated successfully:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>Paid Amount:</source>
-        <translation type="unfinished"></translation>
+        <source>Montant payé:</source>
+        <translation>Amount Paid:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="134"/>
         <source>SQLAlchemy Error:</source>
-        <translation type="unfinished"></translation>
+        <translation>SQLAlchemy Error:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="150"/>
-        <source>Please enter a valid amount.</source>
-        <translation type="unfinished"></translation>
+        <source>Veuillez entrer un montant valide.</source>
+        <translation>Please enter a valid amount.</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="13"/>
-        <source>User History</source>
-        <translation type="unfinished"></translation>
+        <source>Historique d&apos;utilisateur</source>
+        <translation>User History</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
         <source>Action</source>
-        <translation type="unfinished"></translation>
+        <translation>Action</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
         <source>Table</source>
-        <translation type="unfinished"></translation>
+        <translation>Table</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
-        <source>Record ID</source>
-        <translation type="unfinished"></translation>
+        <source>ID de l&apos;enregistrement</source>
+        <translation>Record ID</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
         <source>Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Details</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
-        <source>Timestamp</source>
-        <translation type="unfinished"></translation>
+        <source>Horodatage</source>
+        <translation>Timestamp</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="50"/>
-        <source>No history available for this user.</source>
-        <translation type="unfinished"></translation>
+        <source>Pas d&apos;historique pour cet utilisateur.</source>
+        <translation>No history for this user.</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="76"/>
-        <source>No details</source>
-        <translation type="unfinished"></translation>
+        <source>Pas de details</source>
+        <translation>No details</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="88"/>
-        <source>An error occurred while loading history.</source>
-        <translation type="unfinished"></translation>
+        <source>Erreur lors du chargement de l&apos;historique.</source>
+        <translation>Error loading history.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="23"/>
-        <source>Withdrawal</source>
-        <translation type="unfinished"></translation>
+        <source>Retrait</source>
+        <translation>Withdrawal</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="31"/>
-        <source>Amount to withdraw</source>
-        <translation type="unfinished"></translation>
+        <source>Montant à retirer</source>
+        <translation>Amount to withdraw</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="42"/>
-        <source>Withdrawal Date:</source>
-        <translation type="unfinished"></translation>
+        <source>Date de retrait:</source>
+        <translation>Withdrawal date:</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="54"/>
-        <source>The amount must be greater than zero.</source>
-        <translation type="unfinished"></translation>
+        <source>Le montant doit être supérieur à zéro.</source>
+        <translation>The amount must be greater than zero.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="68"/>
-        <source>Insufficient balance for withdrawal.</source>
-        <translation type="unfinished"></translation>
+        <source>Solde insuffisant pour le retrait.</source>
+        <translation>Insufficient balance for withdrawal.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Name</source>
-        <translation type="unfinished"></translation>
+        <source>Nom</source>
+        <translation>Name</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Released Deposit</source>
-        <translation type="unfinished"></translation>
+        <source>Dépôt libéré</source>
+        <translation>Released deposit</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Current Debt</source>
-        <translation type="unfinished"></translation>
+        <source>Dette actuelle</source>
+        <translation>Current debt</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Deposit</source>
-        <translation type="unfinished"></translation>
+        <source>Dépôt</source>
+        <translation>Deposit</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>WITHDRAW</source>
-        <translation type="unfinished"></translation>
+        <source>RETRAIT</source>
+        <translation>WITHDRAWAL</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="109"/>
-        <source>Withdrawal completed successfully.</source>
-        <translation type="unfinished"></translation>
+        <source>Retrait effectué avec succès.</source>
+        <translation>Withdrawal completed successfully.</translation>
     </message>
     <message>
         <location filename="../app6.py" line="87"/>
         <source>Bienvenue, </source>
-        <translation type="unfinished"></translation>
+        <translation>Welcome, </translation>
     </message>
     <message>
         <location filename="../app6.py" line="99"/>
         <source>Accueil</source>
-        <translation type="unfinished"></translation>
+        <translation>Home</translation>
     </message>
     <message>
         <location filename="../app6.py" line="100"/>
         <source>Devises</source>
-        <translation type="unfinished"></translation>
+        <translation>Currencies</translation>
     </message>
     <message>
         <location filename="../app6.py" line="101"/>
         <source>Échanges</source>
-        <translation type="unfinished"></translation>
+        <translation>Exchanges</translation>
     </message>
     <message>
         <location filename="../app6.py" line="107"/>
         <source>Gestion des employés</source>
-        <translation type="unfinished"></translation>
+        <translation>Employee Management</translation>
     </message>
     <message>
         <location filename="../app6.py" line="134"/>
         <source>Déconnexion</source>
-        <translation type="unfinished"></translation>
+        <translation>Logout</translation>
     </message>
+    <message>
+        <location filename="../dialogs/add_debt_dialog.py" line="61"/>
+        <source>Annuler</source>
+        <translation>Cancel</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_debt_dialog.py" line="62"/>
+        <source>Effectuer</source>
+        <translation>Execute</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="132"/>
+        <source>Total des Devises</source>
+        <translation>Total Currencies</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="133"/>
+        <source>Total des Dettes</source>
+        <translation>Total Debts</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="134"/>
+        <source>Total des Dépôts</source>
+        <translation>Total Deposits</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="135"/>
+        <source>Nombre de Clients</source>
+        <translation>Number of Clients</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="136"/>
+        <source>Activités Récentes</source>
+        <translation>Recent Activities</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="137"/>
+        <source>Chargement des activités récentes...</source>
+        <translation>Loading recent activities...</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="138"/>
+        <source>Erreur lors du chargement des données.</source>
+        <translation>Error loading data.</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="139"/>
+        <source>Aucune activité récente</source>
+        <translation>No recent activities</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="140"/>
+        <source>Erreur lors du chargement de l&apos;activité</source>
+        <translation>Error loading activity</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="246"/>
+        <source>MRU</source>
+        <translation>MRU</translation>
+    </message>
+
 </context>
 </TS>

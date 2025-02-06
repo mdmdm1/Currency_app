@@ -10,7 +10,7 @@ class UserHistoryDialog(QDialog):
     def __init__(self, user_id, parent=None):
         super().__init__(parent)
         self.user_id = user_id
-        self.setWindowTitle(TranslationManager.tr("User History"))
+        self.setWindowTitle(TranslationManager.tr("Historique d'utilisateur"))
         self.setGeometry(300, 200, 800, 400)  # Adjusted for more columns
         self.init_ui()
 
@@ -23,9 +23,9 @@ class UserHistoryDialog(QDialog):
             [
                 TranslationManager.tr("Action"),
                 TranslationManager.tr("Table"),
-                TranslationManager.tr("Record ID"),
+                TranslationManager.tr("ID de l'enregistrement"),
                 TranslationManager.tr("Details"),
-                TranslationManager.tr("Timestamp"),
+                TranslationManager.tr("Horodatage"),
             ]
         )
         self.table.horizontalHeader().setStretchLastSection(True)
@@ -48,7 +48,7 @@ class UserHistoryDialog(QDialog):
             if not logs:
                 self.table.setRowCount(0)
                 no_logs_label = QLabel(
-                    TranslationManager.tr("No history available for this user.")
+                    TranslationManager.tr("Pas d'historique pour cet utilisateur.")
                 )
                 no_logs_label.setStyleSheet("color: gray; font-style: italic;")
                 self.layout().addWidget(no_logs_label)
@@ -65,7 +65,7 @@ class UserHistoryDialog(QDialog):
                     details = (
                         json.loads(log.changes)
                         if log.changes
-                        else TranslationManager.tr("No details")
+                        else TranslationManager.tr("Pas de details")
                     )
                     details_str = (
                         json.dumps(details, indent=2)
@@ -74,7 +74,7 @@ class UserHistoryDialog(QDialog):
                     )
                 except json.JSONDecodeError:
                     details_str = str(
-                        log.changes or TranslationManager.tr("No details")
+                        log.changes or TranslationManager.tr("Pas de details")
                     )
 
                 self.table.setItem(row, 3, QTableWidgetItem(details_str))
@@ -86,7 +86,7 @@ class UserHistoryDialog(QDialog):
         except Exception as e:
             print(f"{TranslationManager.tr('Error loading history:')} {e}")
             error_label = QLabel(
-                TranslationManager.tr("An error occurred while loading history.")
+                TranslationManager.tr("Erreur lors du chargement de l'historique.")
             )
             error_label.setStyleSheet("color: red;")
             self.layout().addWidget(error_label)

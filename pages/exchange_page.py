@@ -19,7 +19,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDoubleValidator
 from database.models import Currency
 from database.database import SessionLocal
-from dialogs.exchange_confirm_dialog import ConfirmationDialog
+from dialogs.exchange_confirm_dialog import ExchangeConfirmationDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
@@ -200,7 +200,7 @@ class CurrencyExchangePage(BasePage):
             dialog.setTextValue(str(currency.rate))
 
             # Use a validator to allow only valid double values
-            validator = QDoubleValidator(0.000001, 1000000.0, 6, self)
+            validator = CustomDoubleValidator(0.000001, 1000000.0, 6, self)
             line_edit = dialog.findChild(QLineEdit)
             if line_edit:
                 line_edit.setValidator(validator)
@@ -210,8 +210,9 @@ class CurrencyExchangePage(BasePage):
 
             if ok and new_rate_text:
                 try:
-                    new_rate = float(new_rate_text)
 
+                    new_rate_text = new_rate_text.replace(",", ".")
+                    new_rate = float(new_rate_text)
                     # Record old state for audit log
                     old_data = {"taux": currency.rate}
 
@@ -315,7 +316,7 @@ class CurrencyExchangePage(BasePage):
                 return
 
             # Show confirmation dialog
-            dialog = ConfirmationDialog(
+            dialog = ExchangeConfirmationDialog(
                 source_currency,
                 target_currency,
                 self.format_french_number(amount),
@@ -453,3 +454,11 @@ class CurrencyExchangePage(BasePage):
         # Update any dynamically populated content
         self.load_currencies_from_db()
         self.load_conversion_rates()
+
+
+# a custom validator to allow both dot and comma as decimal separators
+class CustomDoubleValidator(QDoubleValidator):
+    def validate(self, input_str, pos):
+        # Replace comma with dot for validation
+        input_str = input_str.replace(",", ".")
+        return super().validate(input_str, pos)

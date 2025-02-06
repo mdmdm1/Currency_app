@@ -9,9 +9,11 @@ from PyQt5.QtWidgets import (
     QLabel,
     QStackedWidget,
     QFrame,
+    QDialog,
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
+from dialogs.add_debt_dialog import AddDebtDialog
 from utils.language_switcher import LanguageSwitcher
 from pages.home_page import HomePage
 from pages.currency_page import CurrencyPage
@@ -49,6 +51,7 @@ class MainWindow(QWidget):
             "transactions": CurrencyExchangePage(self),
             "debt": DebtPage(self),
             "deposit": DepositPage(self),
+            # "add_debt": AddDebtDialog(self),
         }
 
         if self.is_admin:
@@ -59,7 +62,7 @@ class MainWindow(QWidget):
     def init_ui(self):
         """Initialize the user interface"""
         self.setWindowTitle("GestiFin Pro")
-        self.setGeometry(95, 70, 1200, 650)
+        self.setGeometry(95, 60, 1200, 650)
 
         # Set window icon
         icon_path = self.icons_dir / "icons" / "app_icon.png"
@@ -222,11 +225,20 @@ class MainWindow(QWidget):
             if hasattr(page, "retranslate_ui"):
                 page.retranslate_ui()
 
-        print("UI retranslation complete.")
+        # Set layout direction based on language
+        if self.translation_manager.current_language == "ar":
+            self.setLayoutDirection(Qt.RightToLeft)
+            # Propagate to all child widgets
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.RightToLeft)
+        else:
+            self.setLayoutDirection(Qt.LeftToRight)
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.LeftToRight)
 
     def setup_language_switcher(self):
         """Initialize the language switcher"""
-        self.language_switcher = LanguageSwitcher(self.translation_manager)
+        self.language_switcher = LanguageSwitcher(self.translation_manager, self)
 
         self.language_switcher.language_changed.connect(self.retranslate_ui)
 

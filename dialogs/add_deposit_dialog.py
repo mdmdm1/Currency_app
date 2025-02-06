@@ -1,5 +1,13 @@
-from PyQt5.QtWidgets import QLineEdit, QDateEdit, QLabel, QHBoxLayout, QMessageBox
-from PyQt5.QtCore import QDate
+from PyQt5.QtWidgets import (
+    QLineEdit,
+    QDateEdit,
+    QLabel,
+    QHBoxLayout,
+    QMessageBox,
+    QPushButton,
+    QWidget,
+)
+from PyQt5.QtCore import QDate, Qt
 from database.models import Customer, Deposit
 from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
@@ -12,7 +20,7 @@ from utils.audit_logger import log_audit_entry
 class AddDepositDialog(BaseDialog):
     def __init__(self, parent, customer_id=None):
         super().__init__(TranslationManager.tr("Ajouter un dépôt"), parent)
-        self.setGeometry(250, 250, 500, 400)
+        self.setGeometry(400, 65, 500, 400)
         self.user_id = parent.user_id
         self.customer_id = customer_id
         if self.customer_id:
@@ -64,6 +72,30 @@ class AddDepositDialog(BaseDialog):
             self.amount_input.setText(f"{amount:.2f}")
             return True
         return False
+
+    def create_buttons(self):
+        self.buttons_widget = QWidget()
+        buttons_layout = QHBoxLayout(self.buttons_widget)
+        buttons_layout.setSpacing(15)
+
+        self.cancel_button = QPushButton(TranslationManager.tr("Annuler"))
+        self.submit_button = QPushButton(TranslationManager.tr("Effectuer"))
+
+        self.submit_button.setMinimumHeight(45)
+        self.submit_button.setMinimumWidth(120)
+        self.submit_button.setCursor(Qt.PointingHandCursor)
+        self.submit_button.setStyleSheet(self._get_primary_button_style())
+
+        self.cancel_button.setMinimumHeight(45)
+        self.cancel_button.setMinimumWidth(120)
+        self.cancel_button.setCursor(Qt.PointingHandCursor)
+        self.cancel_button.setStyleSheet(self._get_secondary_button_style())
+
+        self.submit_button.clicked.connect(self.on_submit)
+        self.cancel_button.clicked.connect(self.reject)
+
+        buttons_layout.addWidget(self.cancel_button)
+        buttons_layout.addWidget(self.submit_button)
 
     def get_values(self):
         return (

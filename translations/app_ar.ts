@@ -3,6 +3,7 @@
 <TS version="2.1" language="ar" sourcelanguage="fr">
 <context>
     <name>TranslationManager</name>
+    
     <message>
         <location filename="../pages/currency_page.py" line="25"/>
         <source>Gestion des Devises</source>
@@ -56,12 +57,12 @@
     <message>
         <location filename="../pages/currency_page.py" line="94"/>
         <source>Montant à ajouter</source>
-        <translation>المبلغ المطلوب إضافته</translation>
+        <translation>المبلغ المضاف</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="101"/>
         <source>Montant à soustraire</source>
-        <translation>المبلغ المطلوب طرحه</translation>
+        <translation>المبلغ المطروح</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="109"/>
@@ -187,6 +188,62 @@
         <location filename="../pages/debt_page.py" line="119"/>
         <source>Total Dette</source>
         <translation>إجمالي الدين</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="22"/>
+        <source>Ajouter un nouvel utilisateur</source>
+        <translation>إضافة مستخدم</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="37"/>
+        <source>admin</source>
+        <translation>مدير</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="38"/>
+        <source>utilisateur</source>
+        <translation>مستخدم</translation>    
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="39"/>
+        <source>auditeur</source>
+        <translation>زائر</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="45"/>
+        <source>Actif</source>
+        <translation>نشط</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="45"/>
+        <source>Inactif</source>
+        <translation>معطل</translation>
+
+    </message>    
+    <message>
+        <location filename="../pages/add_user_dialog.py" line="52"/>
+        <source>Nom d&apos;utilisateur</source>
+        <translation>اسم المستخدم</translation>
+    </message>
+    <message>
+        <location filename="../pages/add_user_dialog.py" line="53"/>
+        <source>Mot de passe:</source>
+        <translation>:كلمة المرور</translation>
+    </message>
+    <message>
+        <location filename="../pages/add_user_dialog.py" line="53"/>
+        <source>Statut du compte:</source>
+        <translation>وضعية الحساب</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="54"/>
+        <source>Rôle:</source>
+        <translation>الدور:</translation> 
+    </message>
+    <message>
+        <location filename="../dialogs/add_user_dialog.py" line="55"/>
+        <source>Status du compte:</source>
+        <translation>:وضع الحساب</translation> 
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="124"/>
@@ -459,14 +516,39 @@
         <translation>اسم المستخدم</translation>
     </message>
     <message>
-        <location filename="../pages/login_page.py" line="82"/>
+        <location filename="../pages/login_page.py" line="70"/>
+        <source>Nom d&apos;utilisateur</source>
+        <translation>اسم المستخدم</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="80"/>
         <source>Mot de passe</source>
         <translation>كلمة المرور</translation>
     </message>
     <message>
-        <location filename="../pages/login_page.py" line="92"/>
+        <location filename="../pages/login_page.py" line="90"/>
         <source>Connexion</source>
         <translation>تسجيل الدخول</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="150"/>
+        <source>Veuillez entrer le nom d&apos;utilisateur et le mot de passe.</source>
+        <translation>يرجى إدخال اسم المستخدم وكلمة المرور.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="160"/>
+        <source>Nom d&apos;utilisateur ou mot de passe invalide.</source>
+        <translation>اسم المستخدم أو كلمة المرور غير صحيحة.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="170"/>
+        <source>Ce compte a été désactivé.</source>
+        <translation>تم تعطيل هذا الحساب.</translation>
+    </message>
+    <message>
+        <location filename="../pages/login_page.py" line="180"/>
+        <source>Erreur de connexion : </source>
+        <translation>خطأ في الاتصال: </translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="21"/>
@@ -615,12 +697,12 @@
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="10"/>
-        <source>Edit User</source>
+        <source>Modifier l&apos;utilisateur </source>
         <translation>تعديل المستخدم</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="19"/>
-        <source>Username:</source>
+        <source>Nom d&apos;utilisateur:</source>
         <translation>اسم المستخدم:</translation>
     </message>
     <message>
@@ -630,7 +712,7 @@
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="22"/>
-        <source>User</source>
+        <source>Utilisateur</source>
         <translation>مستخدم</translation>
     </message>
     <message>
@@ -645,107 +727,107 @@
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="37"/>
-        <source>Username cannot be empty.</source>
+        <source>le Nom d&apos;utilisateur ne pas être vide.</source>
         <translation>اسم المستخدم لا يمكن أن يكون فارغًا.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="74"/>
-        <source>User not found.</source>
+        <source>Utilisateur introuvable.</source>
         <translation>المستخدم غير موجود.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="109"/>
-        <source>Success</source>
+        <source>Succès</source>
         <translation>نجاح</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="52"/>
-        <source>User successfully updated.</source>
+        <source>Les modifications ont été enregistrées avec succès.</source>
         <translation>تم تحديث المستخدم بنجاح.</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_user_dialog.py" line="61"/>
-        <source>Error saving changes:</source>
+        <source>Erreur dans le sauvegarde les modifications:</source>
         <translation>حدث خطأ أثناء حفظ التغييرات:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="52"/>
-        <source>Error loading data:</source>
+        <source>Erreur de chargement de données:</source>
         <translation>حدث خطأ أثناء تحميل البيانات:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="27"/>
-        <source>Confirm Exchange</source>
+        <source>Confirmer l&apos;échange</source>
         <translation>تأكيد التبادل</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="34"/>
-        <source>Source Currency:</source>
+        <source>Devise source:</source>
         <translation>العملة المصدر:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="37"/>
-        <source>Target Currency:</source>
+        <source>Devise cible:</source>
         <translation>العملة الهدف:</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="37"/>
-        <source>Amount:</source>
+        <source>Montant:</source>
         <translation>المبلغ:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="43"/>
-        <source>Converted Amount:</source>
+        <source>Montant converti:</source>
         <translation>المبلغ المحول:</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="52"/>
-        <source>Confirm</source>
+        <source>Confirmer</source>
         <translation>تأكيد</translation>
     </message>
     <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="53"/>
-        <source>Cancel</source>
+        <source>Annuler</source>
         <translation>إلغاء</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="15"/>
-        <source>Pay Debt</source>
+        <source>Payer la dette</source>
         <translation>دفع الدين</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>Current Debt:</source>
+        <source>Dette actuelle:</source>
         <translation>الدين الحالي:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="27"/>
-        <source>Amount to Pay:</source>
+        <source>Montant à payer:</source>
         <translation>المبلغ المطلوب دفعه:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="150"/>
-        <source>Error</source>
+        <source>Erreur</source>
         <translation>خطأ</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="74"/>
-        <source>Debt not found.</source>
+        <source>Dette non trouvée.</source>
         <translation>الدين غير موجود.</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="83"/>
-        <source>The paid amount cannot exceed the current debt.</source>
+        <source>Le montant payé ne peut pas dépasser la dette actuelle.</source>
         <translation>لا يمكن أن يتجاوز المبلغ المدفوع الدين الحالي.</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>The debt has been successfully updated:</source>
+        <source>La dette a été mise à jour avec succès:</source>
         <translation>تم تحديث الدين بنجاح:</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="120"/>
-        <source>Paid Amount:</source>
+        <source>Montant payé:</source>
         <translation>المبلغ المدفوع:</translation>
     </message>
     <message>
@@ -755,12 +837,12 @@
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="150"/>
-        <source>Please enter a valid amount.</source>
+        <source>Veuillez entrer un montant valide.</source>
         <translation>الرجاء إدخال مبلغ صالح.</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="13"/>
-        <source>User History</source>
+        <source>Historique d&apos;utilisateur</source>
         <translation>سجل المستخدم</translation>
     </message>
     <message>
@@ -775,7 +857,7 @@
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
-        <source>Record ID</source>
+        <source>ID de l&apos;enregistrement</source>
         <translation>معرف السجل</translation>
     </message>
     <message>
@@ -785,77 +867,77 @@
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="22"/>
-        <source>Timestamp</source>
+        <source>Horordatage</source>
         <translation>الطابع الزمني</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="50"/>
-        <source>No history available for this user.</source>
+        <source>Pas d&apos;historique pour cet utilisateur.</source>
         <translation>لا يوجد سجل لهذا المستخدم.</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="76"/>
-        <source>No details</source>
+        <source>Pas de details</source>
         <translation>لا توجد تفاصيل</translation>
     </message>
     <message>
         <location filename="../dialogs/user_history_dialog.py" line="88"/>
-        <source>An error occurred while loading history.</source>
+        <source>Erreur lors du chargement de l&apos;historique.</source>
         <translation>حدث خطأ أثناء تحميل السجل.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="23"/>
-        <source>Withdrawal</source>
+        <source>Retrait</source>
         <translation>السحب</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="31"/>
-        <source>Amount to withdraw</source>
+        <source>Montant à retirer</source>
         <translation>المبلغ المطلوب سحبه</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="42"/>
-        <source>Withdrawal Date:</source>
+        <source>Date de retrait:</source>
         <translation>تاريخ السحب:</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="54"/>
-        <source>The amount must be greater than zero.</source>
+        <source>Le montant doit être supérieur à zéro.</source>
         <translation>يجب أن يكون المبلغ أكبر من الصفر.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="68"/>
-        <source>Insufficient balance for withdrawal.</source>
+        <source>Solde insuffisant pour le retrait.</source>
         <translation>الرصيد غير كافي للسحب.</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Name</source>
+        <source>Nom</source>
         <translation>الاسم</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Released Deposit</source>
+        <source>Dépôt libéré</source>
         <translation>الإيداع المفرج عنه</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Current Debt</source>
+        <source>Dette actuelle</source>
         <translation>الدين الحالي</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Deposit</source>
+        <source>Dépôt</source>
         <translation>الإيداع</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>WITHDRAW</source>
+        <source>RETRAIT</source>
         <translation>سحب</translation>
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="109"/>
-        <source>Withdrawal completed successfully.</source>
+        <source>Retrait effectué avec succès.</source>
         <translation>تم السحب بنجاح.</translation>
     </message>
     <message>
@@ -887,6 +969,66 @@
         <location filename="../app6.py" line="134"/>
         <source>Déconnexion</source>
         <translation>تسجيل الخروج</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_debt_dialog.py" line="61"/>
+        <source>Annuler</source>
+        <translation>إلغاء</translation>
+    </message>
+    <message>
+        <location filename="../dialogs/add_debt_dialog.py" line="62"/>
+        <source>Effectuer</source>
+        <translation>تنفيذ</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="132"/>
+        <source>Total des Devises</source>
+        <translation>إجمالي العملات</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="133"/>
+        <source>Total des Dettes</source>
+        <translation>إجمالي الديون</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="134"/>
+        <source>Total des Dépôts</source>
+        <translation>إجمالي الودائع</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="135"/>
+        <source>Nombre de Clients</source>
+        <translation>عدد العملاء</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="136"/>
+        <source>Activités Récentes</source>
+        <translation>الأنشطة الأخيرة</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="137"/>
+        <source>Chargement des activités récentes...</source>
+        <translation>جارٍ تحميل الأنشطة الأخيرة...</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="138"/>
+        <source>Erreur lors du chargement des données.</source>
+        <translation>حدث خطأ أثناء تحميل البيانات.</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="139"/>
+        <source>Aucune activité récente</source>
+        <translation>لا توجد أنشطة حديثة</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="140"/>
+        <source>Erreur lors du chargement de l&apos;activité</source>
+        <translation>حدث خطأ أثناء تحميل النشاط</translation>
+    </message>
+    <message>
+        <location filename="../pages/home_page.py" line="246"/>
+        <source>MRU</source>
+        <translation>أوقية</translation>
     </message>
 </context>
 </TS>
