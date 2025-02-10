@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Date, Integer, String, Identity, Unicode
 from sqlalchemy.orm import relationship
-from database import Base
+from database_file import Base
 
 
 class Customer(Base):

@@ -8,7 +8,7 @@ from sqlalchemy import (
     Date,
 )
 from sqlalchemy.orm import relationship
-from database import Base
+from database_file import Base
 import sqlalchemy as sa
 
 

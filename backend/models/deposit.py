@@ -1,4 +1,4 @@
-from unittest.mock import Base
+from database_file import Base
 from sqlalchemy import Column, Date, Float, ForeignKey, Identity, Integer, Unicode
 from sqlalchemy.orm import relationship
 
