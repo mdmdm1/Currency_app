@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
 )
 from PyQt5.QtCore import Qt
+import requests
 from sqlalchemy.exc import SQLAlchemyError
 from dialogs.add_deposit_dialog import AddDepositDialog
 from database.models import Customer, Deposit
@@ -15,6 +16,7 @@ from utils.translation_manager import TranslationManager
 
 
 class DepositPage(BasePage):
+
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Gestion des dépôts"))
         self.user_id = parent.user_id
@@ -47,43 +49,34 @@ class DepositPage(BasePage):
         self.load_deposit_data()
 
     def load_deposit_data(self):
-        session = SessionLocal()
         try:
-            deposits = (
-                session.query(Deposit)
-                .join(Customer, Deposit.customer_id == Customer.id)
-                .add_columns(
-                    Customer.id,
-                    Customer.name,
-                    Customer.identite,
-                    Deposit.deposit_date,
-                    Deposit.amount,
-                    Deposit.released_deposit,
-                    Deposit.current_debt,
-                )
-                .filter(Deposit.current_debt > 0)
-                .all()
-            )
+
+            response = requests.get("http://127.0.0.1:8000/deposits")
+            response.raise_for_status()  # Raise an error for bad status codes
+            deposits = response.json()
 
             self.table.setRowCount(len(deposits))
             total_deposited = 0
 
-            for row_idx, row in enumerate(deposits):
-                (
-                    customer_id,
-                    customer_name,
-                    identite,
-                    deposit_date,
-                    amount,
-                    released_deposit,
-                    current_debt,
-                ) = row[1:]
+            for row_idx, deposit in enumerate(deposits):
+                customer_response = requests.get(
+                    f"http://127.0.0.1:8000/customers/{deposit["customer_id"]}"
+                )
+                customer_response.raise_for_status()
+                customer = customer_response.json()
+                customer_name = customer["name"]
+                identite = customer["identite"]
+                deposit_date = deposit["deposit_date"]
+                amount = deposit["amount"]
+                released_deposit = deposit["released_deposit"]
+                current_debt = deposit["current_debt"]
+
                 total_deposited += current_debt
 
                 row_data = [
                     customer_name,
                     identite,
-                    deposit_date.strftime("%Y-%m-%d"),
+                    deposit_date,
                     self.format_french_number(amount),
                     self.format_french_number(released_deposit),
                     self.format_french_number(current_debt),
@@ -113,17 +106,16 @@ class DepositPage(BasePage):
                         "width": 70,
                     },
                 ]
-                self.add_action_buttons(row_idx, customer_id, buttons_config)
+                self.add_action_buttons(row_idx, deposit["customer_id"], buttons_config)
+
             self.total_prefix = TranslationManager.tr("Total Déposé")
             self.update_total_label(total_deposited, self.total_prefix)
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
             )
-        finally:
-            session.close()
 
     def add_deposit(self):
         dialog = AddDepositDialog(self)

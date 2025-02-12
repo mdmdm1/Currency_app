@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtCore import Qt
+import requests
 from database.database import SessionLocal
 from database.models import Currency
 from sqlalchemy.exc import SQLAlchemyError
@@ -71,20 +72,21 @@ class CurrencyPage(BasePage):
         self.load_currency_data()
 
     def load_currency_data(self):
-        session = SessionLocal()
         try:
-            currencies = session.query(Currency).all()
+            response = requests.get("http://127.0.0.1:8000/currencies")
+            response.raise_for_status()
+            currencies = response.json()
             self.table.setRowCount(len(currencies))
+            total = 0
 
             for row, currency in enumerate(currencies):
-                # Currency name
-                self.table.setItem(row, 0, QTableWidgetItem(currency.name))
+                self.table.setItem(row, 0, QTableWidgetItem(currency["name"]))
 
                 # Currency code
-                self.table.setItem(row, 1, QTableWidgetItem(currency.code))
+                self.table.setItem(row, 1, QTableWidgetItem(currency["code"]))
 
                 # Available balance (formatted in French style)
-                formatted_balance = self.format_french_number(currency.balance)
+                formatted_balance = self.format_french_number(currency["balance"])
                 amount_item = QTableWidgetItem(formatted_balance)
                 amount_item.setTextAlignment(Qt.AlignCenter)
                 self.table.setItem(row, 2, amount_item)
@@ -118,22 +120,22 @@ class CurrencyPage(BasePage):
                         "width": 80,
                     },
                 ]
-                self.add_action_buttons(row, currency.id, buttons_config)
+                self.add_action_buttons(row, currency["id"], buttons_config)
 
-                total = sum(currency.balance / currency.rate for currency in currencies)
+                total = sum(
+                    currency["balance"] / currency["rate"] for currency in currencies
+                )
 
             self.total_prefix = TranslationManager.tr("Total Disponible")
             self.update_total_label(total, self.total_prefix)
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr(
                     "Erreur lors du chargement des devises : {0}"
                 ).format(str(e)),
             )
-        finally:
-            session.close()
 
     def add_new_currency(self):
         currency_name = self.new_currency_input.text().strip().upper()

@@ -17,6 +17,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDoubleValidator
+import requests
 from database.models import Currency
 from database.database import SessionLocal
 from dialogs.exchange_confirm_dialog import ExchangeConfirmationDialog
@@ -104,44 +105,46 @@ class CurrencyExchangePage(BasePage):
 
     def load_currencies_from_db(self):
         """Load currencies into the combo boxes."""
-        session = SessionLocal()
         try:
-            currencies = session.query(Currency).all()
+            response = requests.get("http://127.0.0.1:8000/currencies")
+            response.raise_for_status()
+            currencies = response.json()
             self.source_currency_combo.clear()
             self.target_currency_combo.clear()
 
             for currency in currencies:
-                self.source_currency_combo.addItem(currency.code)
-                self.target_currency_combo.addItem(currency.code)
+                self.source_currency_combo.addItem(currency["code"])
+                self.target_currency_combo.addItem(currency["code"])
 
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr("Impossible de charger les devises : {0}").format(
                     str(e)
                 ),
             )
-        finally:
-            session.close()
 
     def load_conversion_rates(self):
         """Load and display conversion rates in the table."""
-        session = SessionLocal()
         try:
-            currencies = session.query(Currency).all()
+            response = requests.get("http://127.0.0.1:8000/currencies")
+            response.raise_for_status()
+            currencies = response.json()
+
             self.table.setRowCount(len(currencies))
+            total = 0
 
             for row, currency in enumerate(currencies):
                 # Calculate conversion rates
                 mru_rate = 1.0
-                conversion_to_others = currency.rate / mru_rate
+                conversion_to_others = currency["rate"] / mru_rate
                 conversion_from_others = (
-                    mru_rate / currency.rate if currency.rate != 0 else 0
+                    mru_rate / currency["rate"] if currency["rate"] != 0 else 0
                 )
-                balance = currency.balance if hasattr(currency, "balance") else 0
+                balance = currency["balance"] if hasattr(currency, "balance") else 0
 
                 # Populate table cells
-                self.table.setItem(row, 0, QTableWidgetItem(currency.code))
+                self.table.setItem(row, 0, QTableWidgetItem(currency["code"]))
                 self.table.setItem(
                     row, 1, QTableWidgetItem(self.format_french_number(balance))
                 )
@@ -152,7 +155,9 @@ class CurrencyExchangePage(BasePage):
                     row, 3, QTableWidgetItem(f"{conversion_from_others:.6f}")
                 )
 
-                total = sum(currency.balance / currency.rate for currency in currencies)
+                total = sum(
+                    currency["balance"] / currency["rate"] for currency in currencies
+                )
 
                 # Add modify button using BasePage's helper method
                 buttons_config = [
@@ -163,43 +168,44 @@ class CurrencyExchangePage(BasePage):
                         "width": 100,
                     }
                 ]
-                self.add_action_buttons(row, currency.code, buttons_config)
+                self.add_action_buttons(row, currency["id"], buttons_config)
             self.total_prefix = TranslationManager.tr("Total Disponible")
             self.update_total_label(total, self.total_prefix)
-        except Exception as e:
+
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr(
                     "Impossible de charger les taux de conversion : {0}"
                 ).format(str(e)),
             )
-        finally:
-            session.close()
 
-    def modify_rate(self, currency_code):
-        """Modify the rate of a currency."""
-        session = SessionLocal()
+    def modify_rate(self, currency_id):
+        """Modify the rate of a currency"""
         try:
-            currency = session.query(Currency).filter_by(code=currency_code).first()
+            # Fetch existing currency data
+            response = requests.get(f"http://127.0.0.1:8000/currencies/{currency_id}")
+            response.raise_for_status()
+            currency = response.json()
+            print(f"found currency: {currency}")
+
             if not currency:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
-                    TranslationManager.tr("Devise {0} introuvable").format(
-                        currency_code
-                    ),
+                    TranslationManager.tr("Devise {0} introuvable").format(currency_id),
                 )
                 return
 
+            # Ask for new rate
             dialog = QInputDialog(self)
             dialog.setWindowTitle(TranslationManager.tr("Modifier Taux"))
             dialog.setLabelText(
                 TranslationManager.tr("Entrez un nouveau taux pour {0} :").format(
-                    currency_code
+                    currency["code"]
                 )
             )
-            dialog.setTextValue(str(currency.rate))
+            dialog.setTextValue(str(currency["rate"]))
 
-            # Use a validator to allow only valid double values
             validator = CustomDoubleValidator(0.000001, 1000000.0, 6, self)
             line_edit = dialog.findChild(QLineEdit)
             if line_edit:
@@ -210,14 +216,68 @@ class CurrencyExchangePage(BasePage):
 
             if ok and new_rate_text:
                 try:
-
                     new_rate_text = new_rate_text.replace(",", ".")
                     new_rate = float(new_rate_text)
-                    # Record old state for audit log
-                    old_data = {"taux": currency.rate}
 
-                    currency.rate = new_rate
-                    session.commit()
+                    # Send API request with all required fields
+                    update_data = {
+                        "name": currency["name"],
+                        "code": currency["code"],
+                        "input": currency["input"],
+                        "output": currency["output"],
+                        "balance": currency["balance"],
+                        "rate": new_rate,
+                    }
+
+                    update_response = requests.put(
+                        f"http://127.0.0.1:8000/currencies/{currency_id}",
+                        json=update_data,
+                    )
+
+                    # Print response for debugging
+                    print(f"Update response status: {update_response.status_code}")
+                    print(f"Update response content: {update_response.text}")
+
+                    update_response.raise_for_status()
+
+                    # Log audit entry
+                    audit_response = requests.post(
+                        "http://127.0.0.1:8000/audit_logs/",
+                        json={
+                            "table_name": "Devise",
+                            "operation": "MISE A JOUR",
+                            "record_id": currency_id,
+                            "user_id": self.user_id,
+                            "changes": {
+                                "old": {
+                                    "name": currency["code"],
+                                    "taux": currency["rate"],
+                                },
+                                "new": {"name": currency["code"], "taux": new_rate},
+                            },
+                        },
+                    )
+                    audit_response.raise_for_status()
+
+                    # Reload UI after successful update
+                    self.load_conversion_rates()
+
+                    """
+                    self.show_message(
+                        TranslationManager.tr("Succès"),
+                        TranslationManager.tr(
+                            "Taux pour {0} mis à jour avec succès !"
+                        ).format(currency_id),
+                    )
+                    """
+                    QMessageBox.information(
+                        self,
+                        TranslationManager.tr("Succès"),
+                        TranslationManager.tr(
+                            "Taux pour {0} mis à jour avec succès !"
+                        ).format(currency["code"]),
+                    )
+
                 except ValueError:
                     QMessageBox.warning(
                         self,
@@ -225,37 +285,13 @@ class CurrencyExchangePage(BasePage):
                         TranslationManager.tr("Veuillez entrer un nombre valide."),
                     )
 
-                # Log audit entry
-                log_audit_entry(
-                    db_session=session,
-                    table_name=TranslationManager.tr("Devise"),
-                    operation=TranslationManager.tr("MISE A JOUR"),
-                    record_id=currency.id,
-                    user_id=self.user_id,
-                    changes={
-                        "old": old_data,
-                        "new": {
-                            "taux": currency.rate,
-                        },
-                    },
-                )
-                self.load_conversion_rates()
-                self.show_message(
-                    TranslationManager.tr("Succès"),
-                    TranslationManager.tr(
-                        "Taux pour {0} mis à jour avec succès !"
-                    ).format(currency_code),
-                )
-
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr("Échec de la modification du taux : {0}").format(
                     str(e)
                 ),
             )
-        finally:
-            session.close()
 
     def perform_conversion(self):
         """Perform currency conversion based on user input."""

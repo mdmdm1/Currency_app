@@ -1,3 +1,4 @@
+# schemas/currency.py
 from pydantic import BaseModel
 from typing import Optional
 
@@ -20,3 +21,13 @@ class CurrencyResponse(CurrencyBase):
 
     class Config:
         from_attributes = True
+
+
+# Make all fields optional for update
+class CurrencyUpdate(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    input: Optional[float] = None
+    output: Optional[float] = None
+    balance: Optional[float] = None
+    rate: Optional[float] = None

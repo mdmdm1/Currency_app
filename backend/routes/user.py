@@ -23,3 +23,8 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+
+@router.get("/", response_model=list[UserResponse])
+def get_all_deposits(db: Session = Depends(get_db)):
+    return db.query(User).all()

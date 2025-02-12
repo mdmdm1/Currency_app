@@ -10,7 +10,7 @@ router = APIRouter(prefix="/deposits", tags=["Deposits"])
 
 @router.post("/", response_model=DepositResponse)
 def create_deposit(deposit: DepositCreate, db: Session = Depends(get_db)):
-    new_deposit = Deposit(**deposit.dict())
+    new_deposit = Deposit(**deposit.model_dump())
     db.add(new_deposit)
     db.commit()
     db.refresh(new_deposit)

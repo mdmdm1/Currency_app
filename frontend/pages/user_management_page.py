@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtCore import Qt
+import requests
 from sqlalchemy.exc import SQLAlchemyError
 from database.database import SessionLocal
 from database.models import User
@@ -28,9 +29,10 @@ class UserManagementPage(BasePage):
         """Initialize the UI for user management."""
         # Set up table headers
         headers = [
+            TranslationManager.tr("ID"),
             TranslationManager.tr("Nom d'utilisateur"),
             TranslationManager.tr("Rôle"),
-            TranslationManager.tr("Dernière connexion"),
+            # TranslationManager.tr("Dernière connexion"),
             TranslationManager.tr("Actions"),
         ]
         self.setup_table_headers(headers)
@@ -53,20 +55,23 @@ class UserManagementPage(BasePage):
 
     def load_user_data(self):
         """Load user data from the database and populate the table."""
-        session = SessionLocal()
         try:
-            users = session.query(User).all()
+            response = requests.get("http://127.0.0.1:8000/users")
+            response.raise_for_status()
+            users = response.json()
 
             self.table.setRowCount(len(users))
             for row_idx, user in enumerate(users):
+                """
                 last_login = user.created_at.strftime(
                     "%Y-%m-%d"
-                )  # Modify TO using a real last login field
+                )
+                """  # Modify TO using a real last login field
 
                 row_data = [
-                    user.username,
-                    user.role,
-                    last_login,
+                    user["id"],
+                    user["username"],
+                    user["role"],
                 ]
 
                 # Populate table with user data
@@ -100,15 +105,13 @@ class UserManagementPage(BasePage):
                     },
                 ]
 
-                self.add_action_buttons(row_idx, user.id, buttons_config)
+                self.add_action_buttons(row_idx, user["id"], buttons_config)
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
             )
-        finally:
-            session.close()
 
     def add_user(self):
         dialog = AddUserDialog(self)
@@ -158,9 +161,10 @@ class UserManagementPage(BasePage):
         # Update table headers
         self.setup_table_headers(
             [
+                TranslationManager.tr("ID"),
                 TranslationManager.tr("Nom d'utilisateur"),
                 TranslationManager.tr("Rôle"),
-                TranslationManager.tr("Dernière connexion"),
+                # TranslationManager.tr("Dernière connexion"),
                 TranslationManager.tr("Actions"),
             ]
         )

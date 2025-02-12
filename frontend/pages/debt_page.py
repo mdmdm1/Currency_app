@@ -6,6 +6,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 from PyQt5.QtCore import Qt
+import requests
 from sqlalchemy.exc import SQLAlchemyError
 from dialogs.add_debt_dialog import AddDebtDialog
 from dialogs.pay_debt_dialog import PayDebtDialog
@@ -49,43 +50,34 @@ class DebtPage(BasePage):
         self.load_debt_data()
 
     def load_debt_data(self):
-        session = SessionLocal()
         try:
-            debts = (
-                session.query(Debt)
-                .join(Customer, Debt.customer_id == Customer.id)
-                .add_columns(
-                    Customer.name,
-                    Customer.identite,
-                    Debt.id,
-                    Debt.created_at,
-                    Debt.amount,
-                    Debt.paid_debt,
-                    Debt.current_debt,
-                )
-                .filter(Debt.current_debt > 0)
-                .all()
-            )
+            response = requests.get("http://127.0.0.1:8000/debts")
+            response.raise_for_status()  # Raise an error for bad status codes
+            debts = response.json()
 
             self.table.setRowCount(len(debts))
             total_debt = 0
 
-            for row_idx, row in enumerate(debts):
-                (
-                    customer_name,
-                    identite,
-                    debt_id,
-                    created_at,
-                    total_amount,
-                    paid_debt,
-                    current_debt,
-                ) = row[1:]
+            for row_idx, debt in enumerate(debts):
+                customer_response = requests.get(
+                    f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
+                )
+                customer_response.raise_for_status()
+                customer = customer_response.json()
+                customer_name = customer["name"]
+                identite = customer["identite"]
+                debt_id = debt["id"]
+                created_at = debt["created_at"]
+                total_amount = debt["amount"]
+                paid_debt = debt["paid_debt"]
+                current_debt = debt["current_debt"]
+
                 total_debt += current_debt
 
                 row_data = [
                     customer_name,
                     identite,
-                    created_at.strftime("%Y-%m-%d"),
+                    created_at,
                     self.format_french_number(total_amount),
                     self.format_french_number(paid_debt),
                     self.format_french_number(current_debt),
@@ -119,13 +111,11 @@ class DebtPage(BasePage):
             self.total_prefix = TranslationManager.tr("Total Dette")
             self.update_total_label(total_debt, TranslationManager.tr("Total Dette"))
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 f"{TranslationManager.tr('Erreur lors du chargement')}: {str(e)}",
             )
-        finally:
-            session.close()
 
     def add_debt(self):
         dialog = AddDebtDialog(self)

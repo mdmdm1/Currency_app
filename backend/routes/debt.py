@@ -9,7 +9,7 @@ router = APIRouter(prefix="/debts", tags=["Debts"])
 
 @router.post("/", response_model=DebtResponse)
 def create_debt(debt: DebtCreate, db: Session = Depends(get_db)):
-    new_debt = Debt(**debt.dict())
+    new_debt = Debt(**debt.model_dump())
     db.add(new_debt)
     db.commit()
     db.refresh(new_debt)
