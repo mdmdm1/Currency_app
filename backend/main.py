@@ -8,6 +8,7 @@ from routes import (
     currency,
     audit_log,
     user,
+    auth,
 )
 
 app = FastAPI(title="Currency Bank API", version="1.0")
@@ -21,5 +22,5 @@ app.include_router(treasury.router)
 app.include_router(currency.router)
 app.include_router(audit_log.router)
 app.include_router(user.router)
-
+app.include_router(auth.router)
 # Run with: uvicorn main:app --reload

@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QIcon
+import requests
 from dialogs.add_debt_dialog import AddDebtDialog
 from utils.language_switcher import LanguageSwitcher
 from pages.home_page import HomePage
@@ -29,33 +30,23 @@ from utils.verify_admin import is_user_admin
 
 
 class MainWindow(QWidget):
-    def __init__(self, user_id):
+    def __init__(self, user):
         super().__init__()
-        self.user_id = user_id
-        self.is_admin = is_user_admin(user_id)
-        self.active_button = None
-        # Define icons directory
-        self.icons_dir = Path(__file__).parent / "icons"
+        self.user = user
+        self.user_id = user.id
+        self.api_base_url = "http://127.0.0.1:8000"
+        self.access_token = user.access_token
 
-        # Initialize translation manager using same instance
+        self.pages = {}
+        self.is_admin = self.check_user_admin()
+
+        self.active_button = None
+        self.icons_dir = Path(__file__).parent / "icons"
         self.translation_manager = TranslationManager()
 
         # self.translation_manager.load_language("fr")
 
         self.setup_language_switcher()
-
-        # Initialize pages
-        self.pages = {
-            "home": HomePage(self),
-            "currency": CurrencyPage(self),
-            "transactions": CurrencyExchangePage(self),
-            "debt": DebtPage(self),
-            "deposit": DepositPage(self),
-            # "add_debt": AddDebtDialog(self),
-        }
-
-        if self.is_admin:
-            self.pages["employees"] = UserManagementPage(self)
 
         self.init_ui()
 
@@ -107,10 +98,10 @@ class MainWindow(QWidget):
         profile_image.setObjectName("profile-image")
 
         # Username label
-        username = self.get_user_name(self.user_id)
         username_label = QLabel(
-            TranslationManager.tr("Bienvenue, ") + TranslationManager.tr(str(username))
+            TranslationManager.tr("Bienvenue, ") + (self.get_user_name())
         )
+
         username_label.setAlignment(Qt.AlignCenter)
         username_label.setObjectName("username-label")
 
@@ -215,10 +206,10 @@ class MainWindow(QWidget):
             logout_btn.setText(tr("Déconnexion"))
 
         # Update username label
-        username = self.get_user_name(self.user_id)
+
         username_label = self.findChild(QLabel, "username-label")
         if username_label:
-            username_label.setText(tr("Bienvenue, ") + username)
+            username_label.setText(tr("Bienvenue, ") + self.get_user_name())
 
         # Update all pages
         for page in self.pages.values():
@@ -291,32 +282,43 @@ class MainWindow(QWidget):
         if self.is_admin and "employees" in self.pages:
             self.stack.setCurrentWidget(self.pages["employees"])
 
+    def check_user_admin(self) -> bool:
+        try:
+            headers = self.get_auth_headers()
+            response = requests.get(
+                f"{self.api_base_url}/users/check-admin/{self.user_id}", headers=headers
+            )
+            if response.status_code == 200:
+                user_data = response.json()
+                is_admin = user_data.get("role") == "admin"
+                return is_admin
+            return False
+        except requests.RequestException as e:
+            print(f"Error checking admin status: {e}")
+            return False
+
+    def get_auth_headers(self):
+        """Get headers with authentication token"""
+        return {"Authorization": f"Bearer {self.access_token}"}
+
+    def get_user_name(self):
+        """Get username from stored user object"""
+        return self.user.username
+
     def sign_out(self):
         """Handle sign-out action"""
+        # Clear stored token
+        QApplication.instance().access_token = None
+
         self.close()
-        self.login_page = LoginPage(SessionLocal())
+        self.login_page = LoginPage()
         self.login_page.login_successful.connect(self.show_main_window)
         self.login_page.show()
 
     @staticmethod
-    def get_user_name(user_id):
-        session = SessionLocal()
-        try:
-            user = session.get(User, user_id)
-            if not user:
-                return False  # User not found
-
-            return user.username
-        except Exception as e:
-            print(f"Error while getting the username: {e}")
-            return False  # Return False in case of an error
-        finally:
-            session.close()
-
-    @staticmethod
     def show_main_window(user):
         """Show main window after successful login"""
-        main_window = MainWindow(user.id)
+        main_window = MainWindow(user)
         main_window.show()
 
 
@@ -331,9 +333,14 @@ if __name__ == "__main__":
 
     translation_manager = TranslationManager(app)
 
-    # Load and apply the stylesheet
-    stylesheet = load_stylesheet()
-    app.setStyleSheet(stylesheet)
+    # Load stylesheet
+    try:
+        with open("style.css", "r") as file:
+            stylesheet = file.read()
+            app.setStyleSheet(stylesheet)
+    except FileNotFoundError:
+        print("Warning: style.css not found")
+
     # Set the application icon
     icons_dir = Path(__file__).parent / "icons"
     icon_path = icons_dir / "app-icon.png"
@@ -344,14 +351,12 @@ if __name__ == "__main__":
     else:
         print(f"Warning: Application icon not found at {icon_path}")
 
-    db_session = SessionLocal()  # Initialize your database session
-
     # Create and show the login page
-    login_page = LoginPage(db_session)
+    login_page = LoginPage()
 
     def show_main_window(user):
         """Callback to show the main window after login."""
-        main_window = MainWindow(user.id)
+        main_window = MainWindow(user)
         main_window.show()
 
     # Connect the login signal to the function

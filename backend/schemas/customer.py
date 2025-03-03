@@ -19,3 +19,10 @@ class CustomerResponse(CustomerBase):
 
     class Config:
         from_attributes = True
+
+
+class CustomerResponseWithIdentite(CustomerBase):
+    identite: str
+
+    class Config:
+        from_attributes = True

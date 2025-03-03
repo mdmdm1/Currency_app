@@ -13,9 +13,7 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QPixmap
 import bcrypt
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from database.models import User
+import requests
 from pathlib import Path
 
 from utils.language_switcher import LanguageSwitcher
@@ -25,12 +23,13 @@ from utils.translation_manager import TranslationManager
 class LoginPage(QMainWindow):
     login_successful = pyqtSignal(object)
 
-    def __init__(self, db_session: Session):
+    def __init__(self):
         super().__init__()
-        self.db_session = db_session
-
-        # Get existing TranslationManager instance instead of creating new one
+        # Get existing TranslationManager instance
         self.translation_manager = TranslationManager()
+
+        # API base URL
+        self.api_base_url = "http://127.0.0.1:8000"
 
         self.setWindowTitle(TranslationManager.tr("GestiFin Pro - Connexion"))
         self.setFixedSize(400, 500)
@@ -123,7 +122,7 @@ class LoginPage(QMainWindow):
         layout.addWidget(self.language_switcher)
         # Status message
         self.status_label = QLabel("")
-        self.status_label.setStyleSheet("color: #e74c3c; font-size: 14px;")
+        self.status_label.setStyleSheet("color: #e74c3c; font-size: 13px;")
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
 
@@ -201,47 +200,61 @@ class LoginPage(QMainWindow):
             return
 
         try:
-            # Optimize database query by selecting only necessary fields
-            stmt = select(User.id, User.password, User.is_active).where(
-                User.username == username
+            # Make API request to login endpoint
+            response = requests.post(
+                f"{self.api_base_url}/auth/login",
+                json={"username": username, "password": password},
             )
-            result = self.db_session.execute(stmt).first()
 
-            if not result:
-                self.show_error(
-                    TranslationManager.tr("Nom d'utilisateur ou mot de passe invalide.")
-                )
+            if response.status_code == 401:
+                error_data = response.json()
+
+                if error_data["detail"] == "Invalid username or password":
+                    self.show_error(
+                        TranslationManager.tr(
+                            "Nom d'utilisateur ou mot de passe invalide."
+                        )
+                    )
+
+                elif error_data["detail"] == "Account is disabled":
+                    self.show_error(TranslationManager.tr("Ce compte a été désactivé."))
                 return
 
-            user_id, hashed_password, is_active = result
-
-            if not is_active:
-                self.show_error(TranslationManager.tr("Ce compte a été désactivé."))
+            if response.status_code != 200:
+                self.show_error(TranslationManager.tr("Erreur de connexion au serveur"))
                 return
 
-            # Use a separate thread for password verification
-            QApplication.processEvents()  # Keep UI responsive
-            if not self.verify_password(password, hashed_password):
-                self.show_error(
-                    TranslationManager.tr("Nom d'utilisateur ou mot de passe invalide.")
-                )
-                return
+            # Parse response data
+            user_data = response.json()
 
-            # Construct user object with minimal data
-            user = User(id=user_id, username=username, is_active=is_active)
+            # Create a simple user object with the required data
+            class User:
+                def __init__(self, id, username, is_active, access_token):
+                    self.id = id
+                    self.username = username
+                    self.is_active = is_active
+                    self.access_token = access_token
+
+            user = User(
+                id=user_data["id"],
+                username=user_data["username"],
+                is_active=user_data["is_active"],
+                access_token=user_data["access_token"],
+            )
+
+            # Store the token for future API requests
+            self.save_token(user_data["access_token"])
+
             self.login_successful.emit(user)
             self.close()
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.show_error(TranslationManager.tr("Erreur de connexion : ") + str(e))
 
-    def verify_password(self, plain_password: str, hashed_password: str) -> bool:
-        try:
-            return bcrypt.checkpw(
-                plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-            )
-        except Exception:
-            return False
+    def save_token(self, token: str):
+        """Save the authentication token for future use"""
+        # You might want to store this more securely in a real application
+        QApplication.instance().access_token = token
 
     def setup_language_switcher(self):
         """Initialize the language switcher"""

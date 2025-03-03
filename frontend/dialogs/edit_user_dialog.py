@@ -1,6 +1,6 @@
+import json
 from PyQt5.QtWidgets import QLineEdit, QComboBox, QMessageBox
-from database.database import SessionLocal
-from database.models import User
+import requests
 from dialogs.base_dialog import BaseDialog
 from utils.translation_manager import TranslationManager
 
@@ -28,12 +28,26 @@ class EditUserDialog(BaseDialog):
                 TranslationManager.tr("Visitor"),
             ]
         )
-        self.create_input_row(TranslationManager.tr("Role:"), self.role_combobox)
+        self.create_input_row(TranslationManager.tr("Rôle:"), self.role_combobox)
+
+        self.status_combobox = QComboBox()
+        self.status_combobox.addItems(
+            [
+                TranslationManager.tr("Actif"),
+                TranslationManager.tr("Inactif"),
+            ]
+        )
+        self.create_input_row(
+            TranslationManager.tr("Statut du compte:"), self.status_combobox
+        )
 
     def on_submit(self):
         """Save the modified user details to the database."""
         new_username = self.username_input.text().strip()
         new_role = self.role_combobox.currentText()
+        new_is_active = self.status_combobox.currentText() == TranslationManager.tr(
+            "Actif"
+        )
 
         if not new_username:
             self.show_error(
@@ -41,17 +55,44 @@ class EditUserDialog(BaseDialog):
             )
             return
 
-        session = SessionLocal()
         try:
-            user = session.query(User).get(self.user_id)
-            if not user:
-                self.show_error(TranslationManager.tr("Utilisateur introuvable."))
-                self.reject()
-                return
+            old_data = {
+                TranslationManager.tr("username"): self.user["username"],
+                TranslationManager.tr("role"): self.user["role"],
+                TranslationManager.tr("is_active"): self.user["is_active"],
+            }
+            updated_data = {
+                "username": new_username,
+                "role": new_role,
+                "is_active": new_is_active,
+            }
+            response = requests.put(
+                f"http://127.0.0.1:8000/users/{self.user_id}", json=updated_data
+            )
 
-            user.username = new_username
-            user.role = new_role
-            session.commit()
+            response.raise_for_status()
+            user = response.json()
+
+            audit_response = requests.post(
+                "http://127.0.0.1:8000/audit_logs/",
+                json={
+                    "table_name": TranslationManager.tr("Utilisateurs"),
+                    "operation": TranslationManager.tr("MISE A JOUR"),
+                    "record_id": user["id"],
+                    "user_id": self.current_user_id,
+                    "changes": json.dumps(
+                        {
+                            "old": old_data,
+                            "new": {
+                                TranslationManager.tr("username"): user["username"],
+                                TranslationManager.tr("role"): user["role"],
+                                TranslationManager.tr("is_active"): user["is_active"],
+                            },
+                        }
+                    ),
+                },
+            )
+            audit_response.raise_for_status()
 
             QMessageBox.information(
                 self,
@@ -62,34 +103,35 @@ class EditUserDialog(BaseDialog):
             )
             self.accept()
 
-        except Exception as e:
-            session.rollback()
+        except requests.exceptions.RequestException as e:
+
             self.show_error(
                 TranslationManager.tr("Erreur dans le sauvegarde les modifications:")
                 + f" {str(e)}"
             )
 
-        finally:
-            session.close()
-
     def load_user_data(self):
         """Load user data into the form fields."""
-        session = SessionLocal()
         try:
-            user = session.query(User).get(self.user_id)
-            if not user:
+            response = requests.get(f"http://127.0.0.1:8000/users/{self.user_id}")
+            response.raise_for_status()
+
+            if response.status_code == 404:
                 self.show_error(TranslationManager.tr("Utilisateur introuvable."))
                 self.reject()
                 return
+            self.user = response.json()
 
-            self.username_input.setText(user.username)
-            self.role_combobox.setCurrentText(user.role)
+            self.username_input.setText(self.user["username"])
+            self.role_combobox.setCurrentText(self.user["role"])
+            if self.user["is_active"] == True:
+                status = TranslationManager.tr("Actif")
+            else:
+                status = TranslationManager.tr("Inactif")
+            self.status_combobox.setCurrentText(status)
 
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             self.show_error(
                 TranslationManager.tr("Erreur de chargement de données:") + f" {str(e)}"
             )
             self.reject()
-
-        finally:
-            session.close()

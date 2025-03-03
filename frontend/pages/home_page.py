@@ -1,3 +1,4 @@
+from datetime import datetime
 from PyQt5.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -9,6 +10,7 @@ from PyQt5.QtWidgets import (
     QScrollArea,
 )
 from PyQt5.QtCore import Qt
+import requests
 from sqlalchemy import func, desc
 from database.database import SessionLocal
 from database.models import (
@@ -191,7 +193,8 @@ class HomePage(QWidget):
         try:
             # Activity description
             description = QLabel(
-                f"{log.operation} sur {log.table_name} " f"(ID: {log.record_id})"
+                f"{log["operation"]} sur {log["table_name"]} "
+                f"(ID: {log["record_id"]})"
             )
             description.setStyleSheet(
                 """
@@ -201,20 +204,23 @@ class HomePage(QWidget):
             )
             description.setWordWrap(True)
 
-            # Timestamp
-            timestamp = QLabel(log.timestamp.strftime("%d/%m/%Y %H:%M"))
-            timestamp.setStyleSheet(
+            timestamp_dt = datetime.fromisoformat(log["timestamp"])
+            formatted_timestamp = timestamp_dt.strftime("%d/%m/%Y %H:%M")
+
+            # Create a QLabel with the formatted timestamp
+            timestamp_label = QLabel(formatted_timestamp)
+            timestamp_label.setStyleSheet(
                 """
                 color: #888;
                 font-size: 11px;
             """
             )
-            timestamp.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
+            timestamp_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
             layout.addWidget(description, stretch=1)
-            layout.addWidget(timestamp)
+            layout.addWidget(timestamp_label)
 
-        except Exception as e:
+        except requests.RequestException as e:
             print(f"Error creating activity item: {e}")
             error_label = QLabel(
                 TranslationManager.tr("Erreur lors du chargement de l'activité")
@@ -234,71 +240,69 @@ class HomePage(QWidget):
         """Load and display all dashboard data"""
         # print("Loading data")
         try:
-            session = SessionLocal()
+
+            # Currency statistics
+
+            currency_response = requests.get("http://127.0.0.1:8000/currencies/total")
+
+            currency_response.raise_for_status()
+            currency_total = currency_response.json().get("total_currencies")
+            self.update_stat_widget(
+                self.stats_widgets["currency"],
+                f"{self.format_french_number(currency_total)} {TranslationManager.tr('MRU')}",
+            )
+
+            # Debt statistics
+            debt_response = requests.get("http://127.0.0.1:8000/debts/total")
+
+            debt_response.raise_for_status()
+            debt_total = debt_response.json().get("total_debts")
+            self.update_stat_widget(
+                self.stats_widgets["debt"],
+                f"{self.format_french_number(debt_total)} {TranslationManager.tr('MRU')}",
+            )
+
+            # Deposit statistics
+            deposit_response = requests.get("http://127.0.0.1:8000/deposits/total")
+
+            deposit_response.raise_for_status()
+            deposit_total = deposit_response.json().get("total_deposits")
+            self.update_stat_widget(
+                self.stats_widgets["deposit"],
+                f"{self.format_french_number(deposit_total)} {TranslationManager.tr('MRU')}",
+            )
+
+            # Customer count
+            customer_response = requests.get("http://127.0.0.1:8000/customers/total")
+            customer_response.raise_for_status()
+            customer_count = customer_response.json().get("total_customers")
+            self.update_stat_widget(
+                self.stats_widgets["customers"], str(customer_count)
+            )
+
             try:
-                # Currency statistics
-                currency_total = (
-                    session.query(func.sum(Currency.balance / Currency.rate)).scalar()
-                    or 0
-                )
-                self.update_stat_widget(
-                    self.stats_widgets["currency"],
-                    f"{self.format_french_number(currency_total)} {TranslationManager.tr('MRU')}",
-                )
+                response = requests.get("http://127.0.0.1:8000/audit_logs/recent")
+                response.raise_for_status()  # Raise error if request fails
+                recent_logs = response.json()  # Parse JSON response
+            except requests.RequestException as e:
+                print(f"Error fetching audit logs: {e}")
+                recent_logs = []
 
-                # Debt statistics
-                debt_total = session.query(func.sum(Debt.current_debt)).scalar() or 0
-                self.update_stat_widget(
-                    self.stats_widgets["debt"],
-                    f"{self.format_french_number(debt_total)} {TranslationManager.tr('MRU')}",
-                )
+            # Display logs
+            if recent_logs:
+                for log in recent_logs:
+                    activity_widget = self.create_activity_item(log)
+                    self.activity_list_layout.addWidget(activity_widget)
+            else:
+                no_activity = QLabel("Aucune activité récente")
+                no_activity.setStyleSheet("font-size: 12px; color: #666;")
+                no_activity.setAlignment(Qt.AlignCenter)
+                self.activity_list_layout.addWidget(no_activity)
 
-                # Deposit statistics
-                deposit_total = (
-                    session.query(func.sum(Deposit.current_debt)).scalar() or 0
-                )
-                self.update_stat_widget(
-                    self.stats_widgets["deposit"],
-                    f"{self.format_french_number(deposit_total)} {TranslationManager.tr('MRU')}",
-                )
+            # Add stretch to push activities to the top
+            self.activity_list_layout.addStretch()
 
-                # Customer count
-                customer_count = session.query(func.count(Customer.id)).scalar() or 0
-                self.update_stat_widget(
-                    self.stats_widgets["customers"], str(customer_count)
-                )
-
-                # Clear previous activities
-                while self.activity_list_layout.count():
-                    child = self.activity_list_layout.takeAt(0)
-                    if child.widget():
-                        child.widget().deleteLater()
-
-                # Recent activities
-                recent_logs = (
-                    session.query(AuditLog)
-                    .order_by(desc(AuditLog.timestamp))
-                    .limit(5)
-                    .all()
-                )
-
-                if recent_logs:
-                    for log in recent_logs:
-                        activity_widget = self.create_activity_item(log)
-                        self.activity_list_layout.addWidget(activity_widget)
-                else:
-                    no_activity = QLabel("Aucune activité récente")
-                    no_activity.setStyleSheet("font-size: 12px; color: #666;")
-                    no_activity.setAlignment(Qt.AlignCenter)
-                    self.activity_list_layout.addWidget(no_activity)
-
-                # Add stretch to push activities to the top
-                self.activity_list_layout.addStretch()
-
-            finally:
-                session.close()
-
-        except Exception as e:
+        except requests.RequestException as e:
             print(f"Error loading data: {e}")
             self.show_error_message(
                 TranslationManager.tr("Erreur"),

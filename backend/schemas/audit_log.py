@@ -21,3 +21,11 @@ class AuditLogResponse(AuditLogBase):
 
     class Config:
         from_attributes = True
+
+
+class AuditLogResponseWithUser(AuditLogBase):
+    id: int
+    user_id: int
+
+    class Config:
+        from_attributes = True

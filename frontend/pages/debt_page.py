@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import (
     QTableWidgetItem,
     QPushButton,
@@ -7,14 +8,10 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-from sqlalchemy.exc import SQLAlchemyError
 from dialogs.add_debt_dialog import AddDebtDialog
 from dialogs.pay_debt_dialog import PayDebtDialog
-from database.models import Customer, Debt
-from database.database import SessionLocal
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
-from utils.audit_logger import log_audit_entry
 
 
 class DebtPage(BasePage):
@@ -128,55 +125,74 @@ class DebtPage(BasePage):
             self.load_debt_data()
 
     def delete_debt(self, debt_id, row):
-        confirmation = QMessageBox.question(
-            self,
-            TranslationManager.tr("Confirmer la suppression"),
-            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette dette ?"),
-            QMessageBox.Yes | QMessageBox.No,
+        confirmation = QMessageBox(self)
+        confirmation.setIcon(QMessageBox.Question)
+        confirmation.setWindowTitle(TranslationManager.tr("Confirmer la suppression"))
+        confirmation.setText(
+            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette dette ?")
         )
-        if confirmation == QMessageBox.Yes:
-            session = SessionLocal()
+
+        # Add buttons with translated text
+        yes_button = confirmation.addButton(
+            TranslationManager.tr("Oui"), QMessageBox.YesRole
+        )
+        no_button = confirmation.addButton(
+            TranslationManager.tr("Non"), QMessageBox.NoRole
+        )
+
+        confirmation.setDefaultButton(no_button)
+        confirmation.exec_()
+
+        if confirmation.clickedButton() == yes_button:
             try:
-                debt = session.query(Debt).filter(Debt.id == debt_id).first()
-                customer = (
-                    session.query(Customer).filter_by(id=Debt.customer_id).first()
+
+                debt_response = requests.get(f"http://127.0.0.1:8000/debts/{debt_id}")
+                debt_response.raise_for_status()
+                debt = debt_response.json()
+
+                customer_response = requests.get(
+                    f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
                 )
+                customer_response.raise_for_status()
+                customer = customer_response.json()
+                # Proceed with deletion
+                response = requests.delete(f"http://127.0.0.1:8000/debts/{debt_id}")
+                response.raise_for_status()
 
-                if debt:
-                    # Record the deleted data for audit log
-                    deleted_data = {
-                        TranslationManager.tr("name"): customer.name,
-                        TranslationManager.tr("montant"): debt.amount,
-                        TranslationManager.tr("date du dette"): debt.debt_date.strftime(
-                            "%Y-%m-%d"
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Dette"),
+                        "operation": TranslationManager.tr("SUPPRESSION"),
+                        "record_id": debt_id,
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                TranslationManager.tr("name"): customer["name"],
+                                TranslationManager.tr("montant"): debt["amount"],
+                                TranslationManager.tr("date du dette"): debt[
+                                    "debt_date"
+                                ],
+                                TranslationManager.tr("dette actuelle"): debt[
+                                    "current_debt"
+                                ],
+                                TranslationManager.tr("dette payée"): debt["paid_debt"],
+                                TranslationManager.tr("date de création"): debt[
+                                    "created_at"
+                                ],
+                            }
                         ),
-                        TranslationManager.tr("dette actuelle"): debt.current_debt,
-                        TranslationManager.tr("dette payer"): debt.paid_debt,
-                        TranslationManager.tr(
-                            "date du creation"
-                        ): debt.created_at.strftime("%Y-%m-%d"),
-                    }
+                    },
+                )
+                audit_response.raise_for_status()
 
-                    session.delete(debt)
-                    session.commit()
+                self.load_debt_data()  # Refresh table after deletion
 
-                    # Log audit entry
-                    log_audit_entry(
-                        db_session=session,
-                        table_name=TranslationManager.tr("Dette"),
-                        operation=TranslationManager.tr("SUPPRESSION"),
-                        record_id=debt_id,
-                        user_id=self.user_id,
-                        changes=deleted_data,
-                    )
-                    self.load_debt_data()
-            except SQLAlchemyError as e:
+            except requests.exceptions.RequestException as e:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
                     f"{TranslationManager.tr('Erreur lors de la suppression')}: {str(e)}",
                 )
-            finally:
-                session.close()
 
     def retranslate_ui(self):
         # Update the window title

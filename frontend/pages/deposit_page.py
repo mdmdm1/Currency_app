@@ -6,10 +6,7 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-from sqlalchemy.exc import SQLAlchemyError
 from dialogs.add_deposit_dialog import AddDepositDialog
-from database.models import Customer, Deposit
-from database.database import SessionLocal
 from dialogs.withdraw_deposit_dialog import WithdrawDepositDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
@@ -31,7 +28,7 @@ class DepositPage(BasePage):
                 TranslationManager.tr("Date de dépôt"),
                 TranslationManager.tr("Montant initial"),
                 TranslationManager.tr("Dépôt libéré"),
-                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Dépot actuelle"),
                 TranslationManager.tr("Actions"),
             ]
         )
@@ -145,7 +142,7 @@ class DepositPage(BasePage):
                 TranslationManager.tr("Date de dépôt"),
                 TranslationManager.tr("Montant initial"),
                 TranslationManager.tr("Dépôt libéré"),
-                TranslationManager.tr("Dette actuelle"),
+                TranslationManager.tr("Dépot actuelle"),
                 TranslationManager.tr("Actions"),
             ]
         )

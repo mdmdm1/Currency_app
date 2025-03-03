@@ -257,6 +257,12 @@ class BaseDialog(QDialog):
             return False
         return True
 
+    def validate_identite(self, identite):
+        if not identite.strip():
+            self.show_error("Le champ identite ne peut pas être vide. ")
+            return False
+        return True
+
     def validate_amount(self, amount_text):
         try:
             amount = float(amount_text)

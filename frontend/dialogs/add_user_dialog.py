@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import (
     QLineEdit,
     QComboBox,
@@ -6,6 +7,7 @@ from PyQt5.QtWidgets import (
     QPushButton,
     QHBoxLayout,
 )
+import requests
 from sqlalchemy.exc import IntegrityError
 from PyQt5.QtCore import Qt
 from dialogs.base_dialog import BaseDialog
@@ -89,8 +91,6 @@ class AddUserDialog(BaseDialog):
         role = self.role_dropdown.currentText()
         is_active = self.is_active_input.currentText() == TranslationManager.tr("Actif")
 
-        print(f"{TranslationManager.tr('Nom d\'utilisateur saisi')} : '{username}'")
-
         # Validate inputs
         if not username:
             self.show_error(TranslationManager.tr("Le nom d'utilisateur est requis."))
@@ -109,6 +109,9 @@ class AddUserDialog(BaseDialog):
             )
             return
 
+        if self.user_exists(username):
+            self.show_error(TranslationManager.tr("Le nom d'utilisateur existe déjà."))
+            return
         hashed_password = self.hash_password(password)
 
         try:
@@ -121,28 +124,66 @@ class AddUserDialog(BaseDialog):
             self.accept()
         except IntegrityError:
             self.show_error(TranslationManager.tr("Le nom d'utilisateur existe déjà."))
-        except Exception as e:
-            print(f"Error creating user: {e}")
+        except requests.exceptions.RequestException as e:
+
             self.show_error(
                 TranslationManager.tr(
                     f"Échec de la création de l'utilisateur : {str(e)}"
                 )
             )
 
+    def user_exists(self, username):
+        try:
+            response = requests.get(f"http://127.0.0.1:8000/users/exists/{username}")
+            if response.status_code == 400:
+                return True  # User exists
+            return False
+        except requests.exceptions.RequestException as e:
+            print(f"Error checking user existence: {e}")
+            return False
+
     def hash_password(self, password):
         return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
     def save_user_to_db(self, username, hashed_password, role, is_active):
 
-        with SessionLocal() as session:
-            user = User(
-                username=username,
-                password=hashed_password,
-                role=role,
-                is_active=is_active,
+        try:
+            new_user_response = requests.post(
+                "http://127.0.0.1:8000/users/",
+                json={
+                    "username": username,
+                    "password": hashed_password,
+                    "role": role,
+                    "is_active": is_active,
+                },
             )
-            session.add(user)
-            session.commit()
+            new_user_response.raise_for_status()
+            user = new_user_response.json()
+
+            # Log audit entry for new debt
+            audit_response = requests.post(
+                "http://127.0.0.1:8000/audit_logs/",
+                json={
+                    "table_name": TranslationManager.tr("Utilisateurs"),
+                    "operation": TranslationManager.tr("INSERTION"),
+                    "record_id": user["id"],
+                    "user_id": self.current_user_id,
+                    "changes": json.dumps(
+                        {
+                            TranslationManager.tr("username"): user["username"],
+                            TranslationManager.tr("role"): user["role"],
+                        }
+                    ),
+                },
+            )
+            audit_response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            self.show_error(
+                TranslationManager.tr(
+                    f"Erreur lors de la création de l'utilisateur : {str(e)}"
+                )
+            )
+            self.reject()
 
     def show_error(self, message):
         QMessageBox.critical(self, TranslationManager.tr("Erreur"), message)

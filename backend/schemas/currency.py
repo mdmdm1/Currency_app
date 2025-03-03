@@ -23,7 +23,6 @@ class CurrencyResponse(CurrencyBase):
         from_attributes = True
 
 
-# Make all fields optional for update
 class CurrencyUpdate(BaseModel):
     name: Optional[str] = None
     code: Optional[str] = None
@@ -31,3 +30,11 @@ class CurrencyUpdate(BaseModel):
     output: Optional[float] = None
     balance: Optional[float] = None
     rate: Optional[float] = None
+
+
+class CurrencyConversionRequest(BaseModel):
+    source_currency: str
+    target_currency: str
+    amount: float
+    converted_amount: float
+    user_id: int

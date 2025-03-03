@@ -1,6 +1,8 @@
 from datetime import datetime
+import json
 from PyQt5.QtWidgets import QLineEdit, QLabel, QHBoxLayout, QMessageBox
 from PyQt5.QtCore import QDate
+import requests
 from database.models import Customer, Debt
 from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
@@ -31,10 +33,11 @@ class PayDebtDialog(BaseDialog):
             self.create_input_row(label, widget)
 
     def populate_form_fields(self):
-        session = SessionLocal()
+
         try:
-            debt = session.query(Debt).filter_by(id=self.debt_id).first()
-            if not debt:
+            response = requests.get(f"http://127.0.0.1:8000/debts/{self.debt_id}")
+
+            if response.status_code == 404:
                 QMessageBox.critical(
                     self,
                     TranslationManager.tr("Erreur"),
@@ -42,13 +45,15 @@ class PayDebtDialog(BaseDialog):
                 )
                 self.reject()
                 return
+            response.raise_for_status()
+            debt = response.json()
 
             # Display the current debt amount
             self.current_debt_label.setText(
-                self.format_french_number(debt.current_debt)
+                self.format_french_number(debt["current_debt"])
             )
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             QMessageBox.critical(
                 self,
                 TranslationManager.tr("Erreur"),
@@ -56,8 +61,6 @@ class PayDebtDialog(BaseDialog):
                 + f" {str(e)}",
             )
             self.reject()
-        finally:
-            session.close()
 
     def on_submit(self):
         pay_amount_str = self.pay_amount_input.text().strip()
@@ -67,11 +70,12 @@ class PayDebtDialog(BaseDialog):
         if not is_valid_amount:
             return
 
-        session = SessionLocal()
         try:
-            debt = session.query(Debt).filter_by(id=self.debt_id).first()
+            response = requests.get(f"http://127.0.0.1:8000/debts/{self.debt_id}")
+            response.raise_for_status()
+            debt = response.json()
 
-            if not debt:
+            if response.status_code == 404:
                 QMessageBox.critical(
                     self,
                     TranslationManager.tr("Erreur"),
@@ -79,8 +83,16 @@ class PayDebtDialog(BaseDialog):
                 )
                 return
 
-            customer = session.query(Customer).filter_by(id=debt.customer_id).first()
-            if pay_amount > debt.current_debt:
+            response = requests.get(
+                f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
+            )
+            if response.status_code == 404:
+                customer = None
+            else:
+                response.raise_for_status()
+                customer = response.json()
+
+            if pay_amount > debt["current_debt"]:
                 QMessageBox.warning(
                     self,
                     TranslationManager.tr("Erreur"),
@@ -91,54 +103,77 @@ class PayDebtDialog(BaseDialog):
                 return
 
             old_data = {
-                "name": customer.name,
-                "Dette payée": debt.paid_debt,
-                "Dette actuelle": debt.amount,
+                "name": customer["name"],
+                "Dette payee": debt["paid_debt"],
+                "Dette actuelle": debt["amount"],
             }
             # Update debt fields
-            debt.paid_debt = (debt.paid_debt or 0) + pay_amount
+            """debt.paid_debt = (debt.paid_debt or 0) + pay_amount
             debt.current_debt = debt.amount - debt.paid_debt
             debt.updated_at = datetime.now()
+            """
+            updated_data = {
+                "paid_debt": (debt["paid_debt"] or 0) + pay_amount,
+                "current_debt": debt["current_debt"] - pay_amount,
+                "updated_at": datetime.now().date().isoformat(),
+            }
 
-            session.commit()
+            updated_debt_response = requests.put(
+                f"http://127.0.0.1:8000/debts/{debt["id"]}", json=updated_data
+            )
 
-            # Log audit entry
-            log_audit_entry(
-                db_session=session,
-                table_name="Dette",
-                operation="PAYER",
-                record_id=debt.id,
-                user_id=self.user_id,
-                changes={
-                    "old": old_data,
-                    "new": {
-                        "name": customer.name,
-                        "Dette payée": debt.paid_debt,
-                        "Dette actuelle": debt.amount,
-                    },
+            updated_debt_response.raise_for_status()
+            updated_debt = updated_debt_response.json()
+            audit_response = requests.post(
+                "http://127.0.0.1:8000/audit_logs/",
+                json={
+                    "table_name": TranslationManager.tr("Dette"),
+                    "operation": TranslationManager.tr("PAYER"),
+                    "record_id": updated_debt["id"],
+                    "user_id": self.user_id,
+                    "changes": json.dumps(
+                        {
+                            "old": old_data,
+                            "new": {
+                                TranslationManager.tr("nom"): customer["name"],
+                                TranslationManager.tr("Dette payee"): updated_data[
+                                    "paid_debt"
+                                ],
+                                TranslationManager.tr("dette actuelle"): updated_data[
+                                    "current_debt"
+                                ],
+                            },
+                        }
+                    ),
                 },
             )
+            audit_response.raise_for_status()
+
+            if updated_data["current_debt"] == 0:
+                # Proceed with deletion
+                delete_response = requests.delete(
+                    f"http://127.0.0.1:8000/debts/{self.debt_id}"
+                )
+                delete_response.raise_for_status()
             QMessageBox.information(
                 self,
                 TranslationManager.tr("Succès"),
                 TranslationManager.tr("La dette a été mise à jour avec succès:")
                 + "\n"
                 + TranslationManager.tr("Dette actuelle:")
-                + f" {debt.current_debt:.2f}\n"
+                + f" {debt["current_debt"]:.2f}\n"
                 + TranslationManager.tr("Montant payé:")
-                + f" {debt.paid_debt:.2f}",
+                + f" {debt["paid_debt"]:.2f}",
             )
             self.accept()
 
-        except SQLAlchemyError as e:
-            session.rollback()
+        except requests.exceptions.RequestException as e:
+
             QMessageBox.critical(
                 self,
                 TranslationManager.tr("Erreur"),
-                TranslationManager.tr("Erreur SQLAlchemy:") + f" {str(e)}",
+                TranslationManager.tr("Erreur:") + f" {str(e)}",
             )
-        finally:
-            session.close()
 
     @staticmethod
     def validate_amount(amount_str):

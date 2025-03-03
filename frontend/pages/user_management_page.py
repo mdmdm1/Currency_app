@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import (
     QPushButton,
     QHBoxLayout,
@@ -7,9 +8,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt
 import requests
-from sqlalchemy.exc import SQLAlchemyError
-from database.database import SessionLocal
-from database.models import User
 from dialogs.add_user_dialog import AddUserDialog
 from dialogs.edit_user_dialog import EditUserDialog
 from dialogs.user_history_dialog import UserHistoryDialog
@@ -124,29 +122,58 @@ class UserManagementPage(BasePage):
             self.load_user_data()
 
     def delete_user(self, user_id, row):
-        confirmation = QMessageBox.question(
-            self,
-            TranslationManager.tr("Confirmer la suppression"),
+        confirmation = QMessageBox(self)
+        confirmation.setIcon(QMessageBox.Question)
+        confirmation.setWindowTitle(TranslationManager.tr("Confirmer la suppression"))
+        confirmation.setText(
             TranslationManager.tr(
                 "Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
-            ),
-            QMessageBox.Yes | QMessageBox.No,
+            )
         )
-        if confirmation == QMessageBox.Yes:
-            session = SessionLocal()
+
+        yes_button = confirmation.addButton(
+            TranslationManager.tr("Oui"), QMessageBox.YesRole
+        )
+        no_button = confirmation.addButton(
+            TranslationManager.tr("Non"), QMessageBox.NoRole
+        )
+
+        confirmation.setDefaultButton(no_button)
+        confirmation.exec_()
+
+        if confirmation.clickedButton() == yes_button:
             try:
-                user = session.query(User).get(user_id)
-                if user:
-                    session.delete(user)
-                    session.commit()
-                    self.load_user_data()
-            except SQLAlchemyError as e:
+
+                user_response = requests.get(f"http://127.0.0.1:8000/users/{user_id}")
+                user_response.raise_for_status()
+                user = user_response.json()
+
+                response = requests.delete(f"http://127.0.0.1:8000/users/{user_id}")
+                response.raise_for_status()
+
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Utilisateurs"),
+                        "operation": TranslationManager.tr("SUPPRESSION"),
+                        "record_id": user_id,
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                TranslationManager.tr("username"): user["username"],
+                                TranslationManager.tr("role"): user["role"],
+                            }
+                        ),
+                    },
+                )
+                audit_response.raise_for_status()
+
+                self.load_user_data()
+            except requests.exceptions.RequestException as e:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
                     f"{TranslationManager.tr('Erreur lors de la suppression')}: {str(e)}",
                 )
-            finally:
-                session.close()
 
     def view_user_history(self, user_id, row):
         dialog = UserHistoryDialog(user_id)

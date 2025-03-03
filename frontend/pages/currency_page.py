@@ -25,6 +25,7 @@ class CurrencyPage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Gestion des Devises"))
         self.user_id = parent.user_id
+        self.api_base_url = parent.api_base_url
         self.init_ui()
 
     def init_ui(self):
@@ -67,7 +68,6 @@ class CurrencyPage(BasePage):
 
         self.layout.insertWidget(0, top_container)
 
-        print("id=" + str(self.user_id))
         # Load initial data
         self.load_currency_data()
 
@@ -153,165 +153,173 @@ class CurrencyPage(BasePage):
                 TranslationManager.tr("Code doit être composé de trois caractères"),
             )
             return
-        session = SessionLocal()
+
         try:
-            # Check if the currency or code already exists
-            if (
-                session.query(Currency).filter_by(name=currency_name).first()
-                or session.query(Currency).filter_by(code=currency_code).first()
-            ):
+            # headers = self.get_auth_headers()
+            payload = {
+                "name": currency_name,
+                "code": currency_code,
+                "balance": 0,
+                "input": 0,
+                "output": 0,
+            }
+
+            # Make API call to add a new currency
+            response = requests.post(
+                f"{self.api_base_url}/currencies/",
+                json=payload,
+                # headers=headers,
+            )
+
+            if response.status_code != 200:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
-                    TranslationManager.tr("Cette devise ou ce code existe déjà"),
+                    TranslationManager.tr("Échec de l'ajout de la devise : {0}").format(
+                        response.text
+                    ),
                 )
                 return
 
-            # Add a new currency
-            new_currency = Currency(
-                name=currency_name, code=currency_code, balance=0, input=0, output=0
-            )
-            session.add(new_currency)
-            session.commit()
-
-            # Log audit entry
-            log_audit_entry(
-                db_session=session,
-                table_name="Devise",
-                operation="INSERTION",
-                record_id=new_currency.id,
-                user_id=self.user_id,
-                changes={"nom": currency_name, "code": currency_code, "solde": 0},
-            )
             # Clear input fields and reload data
             self.new_currency_input.clear()
             self.new_code_input.clear()
             self.load_currency_data()
 
-        except SQLAlchemyError as e:
-            session.rollback()
+        except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
-                TranslationManager.tr("Échec de l'ajout de la devise : {0}").format(
+                TranslationManager.tr("Erreur de connexion au serveur : {0}").format(
                     str(e)
                 ),
             )
-        finally:
-            session.close()
 
     def update_currency(self, currency_id, row):
         input_field = self.table.cellWidget(row, 3)
         output_field = self.table.cellWidget(row, 4)
+        print(input_field.text())
         try:
             input_amount = float(input_field.text()) if input_field.text() else 0
             output_amount = float(output_field.text()) if output_field.text() else 0
             if input_amount == 0 and output_amount == 0:
                 return
-            session = SessionLocal()
-            try:
-                currency = session.query(Currency).filter_by(id=currency_id).first()
-                if not currency:
-                    raise ValueError(TranslationManager.tr("Devise introuvable"))
 
-                # Record old state for audit log
-                old_data = {
-                    "input": currency.input,
-                    "output": currency.output,
-                    "solde": currency.balance,
-                }
+            # headers = self.get_auth_headers()
+            payload = {
+                "input": input_amount,
+                "output": output_amount,
+            }
 
-                # Update amounts
-                currency.input += input_amount
-                currency.output += output_amount
-                currency.balance = currency.balance + input_amount - output_amount
+            # Make API call to update the currency
+            response = requests.put(
+                f"{self.api_base_url}/currencies/{currency_id}",
+                json=payload,
+                # headers=headers,
+            )
 
-                session.commit()
-
-                # Log audit entry
-                log_audit_entry(
-                    db_session=session,
-                    table_name="Devise",
-                    operation="MISE A JOUR",
-                    record_id=currency_id,
-                    user_id=self.user_id,
-                    changes={
-                        "old": old_data,
-                        "new": {
-                            "name": currency.name,
-                            "input": currency.input,
-                            "output": currency.output,
-                            "balance": currency.balance,
-                        },
-                    },
-                )
-                # Clear input fields and reload data
-                input_field.clear()
-                output_field.clear()
-                self.load_currency_data()
-
-            except SQLAlchemyError as e:
-                session.rollback()
+            if response.status_code != 200:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
                     TranslationManager.tr("Échec de la mise à jour : {0}").format(
-                        str(e)
+                        response.text
                     ),
                 )
-            finally:
-                session.close()
+                return
 
-        except ValueError as e:
+            # Clear input fields and reload data
+            input_field.clear()
+            output_field.clear()
+            self.load_currency_data()
+
+        except ValueError:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr(
                     "Veuillez entrer des montants valides pour l'entrée et la sortie"
                 ),
             )
+        except requests.exceptions.RequestException as e:
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Erreur de connexion au serveur : {0}").format(
+                    str(e)
+                ),
+            )
 
     def delete_currency(self, currency_id, row):
-        confirmation = QMessageBox.question(
-            self,
-            TranslationManager.tr("Confirmer la Suppression"),
-            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette devise ?"),
-            QMessageBox.Yes | QMessageBox.No,
+        confirmation = QMessageBox(self)
+        confirmation.setIcon(QMessageBox.Question)
+        confirmation.setWindowTitle(TranslationManager.tr("Confirmer la suppression"))
+        confirmation.setText(
+            TranslationManager.tr("Êtes-vous sûr de vouloir supprimer cette devise ?")
         )
-        if confirmation == QMessageBox.Yes:
-            session = SessionLocal()
+
+        yes_button = confirmation.addButton(
+            TranslationManager.tr("Oui"), QMessageBox.YesRole
+        )
+        no_button = confirmation.addButton(
+            TranslationManager.tr("Non"), QMessageBox.NoRole
+        )
+
+        confirmation.setDefaultButton(no_button)
+        confirmation.exec_()
+
+        if confirmation.clickedButton() == yes_button:
             try:
-                currency = (
-                    session.query(Currency).filter(Currency.id == currency_id).first()
+                # headers = self.get_auth_headers()
+                currency_response = requests.get(
+                    f"http://127.0.0.1:8000/currencies/{currency_id}"
                 )
-                if currency:
+                currency_response.raise_for_status()
+                currency = currency_response.json()
 
-                    # Record the deleted data for audit log
-                    deleted_data = {
-                        "nom": currency.name,
-                        "code": currency.code,
-                        "solde": currency.balance,
-                        "entree": currency.input,
-                        "sortie": currency.output,
-                    }
-                    session.delete(currency)
-                    session.commit()
+                # Make API call to delete the currency
+                response = requests.delete(
+                    f"{self.api_base_url}/currencies/{currency_id}",
+                    # headers=headers,
+                )
 
-                    # Log audit entry
-                    log_audit_entry(
-                        db_session=session,
-                        table_name="Devise",
-                        operation="SUPPRESSION",
-                        record_id=currency_id,
-                        user_id=self.user_id,
-                        changes=deleted_data,
+                if response.status_code != 200:
+                    self.show_error_message(
+                        TranslationManager.tr("Erreur"),
+                        TranslationManager.tr(
+                            "Erreur lors de la suppression : {0}"
+                        ).format(response.text),
                     )
-                    self.load_currency_data()
-            except SQLAlchemyError as e:
+                    return
+
+                # Log the deletion in the audit log
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Devise"),
+                        "operation": TranslationManager.tr("SUPPRESSION"),
+                        "record_id": currency_id,
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                TranslationManager.tr("name"): currency["name"],
+                                TranslationManager.tr("code"): currency["code"],
+                                TranslationManager.tr("montant disponible"): currency[
+                                    "balance"
+                                ],
+                                TranslationManager.tr("entrée"): currency["input"],
+                                TranslationManager.tr("sortie"): currency["output"],
+                            }
+                        ),
+                    },
+                )
+                audit_response.raise_for_status()
+
+                # Reload data after successful deletion
+                self.load_currency_data()
+
+            except requests.exceptions.RequestException as e:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
-                    TranslationManager.tr("Erreur lors de la suppression : {0}").format(
-                        str(e)
-                    ),
+                    TranslationManager.tr(
+                        "Erreur de connexion au serveur : {0}"
+                    ).format(str(e)),
                 )
-            finally:
-                session.close()
 
     def retranslate_ui(self):
         # Update the window title

@@ -5,31 +5,28 @@ from PyQt5.QtWidgets import (
     QFormLayout,
     QVBoxLayout,
     QDialog,
-    QHBoxLayout,
     QLabel,
     QInputDialog,
     QMessageBox,
-    QTableWidget,
     QTableWidgetItem,
     QWidget,
-    QSizePolicy,
     QHeaderView,
 )
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QDoubleValidator
 import requests
-from database.models import Currency
-from database.database import SessionLocal
+
 from dialogs.exchange_confirm_dialog import ExchangeConfirmationDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
-from utils.audit_logger import log_audit_entry
 
 
 class CurrencyExchangePage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Échange de Devises"))
         self.user_id = parent.user_id
+        self.api_base_url = "http://127.0.0.1:8000"
+
         self.init_currency_exchange_ui()
 
     def init_currency_exchange_ui(self):
@@ -141,7 +138,7 @@ class CurrencyExchangePage(BasePage):
                 conversion_from_others = (
                     mru_rate / currency["rate"] if currency["rate"] != 0 else 0
                 )
-                balance = currency["balance"] if hasattr(currency, "balance") else 0
+                balance = currency["balance"] if currency["balance"] else 0
 
                 # Populate table cells
                 self.table.setItem(row, 0, QTableWidgetItem(currency["code"]))
@@ -187,7 +184,6 @@ class CurrencyExchangePage(BasePage):
             response = requests.get(f"http://127.0.0.1:8000/currencies/{currency_id}")
             response.raise_for_status()
             currency = response.json()
-            print(f"found currency: {currency}")
 
             if not currency:
                 self.show_error_message(
@@ -234,26 +230,25 @@ class CurrencyExchangePage(BasePage):
                         json=update_data,
                     )
 
-                    # Print response for debugging
-                    print(f"Update response status: {update_response.status_code}")
-                    print(f"Update response content: {update_response.text}")
-
                     update_response.raise_for_status()
 
                     # Log audit entry
                     audit_response = requests.post(
                         "http://127.0.0.1:8000/audit_logs/",
                         json={
-                            "table_name": "Devise",
-                            "operation": "MISE A JOUR",
+                            "table_name": TranslationManager.tr("Devise"),
+                            "operation": TranslationManager.tr("MISE A JOUR"),
                             "record_id": currency_id,
                             "user_id": self.user_id,
                             "changes": {
                                 "old": {
-                                    "name": currency["code"],
-                                    "taux": currency["rate"],
+                                    TranslationManager.tr("name"): currency["code"],
+                                    TranslationManager.tr("taux"): currency["rate"],
                                 },
-                                "new": {"name": currency["code"], "taux": new_rate},
+                                "new": {
+                                    TranslationManager.tr("name"): currency["code"],
+                                    TranslationManager.tr("taux"): new_rate,
+                                },
                             },
                         },
                     )
@@ -294,8 +289,7 @@ class CurrencyExchangePage(BasePage):
             )
 
     def perform_conversion(self):
-        """Perform currency conversion based on user input."""
-        session = SessionLocal()
+        """Perform currency conversion based on user input using API calls."""
         try:
             # Validate input
             if not self.amount_input.text():
@@ -317,12 +311,23 @@ class CurrencyExchangePage(BasePage):
                 )
                 return
 
-            # Fetch conversion rates
-            source_currency_obj = (
-                session.query(Currency).filter_by(code=source_currency).first()
+            # Fetch conversion rates from the API
+            # headers = self.get_auth_headers()
+            response = requests.get(f"{self.api_base_url}/currencies/")
+
+            if response.status_code != 200:
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr("Impossible de récupérer les taux de change"),
+                )
+                return
+
+            currencies = response.json()
+            source_currency_obj = next(
+                (c for c in currencies if c["code"] == source_currency), None
             )
-            target_currency_obj = (
-                session.query(Currency).filter_by(code=target_currency).first()
+            target_currency_obj = next(
+                (c for c in currencies if c["code"] == target_currency), None
             )
 
             if not source_currency_obj or not target_currency_obj:
@@ -334,11 +339,11 @@ class CurrencyExchangePage(BasePage):
 
             # Perform conversion
             converted_amount = (
-                amount / source_currency_obj.rate * target_currency_obj.rate
+                amount / source_currency_obj["rate"] * target_currency_obj["rate"]
             )
 
             # Check if target currency has sufficient balance
-            if converted_amount > target_currency_obj.balance:
+            if converted_amount > target_currency_obj["balance"]:
                 QMessageBox.warning(
                     self,
                     TranslationManager.tr("Solde insuffisant"),
@@ -346,7 +351,7 @@ class CurrencyExchangePage(BasePage):
                         "Le solde disponible en {0} ({1}) est insuffisant pour cette opération."
                     ).format(
                         target_currency,
-                        self.format_french_number(target_currency_obj.balance),
+                        self.format_french_number(target_currency_obj["balance"]),
                     ),
                 )
                 return
@@ -380,61 +385,34 @@ class CurrencyExchangePage(BasePage):
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr("Échec de la conversion : {0}").format(str(e)),
             )
-        finally:
-            session.close()
 
     def save_conversion_to_db(
         self, source_currency, target_currency, amount, converted_amount
     ):
-        """Save the conversion transaction to the database."""
-        session = SessionLocal()
+        """Save the conversion transaction using an API call."""
         try:
-            source_currency_obj = (
-                session.query(Currency).filter_by(code=source_currency).first()
-            )
-            target_currency_obj = (
-                session.query(Currency).filter_by(code=target_currency).first()
+            # headers = self.get_auth_headers()
+            payload = {
+                "source_currency": source_currency,
+                "target_currency": target_currency,
+                "amount": amount,
+                "converted_amount": converted_amount,
+                "user_id": self.user_id,
+            }
+
+            # Make API call to save the transaction
+            response = requests.post(
+                f"{self.api_base_url}/currencies/convert",
+                json=payload,
+                # headers=headers,
             )
 
-            if not source_currency_obj or not target_currency_obj:
+            if response.status_code != 200:
                 self.show_error_message(
                     TranslationManager.tr("Erreur"),
-                    TranslationManager.tr("Devises introuvables"),
+                    TranslationManager.tr("Impossible d'enregistrer la transaction"),
                 )
                 return
-
-            # Record old state for audit log
-            old_data = {
-                "source": source_currency_obj.code,
-                "cible": target_currency_obj.code,
-                "solde source": source_currency_obj.balance,
-                "solde cible": target_currency_obj.balance,
-            }
-            # Update amounts
-            target_currency_obj.balance -= converted_amount
-            target_currency_obj.output += converted_amount
-
-            source_currency_obj.balance += amount
-            source_currency_obj.input += amount
-
-            # Log audit entry
-            log_audit_entry(
-                db_session=session,
-                table_name=TranslationManager.tr("Devise"),
-                operation=TranslationManager.tr("ECHANGE"),
-                record_id=target_currency_obj.id,
-                user_id=self.user_id,
-                changes={
-                    "old": old_data,
-                    "new": {
-                        "source": source_currency_obj.code,
-                        "cible": target_currency_obj.code,
-                        "solde source": source_currency_obj.balance,
-                        "solde cible": target_currency_obj.balance,
-                    },
-                },
-            )
-            session.commit()
 
             QMessageBox.information(
                 self,
@@ -444,15 +422,12 @@ class CurrencyExchangePage(BasePage):
             self.load_conversion_rates()
 
         except Exception as e:
-            session.rollback()
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr(
                     "Impossible d'enregistrer les changements : {0}"
                 ).format(str(e)),
             )
-        finally:
-            session.close()
 
     def retranslate_ui(self):
         """Retranslate the UI elements for the CurrencyExchangePage."""

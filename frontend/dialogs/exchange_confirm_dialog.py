@@ -1,18 +1,10 @@
-from datetime import datetime
 from PyQt5.QtWidgets import (
     QVBoxLayout,
     QPushButton,
-    QLineEdit,
     QLabel,
     QHBoxLayout,
-    QMessageBox,
     QDialog,
 )
-from PyQt5.QtCore import QDate
-from database.models import Customer, Debt
-from dialogs.base_dialog import BaseDialog
-from database.database import SessionLocal
-from sqlalchemy.exc import SQLAlchemyError
 
 from utils.translation_manager import TranslationManager
 

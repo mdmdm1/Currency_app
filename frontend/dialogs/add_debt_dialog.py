@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from PyQt5.QtWidgets import (
     QLineEdit,
     QDateEdit,
@@ -10,6 +11,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 from PyQt5.QtCore import QDate, Qt
+import requests
 from database.models import Customer, Debt
 from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
@@ -90,81 +92,128 @@ class AddDebtDialog(BaseDialog):
 
         # Validate inputs
         is_valid_name = self.validate_name(name)
+        is_validate_identite = self.validate_identite(identite)
         is_valid_amount, amount = self.validate_amount(amount_str)
 
+        if not is_validate_identite:
+            return
         if not (is_valid_name and is_valid_amount):
             return
 
-        session = SessionLocal()
         try:
-            # Check if the customer exists
-            customer = session.query(Customer).filter_by(identite=identite).first()
+            # Fetch customer data
+            response = requests.get(
+                f"http://127.0.0.1:8000/customers/by-identite/{identite}"
+            )
+            if response.status_code == 404:
+                customer = None
+            else:
+                response.raise_for_status()
+                customer = response.json()
 
-            if not customer:
-                # Create a new customer
-                customer = Customer(
-                    name=name,
-                    identite=identite,
-                    telephone=telephone,
-                    date_naisse=date_naisse,
+            if customer is None:
+                # Create a new customer if not found
+                new_customer_response = requests.post(
+                    "http://127.0.0.1:8000/customers/",
+                    json={
+                        "name": name,
+                        "identite": identite,
+                        "telephone": telephone,
+                        "date_naisse": date_naisse.strftime("%Y-%m-%d"),
+                    },
                 )
-                session.add(customer)
-                session.flush()  # Get the customer ID for the new customer
+                new_customer_response.raise_for_status()
+                customer = new_customer_response.json()
 
-            # Add debt for the customer
-            debt = session.query(Debt).filter_by(customer_id=customer.id).first()
+            # Fetch debt data for the customer
+            debt_response = requests.get(
+                f"http://127.0.0.1:8000/debts/by-customer-id/{customer['id']}"
+            )
 
-            if debt:
-                old_data = {
-                    TranslationManager.tr("name"): customer.name,
-                    TranslationManager.tr("montant du dette"): debt.amount,
-                    TranslationManager.tr("dette actuelle"): debt.current_debt,
-                }
-                debt.amount += amount
-                debt.debt_date = debt_date
-                debt.current_debt += amount
-                debt.created_at = datetime.now()
+            if debt_response.status_code == 404:
+                debt = None  # No debt found
+            else:
+                debt_response.raise_for_status()
+                debt = debt_response.json()
 
-                log_audit_entry(
-                    db_session=session,
-                    table_name=TranslationManager.tr("Dette"),
-                    operation=TranslationManager.tr("MISE A JOUR"),
-                    record_id=debt.id,
-                    user_id=self.user_id,
-                    changes={
-                        "old": old_data,
-                        "new": {
-                            TranslationManager.tr("name"): customer.name,
-                            TranslationManager.tr("montant du dette"): debt.amount,
-                            TranslationManager.tr("dette actuelle"): debt.current_debt,
+            if debt is None:
+                # Create new debt
+                new_debt_response = requests.post(
+                    "http://127.0.0.1:8000/debts/",
+                    json={
+                        "amount": amount,
+                        "debt_date": debt_date.strftime("%Y-%m-%d"),
+                        "current_debt": amount,
+                        "customer_id": customer["id"],
+                        "created_at": datetime.now().date().isoformat(),
+                        "paid_debt": 0.0,
+                    },
+                )
+                new_debt_response.raise_for_status()
+                debt = new_debt_response.json()
+
+                # Log audit entry for new debt
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Dette"),
+                        "operation": TranslationManager.tr("INSERTION"),
+                        "record_id": debt["id"],
+                        "user_id": self.user_id,
+                        "changes": {
+                            TranslationManager.tr("nom"): customer["name"],
+                            TranslationManager.tr("montant"): amount,
                         },
                     },
                 )
+                audit_response.raise_for_status()
+
             else:
-                debt = Debt(
-                    amount=amount,
-                    debt_date=debt_date,
-                    current_debt=amount,
-                    customer_id=customer.id,
-                    created_at=datetime.now(),
-                    paid_debt=0.0,
-                )
-                session.add(debt)
-                session.commit()
-                # Log audit entry
-                log_audit_entry(
-                    db_session=session,
-                    table_name=TranslationManager.tr("Dette"),
-                    operation=TranslationManager.tr("INSERTION"),
-                    record_id=debt.id,
-                    user_id=self.user_id,
-                    changes={
-                        TranslationManager.tr("nom"): customer.name,
-                        TranslationManager.tr("montant"): amount,
-                    },
+                # Update existing debt
+                old_data = {
+                    TranslationManager.tr("name"): customer["name"],
+                    TranslationManager.tr("montant du dette"): debt["amount"],
+                    TranslationManager.tr("dette actuelle"): debt["current_debt"],
+                }
+                updated_data = {
+                    "amount": debt["amount"] + amount,
+                    "debt_date": debt_date.strftime("%Y-%m-%d"),
+                    "current_debt": debt["current_debt"] + amount,
+                    "updated_at": datetime.now().date().isoformat(),
+                }
+
+                updated_debt_response = requests.put(
+                    f"http://127.0.0.1:8000/debts/{debt["id"]}", json=updated_data
                 )
 
-            session.commit()
+                updated_debt_response.raise_for_status()
+                debt = updated_debt_response.json()
+
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Dette"),
+                        "operation": TranslationManager.tr("MISE A JOUR"),
+                        "record_id": debt["id"],
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                "old": old_data,
+                                "new": {
+                                    TranslationManager.tr("name"): customer["name"],
+                                    TranslationManager.tr(
+                                        "montant du dette"
+                                    ): updated_data["amount"],
+                                    TranslationManager.tr(
+                                        "dette actuelle"
+                                    ): updated_data["current_debt"],
+                                },
+                            }
+                        ),
+                    },
+                )
+                audit_response.raise_for_status()
+
             QMessageBox.information(
                 self,
                 TranslationManager.tr("Succès"),
@@ -172,15 +221,10 @@ class AddDebtDialog(BaseDialog):
             )
             self.accept()
 
-        except SQLAlchemyError as e:
-            session.rollback()
+        except requests.exceptions.RequestException as e:
             QMessageBox.critical(
-                self,
-                TranslationManager.tr("Erreur"),
-                f"{TranslationManager.tr('Erreur SQLAlchemy')}: {str(e)}",
+                self, TranslationManager.tr("Erreur"), f"Erreur: {str(e)}"
             )
-        finally:
-            session.close()
 
     def retranslate_ui(self):
 

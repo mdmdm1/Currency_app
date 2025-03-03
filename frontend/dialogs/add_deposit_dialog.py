@@ -1,3 +1,4 @@
+import json
 from PyQt5.QtWidgets import (
     QLineEdit,
     QDateEdit,
@@ -8,6 +9,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 from PyQt5.QtCore import QDate, Qt
+import requests
 from database.models import Customer, Deposit
 from dialogs.base_dialog import BaseDialog
 from database.database import SessionLocal
@@ -118,64 +120,79 @@ class AddDepositDialog(BaseDialog):
         is_valid_name = self.validate_name(name)
         is_valid_amount, amount = self.validate_amount(amount_str)
 
+        if not (identite):
+            return
         if not (is_valid_name and is_valid_amount):
             return
 
         released_deposit = 0.0
         current_debt = amount
 
-        session = SessionLocal()
-
         try:
             if self.customer_id:
-                customer = (
-                    session.query(Customer).filter_by(id=self.customer_id).first()
+                response = requests.get(
+                    f"http://127.0.0.1:8000/customers/{self.customer_id}"
                 )
+                if response.status_code == 404:
+                    customer = None
+                else:
+                    response.raise_for_status()
+                    customer = response.json()
+
             else:
-                customer = session.query(Customer).filter_by(identite=identite).first()
-                if not customer:
-                    customer = Customer(
-                        name=name,
-                        identite=identite,
-                        telephone=telephone,
-                        date_naisse=date_naisse,
+                # Fetch customer data
+                response = requests.get(
+                    f"http://127.0.0.1:8000/customers/by-identite/{identite}"
+                )
+                if response.status_code == 404:
+                    customer = None
+                else:
+                    response.raise_for_status()
+                    customer = response.json()
+
+                if customer is None:
+                    # Create a new customer if not found
+                    new_customer_response = requests.post(
+                        "http://127.0.0.1:8000/customers/",
+                        json={
+                            "name": name,
+                            "identite": identite,
+                            "telephone": telephone,
+                            "date_naisse": date_naisse.strftime("%Y-%m-%d"),
+                        },
                     )
-                    session.add(customer)
-                    session.flush()
+                    new_customer_response.raise_for_status()
+                    customer = new_customer_response.json()
 
-            self.update_or_create_deposit(session, customer, amount, deposit_date)
+            self.update_or_create_deposit(customer, amount, deposit_date)
 
-            session.commit()
-            self.accept()
-
-        except SQLAlchemyError as e:
-            session.rollback()
+        except requests.exceptions.RequestException as e:
             QMessageBox.critical(
                 self,
                 TranslationManager.tr("Erreur"),
-                f"{TranslationManager.tr('Erreur SQLAlchemy:')} {str(e)}",
+                f"{TranslationManager.tr('Erreur:')} {str(e)}",
             )
-        finally:
-            session.close()
 
     def populate_form_fields(self):
-        session = SessionLocal()
+
         try:
-            customer_with_deposit = (
-                session.query(Customer, Deposit)
-                .outerjoin(Deposit, Customer.id == Deposit.customer_id)
-                .filter(Customer.id == self.customer_id)
-                .first()
+
+            response = requests.get(
+                f"http://127.0.0.1:8000/customers/{self.customer_id}"
             )
+            if response.status_code == 404:
+                customer = None
+            else:
+                response.raise_for_status()
+                customer = response.json()
 
-            customer, deposit = customer_with_deposit
+            self.person_name_input.setText(customer["name"])
+            self.person_id.setText(customer["identite"])
+            self.telephone_input.setText(customer["telephone"])
 
-            self.person_name_input.setText(customer.name)
-            self.person_id.setText(customer.identite)
-            self.telephone_input.setText(customer.telephone)
-
-            if customer.date_naisse:
-                self.date_naisse_input.setDate(customer.date_naisse)
+            if customer["date_naisse"]:
+                date_naisse = QDate.fromString(customer["date_naisse"], "yyyy-MM-dd")
+                self.date_naisse_input.setDate(date_naisse)
 
             self.person_name_input.setEnabled(False)
             self.person_id.setEnabled(False)
@@ -185,84 +202,116 @@ class AddDepositDialog(BaseDialog):
             self.deposit_date_input.setDate(QDate.currentDate())
             self.amount_input.setFocus()
 
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             QMessageBox.critical(
                 self,
                 TranslationManager.tr("Erreur"),
                 f"{TranslationManager.tr('Erreur lors de la récupération des données:')} {str(e)}",
             )
             self.reject()
-        finally:
-            session.close()
 
-    def update_or_create_deposit(self, session, customer, amount, deposit_date):
+    def update_or_create_deposit(self, customer, amount, deposit_date):
         try:
-            deposit = session.query(Deposit).filter_by(customer_id=customer.id).first()
+            # Fetch debt data for the customer
+            deposit_response = requests.get(
+                f"http://127.0.0.1:8000/deposits/by-customer-id/{customer['id']}"
+            )
 
-            if deposit:
+            if deposit_response.status_code != 404:
+                deposit_response.raise_for_status()
+                deposit = deposit_response.json()
+
                 old_data = {
-                    TranslationManager.tr("nom"): customer.name,
-                    TranslationManager.tr("montant du dépôt"): deposit.amount,
-                    TranslationManager.tr("dette actuelle"): deposit.current_debt,
+                    TranslationManager.tr("nom"): customer["name"],
+                    TranslationManager.tr("montant du dépôt"): deposit["amount"],
+                    TranslationManager.tr("dette actuelle"): deposit["current_debt"],
                 }
 
-                deposit.amount += amount
-                deposit.current_debt += amount
+                updated_data = {
+                    "amount": deposit["amount"] + amount,
+                    "current_debt": deposit["current_debt"] + amount,
+                }
 
-                log_audit_entry(
-                    db_session=session,
-                    table_name=TranslationManager.tr("Dépôt"),
-                    operation=TranslationManager.tr("MISE A JOUR"),
-                    record_id=deposit.id,
-                    user_id=self.user_id,
-                    changes={
-                        TranslationManager.tr("old"): old_data,
-                        TranslationManager.tr("new"): {
-                            TranslationManager.tr("nom"): customer.name,
-                            TranslationManager.tr("montant du dépôt"): deposit.amount,
-                            TranslationManager.tr(
-                                "dette courante"
-                            ): deposit.current_debt,
-                        },
+                updated_deposit_response = requests.put(
+                    f"http://127.0.0.1:8000/deposits/{deposit["id"]}", json=updated_data
+                )
+
+                updated_deposit_response.raise_for_status()
+                deposit = updated_deposit_response.json()
+
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Dépôt"),
+                        "operation": TranslationManager.tr("MISE A JOUR"),
+                        "record_id": deposit["id"],
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                "old": old_data,
+                                "new": {
+                                    TranslationManager.tr("name"): customer["name"],
+                                    TranslationManager.tr(
+                                        "montant du dette"
+                                    ): updated_data["amount"],
+                                    TranslationManager.tr(
+                                        "dette actuelle"
+                                    ): updated_data["current_debt"],
+                                },
+                            }
+                        ),
                     },
                 )
+                audit_response.raise_for_status()
 
                 QMessageBox.information(
                     self,
                     TranslationManager.tr("Dépôt mis à jour"),
-                    f"{TranslationManager.tr('Le dépôt a été augmenté de')} {amount:.2f}. {TranslationManager.tr('Nouveau total:')} {deposit.amount:.2f}",
+                    f"{TranslationManager.tr('Le dépôt a été augmenté de')} {amount:.2f}. {TranslationManager.tr('Nouveau total:')} {deposit["amount"]:.2f}",
                 )
+                self.accept()
             else:
-                deposit = Deposit(
-                    amount=amount,
-                    deposit_date=deposit_date,
-                    released_deposit=0.0,
-                    current_debt=amount,
-                    customer_id=customer.id,
-                    person_name=customer.name,
-                )
-                session.add(deposit)
-                session.commit()
+                # Create a new deposit
 
-                log_audit_entry(
-                    db_session=session,
-                    table_name=TranslationManager.tr("Dépôt"),
-                    operation=TranslationManager.tr("INSERTION"),
-                    record_id=deposit.id,
-                    user_id=self.user_id,
-                    changes={
-                        TranslationManager.tr("nom"): customer.name,
-                        TranslationManager.tr("montant"): amount,
+                new_deposit_response = requests.post(
+                    "http://127.0.0.1:8000/deposits/",
+                    json={
+                        "amount": amount,
+                        "deposit_date": deposit_date.strftime("%Y-%m-%d"),
+                        "released_deposit": 0.0,
+                        "current_debt": amount,
+                        "customer_id": customer["id"],
+                        "person_name": customer["name"],
                     },
                 )
+                new_deposit_response.raise_for_status()
+                deposit = new_deposit_response.json()
+
+                # Log audit entry for new debt
+                audit_response = requests.post(
+                    "http://127.0.0.1:8000/audit_logs/",
+                    json={
+                        "table_name": TranslationManager.tr("Dépôt"),
+                        "operation": TranslationManager.tr("INSERTION"),
+                        "record_id": deposit["id"],
+                        "user_id": self.user_id,
+                        "changes": json.dumps(
+                            {
+                                TranslationManager.tr("nom"): customer["name"],
+                                TranslationManager.tr("montant"): amount,
+                            }
+                        ),
+                    },
+                )
+                audit_response.raise_for_status()
 
                 QMessageBox.information(
                     self,
                     TranslationManager.tr("Nouveau dépôt"),
                     f"{TranslationManager.tr('Un nouveau dépôt de')} {amount:.2f} {TranslationManager.tr('a été créé.')}",
                 )
+            self.accept()
+            # return deposit
 
-            return deposit
-
-        except SQLAlchemyError as e:
+        except requests.exceptions.RequestException as e:
             raise e
