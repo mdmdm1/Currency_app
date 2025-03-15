@@ -23,29 +23,36 @@ from database.models import (
     User,
 )
 from utils.translation_manager import TranslationManager
+from pages.base_page import BasePage
 
 
-class HomePage(QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+class HomePage(BasePage):
+    def __init__(self, parent):
+        super().__init__(parent, title=TranslationManager.tr("page d'accueil"))
+        self.user_id = parent.user_id
+
+        # Remove BasePage elements not needed in HomePage
+        self.layout.removeWidget(self.table)
+        self.layout.removeWidget(self.total_amount_label)
+        self.table.deleteLater()
+        self.total_amount_label.deleteLater()
+
         self.init_ui()
         self.load_data()
 
     def init_ui(self):
         """Initialize the dashboard UI"""
-
-        # Main layout
-        self.main_layout = QVBoxLayout(self)
-        self.main_layout.setSpacing(20)
-        self.main_layout.setContentsMargins(20, 20, 20, 20)
+        # Adjust layout settings to match original HomePage
+        self.layout.setSpacing(20)
+        self.layout.setContentsMargins(20, 20, 20, 20)
 
         # Statistics Grid
         self.stats_frame = self.create_stats_frame()
-        self.main_layout.addWidget(self.stats_frame)
+        self.layout.addWidget(self.stats_frame)
 
         # Recent Activity with ScrollArea
         self.activity_frame = self.create_activity_frame()
-        self.main_layout.addWidget(self.activity_frame)
+        self.layout.addWidget(self.activity_frame)
 
         self.stats_frame.setObjectName("stat-card")
         self.activity_frame.setObjectName("activity-frame")
@@ -97,7 +104,6 @@ class HomePage(QWidget):
         grid = QGridLayout(frame)
         grid.setSpacing(15)
 
-        # Create statistics widgets with default values
         self.stats_widgets = {
             "currency": self.create_stat_widget("Total des Devises", "Chargement..."),
             "debt": self.create_stat_widget("Total des Dettes", "Chargement..."),
@@ -105,7 +111,6 @@ class HomePage(QWidget):
             "customers": self.create_stat_widget("Nombre de Clients", "Chargement..."),
         }
 
-        # Add widgets to grid
         grid.addWidget(self.stats_widgets["currency"], 0, 0)
         grid.addWidget(self.stats_widgets["debt"], 0, 1)
         grid.addWidget(self.stats_widgets["deposit"], 1, 0)
@@ -130,33 +135,24 @@ class HomePage(QWidget):
         outer_layout = QVBoxLayout(outer_frame)
         outer_layout.setContentsMargins(15, 15, 15, 15)
 
-        # Title
         title = QLabel(TranslationManager.tr("Activités Récentes"))
         title.setStyleSheet(
             "font-size: 18px; font-weight: bold; color: #333; margin-bottom: 10px;"
         )
         outer_layout.addWidget(title)
 
-        # Scroll Area for activities
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setFrameShape(QFrame.NoFrame)
         scroll_area.setStyleSheet(
-            """
-            QScrollArea {
-                border: none;
-                background-color: transparent;
-            }
-        """
+            "QScrollArea { border: none; background-color: transparent; }"
         )
 
-        # Content widget for scroll area
         self.activity_list = QFrame()
         self.activity_list.setStyleSheet("background-color: transparent;")
         self.activity_list_layout = QVBoxLayout(self.activity_list)
         self.activity_list_layout.setSpacing(5)
 
-        # Add a placeholder message
         placeholder = QLabel(
             TranslationManager.tr("Chargement des activités récentes...")
         )
@@ -179,10 +175,7 @@ class HomePage(QWidget):
                 border-radius: 5px;
                 border: 1px solid #e0e0e0;
             }
-            QLabel {
-                font-size: 12px;
-                padding: 2px;
-            }
+            QLabel { font-size: 12px; padding: 2px; }
         """
         )
 
@@ -191,37 +184,22 @@ class HomePage(QWidget):
         layout.setSpacing(10)
 
         try:
-            # Activity description
             description = QLabel(
-                f"{log["operation"]} sur {log["table_name"]} "
-                f"(ID: {log["record_id"]})"
+                f"{log['operation']} sur {log['table_name']} (ID: {log['record_id']})"
             )
-            description.setStyleSheet(
-                """
-                color: #333;
-                font-size: 12px;
-            """
-            )
+            description.setStyleSheet("color: #333; font-size: 12px;")
             description.setWordWrap(True)
 
             timestamp_dt = datetime.fromisoformat(log["timestamp"])
             formatted_timestamp = timestamp_dt.strftime("%d/%m/%Y %H:%M")
-
-            # Create a QLabel with the formatted timestamp
             timestamp_label = QLabel(formatted_timestamp)
-            timestamp_label.setStyleSheet(
-                """
-                color: #888;
-                font-size: 11px;
-            """
-            )
+            timestamp_label.setStyleSheet("color: #888; font-size: 11px;")
             timestamp_label.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Preferred)
 
             layout.addWidget(description, stretch=1)
             layout.addWidget(timestamp_label)
 
-        except requests.RequestException as e:
-            print(f"Error creating activity item: {e}")
+        except Exception as e:
             error_label = QLabel(
                 TranslationManager.tr("Erreur lors du chargement de l'activité")
             )
@@ -238,15 +216,10 @@ class HomePage(QWidget):
 
     def load_data(self):
         """Load and display all dashboard data"""
-        # print("Loading data")
         try:
-
             # Currency statistics
-
             currency_response = requests.get("http://127.0.0.1:8000/currencies/total")
-
-            currency_response.raise_for_status()
-            currency_total = currency_response.json().get("total_currencies")
+            currency_total = currency_response.json().get("total_currencies", 0)
             self.update_stat_widget(
                 self.stats_widgets["currency"],
                 f"{self.format_french_number(currency_total)} {TranslationManager.tr('MRU')}",
@@ -254,9 +227,7 @@ class HomePage(QWidget):
 
             # Debt statistics
             debt_response = requests.get("http://127.0.0.1:8000/debts/total")
-
-            debt_response.raise_for_status()
-            debt_total = debt_response.json().get("total_debts")
+            debt_total = debt_response.json().get("total_debts", 0)
             self.update_stat_widget(
                 self.stats_widgets["debt"],
                 f"{self.format_french_number(debt_total)} {TranslationManager.tr('MRU')}",
@@ -264,9 +235,7 @@ class HomePage(QWidget):
 
             # Deposit statistics
             deposit_response = requests.get("http://127.0.0.1:8000/deposits/total")
-
-            deposit_response.raise_for_status()
-            deposit_total = deposit_response.json().get("total_deposits")
+            deposit_total = deposit_response.json().get("total_deposits", 0)
             self.update_stat_widget(
                 self.stats_widgets["deposit"],
                 f"{self.format_french_number(deposit_total)} {TranslationManager.tr('MRU')}",
@@ -274,36 +243,33 @@ class HomePage(QWidget):
 
             # Customer count
             customer_response = requests.get("http://127.0.0.1:8000/customers/total")
-            customer_response.raise_for_status()
-            customer_count = customer_response.json().get("total_customers")
+            customer_count = customer_response.json().get("total_customers", 0)
             self.update_stat_widget(
                 self.stats_widgets["customers"], str(customer_count)
             )
 
-            try:
-                response = requests.get("http://127.0.0.1:8000/audit_logs/recent")
-                response.raise_for_status()  # Raise error if request fails
-                recent_logs = response.json()  # Parse JSON response
-            except requests.RequestException as e:
-                print(f"Error fetching audit logs: {e}")
-                recent_logs = []
+            # Recent activities
+            response = requests.get("http://127.0.0.1:8000/audit_logs/recent")
+            recent_logs = response.json() if response.status_code == 200 else []
 
-            # Display logs
+            # Clear existing activities
+            while self.activity_list_layout.count():
+                item = self.activity_list_layout.takeAt(0)
+                if item.widget():
+                    item.widget().deleteLater()
+
             if recent_logs:
                 for log in recent_logs:
-                    activity_widget = self.create_activity_item(log)
-                    self.activity_list_layout.addWidget(activity_widget)
+                    self.activity_list_layout.addWidget(self.create_activity_item(log))
             else:
-                no_activity = QLabel("Aucune activité récente")
+                no_activity = QLabel(TranslationManager.tr("Aucune activité récente"))
                 no_activity.setStyleSheet("font-size: 12px; color: #666;")
                 no_activity.setAlignment(Qt.AlignCenter)
                 self.activity_list_layout.addWidget(no_activity)
 
-            # Add stretch to push activities to the top
             self.activity_list_layout.addStretch()
 
         except requests.RequestException as e:
-            print(f"Error loading data: {e}")
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
                 TranslationManager.tr(
@@ -311,26 +277,10 @@ class HomePage(QWidget):
                 ),
             )
 
-    def format_french_number(self, amount):
-        """Format number in French style"""
-        try:
-            integer_part, decimal_part = f"{amount:.2f}".split(".")
-            integer_part = " ".join(
-                [
-                    integer_part[max(i - 3, 0) : i]
-                    for i in range(len(integer_part), 0, -3)
-                ][::-1]
-            )
-            return f"{integer_part},{decimal_part}"
-        except Exception as e:
-            print(f"Error formatting number: {e}")
-            return str(amount)
-
     def retranslate_ui(self):
-        """Update all static texts in the UI when the language changes"""
+        """Update UI elements on language change"""
         tr = TranslationManager.tr
 
-        # Update statistics widgets
         self.stats_widgets["currency"].findChild(QLabel, "title_label").setText(
             tr("Total des Devises")
         )
@@ -344,31 +294,13 @@ class HomePage(QWidget):
             tr("Nombre de Clients")
         )
 
-        # Update recent activities title
-        recent_activities_title = self.activity_frame.findChild(QLabel)
-        if recent_activities_title:
-            recent_activities_title.setText(tr("Activités Récentes"))
+        title_label = self.activity_frame.findChild(QLabel)
+        if title_label:
+            title_label.setText(tr("Activités Récentes"))
 
-        # Update placeholder text in the activity list
         placeholder = self.activity_list.findChild(QLabel)
         if placeholder:
             placeholder.setText(tr("Chargement des activités récentes..."))
-
-        # Update error messages (if any)
-        error_label = self.findChild(QLabel)
-        if error_label and error_label.text().startswith("Erreur"):
-            error_label.setText(tr("Erreur lors du chargement des données."))
-
-        # Update no activity message
-        no_activity_label = self.activity_list.findChild(QLabel)
-        if no_activity_label and no_activity_label.text() == "Aucune activité récente":
-            no_activity_label.setText(tr("Aucune activité récente"))
-
-    def show_error_message(self, title, message):
-        """Show error message"""
-        error_label = QLabel(f"{title}: {message}")
-        error_label.setStyleSheet("color: red; font-size: 12px;")
-        self.main_layout.addWidget(error_label)
 
     def showEvent(self, event):
         """Refresh data when the page becomes visible"""
