@@ -19,13 +19,14 @@ import json
 
 from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
+from config import API_BASE_URL
 
 
 class CurrencyPage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Gestion des Devises"))
         self.user_id = parent.user_id
-        self.api_base_url = parent.api_base_url
+        self.api_base_url = API_BASE_URL
         self.init_ui()
 
     def init_ui(self):
@@ -73,7 +74,7 @@ class CurrencyPage(BasePage):
 
     def load_currency_data(self):
         try:
-            response = requests.get("http://127.0.0.1:8000/currencies")
+            response = requests.get(f"{self.api_base_url}/currencies")
             response.raise_for_status()
             currencies = response.json()
             self.table.setRowCount(len(currencies))
@@ -267,7 +268,7 @@ class CurrencyPage(BasePage):
             try:
                 # headers = self.get_auth_headers()
                 currency_response = requests.get(
-                    f"http://127.0.0.1:8000/currencies/{currency_id}"
+                    f"{self.api_base_url}/currencies/{currency_id}"
                 )
                 currency_response.raise_for_status()
                 currency = currency_response.json()
@@ -289,7 +290,7 @@ class CurrencyPage(BasePage):
 
                 # Log the deletion in the audit log
                 audit_response = requests.post(
-                    "http://127.0.0.1:8000/audit_logs/",
+                    f"{self.api_base_url}/audit_logs/",
                     json={
                         "table_name": TranslationManager.tr("Devise"),
                         "operation": TranslationManager.tr("SUPPRESSION"),

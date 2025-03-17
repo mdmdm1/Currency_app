@@ -13,6 +13,7 @@ from dialogs.edit_user_dialog import EditUserDialog
 from dialogs.user_history_dialog import UserHistoryDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class UserManagementPage(BasePage):
@@ -21,6 +22,7 @@ class UserManagementPage(BasePage):
             parent, title=TranslationManager.tr("Gestion des utilisateurs")
         )
         self.user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
         self.setup_ui()
 
     def setup_ui(self):
@@ -54,7 +56,8 @@ class UserManagementPage(BasePage):
     def load_user_data(self):
         """Load user data from the database and populate the table."""
         try:
-            response = requests.get("http://127.0.0.1:8000/users")
+            response = requests.get(f"{self.api_base_url}/users")
+
             response.raise_for_status()
             users = response.json()
 
@@ -144,15 +147,15 @@ class UserManagementPage(BasePage):
         if confirmation.clickedButton() == yes_button:
             try:
 
-                user_response = requests.get(f"http://127.0.0.1:8000/users/{user_id}")
+                user_response = requests.get(f"{self.api_base_url}/users/{user_id}")
                 user_response.raise_for_status()
                 user = user_response.json()
 
-                response = requests.delete(f"http://127.0.0.1:8000/users/{user_id}")
+                response = requests.delete(f"{self.api_base_url}/users/{user_id}")
                 response.raise_for_status()
 
                 audit_response = requests.post(
-                    "http://127.0.0.1:8000/audit_logs/",
+                    f"{self.api_base_url}/audit_logs/",
                     json={
                         "table_name": TranslationManager.tr("Utilisateurs"),
                         "operation": TranslationManager.tr("SUPPRESSION"),

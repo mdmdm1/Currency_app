@@ -12,12 +12,14 @@ from dialogs.add_debt_dialog import AddDebtDialog
 from dialogs.pay_debt_dialog import PayDebtDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class DebtPage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Gestion des Dettes"))
         self.user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
         self.init_ui()
 
     def init_ui(self):
@@ -48,7 +50,7 @@ class DebtPage(BasePage):
 
     def load_debt_data(self):
         try:
-            response = requests.get("http://127.0.0.1:8000/debts")
+            response = requests.get(f"{self.api_base_url}/debts")
             response.raise_for_status()  # Raise an error for bad status codes
             debts = response.json()
 
@@ -57,7 +59,7 @@ class DebtPage(BasePage):
 
             for row_idx, debt in enumerate(debts):
                 customer_response = requests.get(
-                    f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
+                    f"{self.api_base_url}/customers/{debt["customer_id"]}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()
@@ -146,21 +148,21 @@ class DebtPage(BasePage):
         if confirmation.clickedButton() == yes_button:
             try:
 
-                debt_response = requests.get(f"http://127.0.0.1:8000/debts/{debt_id}")
+                debt_response = requests.get(f"{self.api_base_url}/debts/{debt_id}")
                 debt_response.raise_for_status()
                 debt = debt_response.json()
 
                 customer_response = requests.get(
-                    f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
+                    f"{self.api_base_url}/customers/{debt["customer_id"]}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()
                 # Proceed with deletion
-                response = requests.delete(f"http://127.0.0.1:8000/debts/{debt_id}")
+                response = requests.delete(f"{self.api_base_url}/debts/{debt_id}")
                 response.raise_for_status()
 
                 audit_response = requests.post(
-                    "http://127.0.0.1:8000/audit_logs/",
+                    f"{self.api_base_url}/audit_logs/",
                     json={
                         "table_name": TranslationManager.tr("Dette"),
                         "operation": TranslationManager.tr("SUPPRESSION"),

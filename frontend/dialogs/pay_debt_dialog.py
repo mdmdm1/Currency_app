@@ -10,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
+from config import API_BASE_URL
 
 
 class PayDebtDialog(BaseDialog):
@@ -17,6 +18,7 @@ class PayDebtDialog(BaseDialog):
         super().__init__(TranslationManager.tr("Payer la dette"), parent)
         self.debt_id = debt_id
         self.user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
         self.setGeometry(200, 200, 500, 400)
         self.populate_form_fields()
 
@@ -35,7 +37,7 @@ class PayDebtDialog(BaseDialog):
     def populate_form_fields(self):
 
         try:
-            response = requests.get(f"http://127.0.0.1:8000/debts/{self.debt_id}")
+            response = requests.get(f"{self.api_base_url}/debts/{self.debt_id}")
 
             if response.status_code == 404:
                 QMessageBox.critical(
@@ -71,7 +73,7 @@ class PayDebtDialog(BaseDialog):
             return
 
         try:
-            response = requests.get(f"http://127.0.0.1:8000/debts/{self.debt_id}")
+            response = requests.get(f"{self.api_base_url}/debts/{self.debt_id}")
             response.raise_for_status()
             debt = response.json()
 
@@ -84,7 +86,7 @@ class PayDebtDialog(BaseDialog):
                 return
 
             response = requests.get(
-                f"http://127.0.0.1:8000/customers/{debt["customer_id"]}"
+                f"{self.api_base_url}/customers/{debt["customer_id"]}"
             )
             if response.status_code == 404:
                 customer = None
@@ -119,13 +121,13 @@ class PayDebtDialog(BaseDialog):
             }
 
             updated_debt_response = requests.put(
-                f"http://127.0.0.1:8000/debts/{debt["id"]}", json=updated_data
+                f"{self.api_base_url}/debts/{debt["id"]}", json=updated_data
             )
 
             updated_debt_response.raise_for_status()
             updated_debt = updated_debt_response.json()
             audit_response = requests.post(
-                "http://127.0.0.1:8000/audit_logs/",
+                f"{self.api_base_url}/audit_logs/",
                 json={
                     "table_name": TranslationManager.tr("Dette"),
                     "operation": TranslationManager.tr("PAYER"),
@@ -152,7 +154,7 @@ class PayDebtDialog(BaseDialog):
             if updated_data["current_debt"] == 0:
                 # Proceed with deletion
                 delete_response = requests.delete(
-                    f"http://127.0.0.1:8000/debts/{self.debt_id}"
+                    f"{self.api_base_url}/debts/{self.debt_id}"
                 )
                 delete_response.raise_for_status()
             QMessageBox.information(

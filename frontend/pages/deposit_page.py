@@ -10,6 +10,7 @@ from dialogs.add_deposit_dialog import AddDepositDialog
 from dialogs.withdraw_deposit_dialog import WithdrawDepositDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class DepositPage(BasePage):
@@ -17,6 +18,7 @@ class DepositPage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Gestion des dépôts"))
         self.user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
         self.init_ui()
 
     def init_ui(self):
@@ -48,7 +50,7 @@ class DepositPage(BasePage):
     def load_deposit_data(self):
         try:
 
-            response = requests.get("http://127.0.0.1:8000/deposits")
+            response = requests.get(f"{self.api_base_url}/deposits")
             response.raise_for_status()  # Raise an error for bad status codes
             deposits = response.json()
 
@@ -57,7 +59,7 @@ class DepositPage(BasePage):
 
             for row_idx, deposit in enumerate(deposits):
                 customer_response = requests.get(
-                    f"http://127.0.0.1:8000/customers/{deposit["customer_id"]}"
+                    f"{self.api_base_url}/customers/{deposit["customer_id"]}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()

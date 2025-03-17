@@ -17,6 +17,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
+from config import API_BASE_URL
 
 
 class AddDepositDialog(BaseDialog):
@@ -25,6 +26,7 @@ class AddDepositDialog(BaseDialog):
         self.setGeometry(400, 65, 500, 400)
         self.user_id = parent.user_id
         self.customer_id = customer_id
+        self.api_base_url = API_BASE_URL
         if self.customer_id:
             try:
                 self.populate_form_fields()
@@ -131,7 +133,7 @@ class AddDepositDialog(BaseDialog):
         try:
             if self.customer_id:
                 response = requests.get(
-                    f"http://127.0.0.1:8000/customers/{self.customer_id}"
+                    f"{self.api_base_url}/customers/{self.customer_id}"
                 )
                 if response.status_code == 404:
                     customer = None
@@ -142,7 +144,7 @@ class AddDepositDialog(BaseDialog):
             else:
                 # Fetch customer data
                 response = requests.get(
-                    f"http://127.0.0.1:8000/customers/by-identite/{identite}"
+                    f"{self.api_base_url}/customers/by-identite/{identite}"
                 )
                 if response.status_code == 404:
                     customer = None
@@ -153,7 +155,7 @@ class AddDepositDialog(BaseDialog):
                 if customer is None:
                     # Create a new customer if not found
                     new_customer_response = requests.post(
-                        "http://127.0.0.1:8000/customers/",
+                        f"{self.api_base_url}/customers/",
                         json={
                             "name": name,
                             "identite": identite,
@@ -177,9 +179,7 @@ class AddDepositDialog(BaseDialog):
 
         try:
 
-            response = requests.get(
-                f"http://127.0.0.1:8000/customers/{self.customer_id}"
-            )
+            response = requests.get(f"{self.api_base_url}/customers/{self.customer_id}")
             if response.status_code == 404:
                 customer = None
             else:
@@ -214,7 +214,7 @@ class AddDepositDialog(BaseDialog):
         try:
             # Fetch debt data for the customer
             deposit_response = requests.get(
-                f"http://127.0.0.1:8000/deposits/by-customer-id/{customer['id']}"
+                f"{self.api_base_url}/deposits/by-customer-id/{customer['id']}"
             )
 
             if deposit_response.status_code != 404:
@@ -233,14 +233,14 @@ class AddDepositDialog(BaseDialog):
                 }
 
                 updated_deposit_response = requests.put(
-                    f"http://127.0.0.1:8000/deposits/{deposit["id"]}", json=updated_data
+                    f"{self.api_base_url}/deposits/{deposit["id"]}", json=updated_data
                 )
 
                 updated_deposit_response.raise_for_status()
                 deposit = updated_deposit_response.json()
 
                 audit_response = requests.post(
-                    "http://127.0.0.1:8000/audit_logs/",
+                    f"{self.api_base_url}/audit_logs/",
                     json={
                         "table_name": TranslationManager.tr("Dépôt"),
                         "operation": TranslationManager.tr("MISE A JOUR"),
@@ -274,7 +274,7 @@ class AddDepositDialog(BaseDialog):
                 # Create a new deposit
 
                 new_deposit_response = requests.post(
-                    "http://127.0.0.1:8000/deposits/",
+                    f"{self.api_base_url}/deposits/",
                     json={
                         "amount": amount,
                         "deposit_date": deposit_date.strftime("%Y-%m-%d"),
@@ -289,7 +289,7 @@ class AddDepositDialog(BaseDialog):
 
                 # Log audit entry for new debt
                 audit_response = requests.post(
-                    "http://127.0.0.1:8000/audit_logs/",
+                    f"{self.api_base_url}/audit_logs/",
                     json={
                         "table_name": TranslationManager.tr("Dépôt"),
                         "operation": TranslationManager.tr("INSERTION"),

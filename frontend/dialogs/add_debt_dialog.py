@@ -19,12 +19,14 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from utils.translation_manager import TranslationManager
 from utils.audit_logger import log_audit_entry
+from config import API_BASE_URL
 
 
 class AddDebtDialog(BaseDialog):
     def __init__(self, parent):  # Parent is DebtPage
         super().__init__(TranslationManager.tr("Ajouter une dette"), parent)
         self.user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
         # self.setGeometry(400, 65, 500, 400)
 
     def create_form_fields(self):
@@ -103,7 +105,7 @@ class AddDebtDialog(BaseDialog):
         try:
             # Fetch customer data
             response = requests.get(
-                f"http://127.0.0.1:8000/customers/by-identite/{identite}"
+                f"{self.api_base_url}/customers/by-identite/{identite}"
             )
             if response.status_code == 404:
                 customer = None
@@ -127,7 +129,7 @@ class AddDebtDialog(BaseDialog):
 
             # Fetch debt data for the customer
             debt_response = requests.get(
-                f"http://127.0.0.1:8000/debts/by-customer-id/{customer['id']}"
+                f"{self.api_base_url}/debts/by-customer-id/{customer['id']}"
             )
 
             if debt_response.status_code == 404:
@@ -183,7 +185,7 @@ class AddDebtDialog(BaseDialog):
                 }
 
                 updated_debt_response = requests.put(
-                    f"http://127.0.0.1:8000/debts/{debt["id"]}", json=updated_data
+                    f"{self.api_base_url}/debts/{debt["id"]}", json=updated_data
                 )
 
                 updated_debt_response.raise_for_status()

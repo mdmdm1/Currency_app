@@ -11,6 +11,7 @@ import json
 from datetime import datetime  # Import datetime for timestamp conversion
 
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class UserHistoryDialog(QDialog):
@@ -19,6 +20,7 @@ class UserHistoryDialog(QDialog):
         self.user_id = user_id
         self.setWindowTitle(TranslationManager.tr("Historique d'utilisateur"))
         self.setGeometry(300, 200, 900, 400)  # Increased width for better layout
+        self.api_base_url = API_BASE_URL
         self.init_ui()
 
     def init_ui(self):
@@ -63,7 +65,7 @@ class UserHistoryDialog(QDialog):
     def load_user_history(self):
         try:
             audit_response = requests.get(
-                f"http://127.0.0.1:8000/audit_logs/by-user/{self.user_id}"
+                f"{self.api_base_url}/audit_logs/by-user/{self.user_id}"
             )
 
             # Check if the user has no logs (FastAPI returns 404 in this case)

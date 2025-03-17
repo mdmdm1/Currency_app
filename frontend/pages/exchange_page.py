@@ -19,13 +19,14 @@ import requests
 from dialogs.exchange_confirm_dialog import ExchangeConfirmationDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class CurrencyExchangePage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("Échange de Devises"))
         self.user_id = parent.user_id
-        self.api_base_url = "http://127.0.0.1:8000"
+        self.api_base_url = API_BASE_URL
 
         self.init_currency_exchange_ui()
 
@@ -103,7 +104,7 @@ class CurrencyExchangePage(BasePage):
     def load_currencies_from_db(self):
         """Load currencies into the combo boxes."""
         try:
-            response = requests.get("http://127.0.0.1:8000/currencies")
+            response = requests.get(f"{self.api_base_url}/currencies")
             response.raise_for_status()
             currencies = response.json()
             self.source_currency_combo.clear()
@@ -124,7 +125,7 @@ class CurrencyExchangePage(BasePage):
     def load_conversion_rates(self):
         """Load and display conversion rates in the table."""
         try:
-            response = requests.get("http://127.0.0.1:8000/currencies")
+            response = requests.get(f"{self.api_base_url}/currencies")
             response.raise_for_status()
             currencies = response.json()
 
@@ -181,7 +182,7 @@ class CurrencyExchangePage(BasePage):
         """Modify the rate of a currency"""
         try:
             # Fetch existing currency data
-            response = requests.get(f"http://127.0.0.1:8000/currencies/{currency_id}")
+            response = requests.get(f"{self.api_base_url}/currencies/{currency_id}")
             response.raise_for_status()
             currency = response.json()
 
@@ -226,7 +227,7 @@ class CurrencyExchangePage(BasePage):
                     }
 
                     update_response = requests.put(
-                        f"http://127.0.0.1:8000/currencies/{currency_id}",
+                        f"{self.api_base_url}/currencies/{currency_id}",
                         json=update_data,
                     )
 
@@ -234,7 +235,7 @@ class CurrencyExchangePage(BasePage):
 
                     # Log audit entry
                     audit_response = requests.post(
-                        "http://127.0.0.1:8000/audit_logs/",
+                        f"{self.api_base_url}/audit_logs/",
                         json={
                             "table_name": TranslationManager.tr("Devise"),
                             "operation": TranslationManager.tr("MISE A JOUR"),

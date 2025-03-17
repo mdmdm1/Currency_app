@@ -3,6 +3,7 @@ from PyQt5.QtWidgets import QLineEdit, QComboBox, QMessageBox
 import requests
 from dialogs.base_dialog import BaseDialog
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class EditUserDialog(BaseDialog):
@@ -10,6 +11,7 @@ class EditUserDialog(BaseDialog):
         super().__init__(TranslationManager.tr("Modifier l'utilisateur"), parent)
         self.current_user_id = parent.user_id
         self.user_id = user_id
+        self.api_base_url = API_BASE_URL
 
         self.load_user_data()
 
@@ -67,14 +69,14 @@ class EditUserDialog(BaseDialog):
                 "is_active": new_is_active,
             }
             response = requests.put(
-                f"http://127.0.0.1:8000/users/{self.user_id}", json=updated_data
+                f"{self.api_base_url}/users/{self.user_id}", json=updated_data
             )
 
             response.raise_for_status()
             user = response.json()
 
             audit_response = requests.post(
-                "http://127.0.0.1:8000/audit_logs/",
+                f"{self.api_base_url}/audit_logs/",
                 json={
                     "table_name": TranslationManager.tr("Utilisateurs"),
                     "operation": TranslationManager.tr("MISE A JOUR"),
@@ -113,7 +115,7 @@ class EditUserDialog(BaseDialog):
     def load_user_data(self):
         """Load user data into the form fields."""
         try:
-            response = requests.get(f"http://127.0.0.1:8000/users/{self.user_id}")
+            response = requests.get(f"{self.api_base_url}/users/{self.user_id}")
             response.raise_for_status()
 
             if response.status_code == 404:

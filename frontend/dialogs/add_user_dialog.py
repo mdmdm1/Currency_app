@@ -17,12 +17,14 @@ import re
 import bcrypt
 
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class AddUserDialog(BaseDialog):
     def __init__(self, parent):
         super().__init__(TranslationManager.tr("Ajouter un nouvel utilisateur"), parent)
         self.current_user_id = parent.user_id
+        self.api_base_url = API_BASE_URL
 
     def create_form_fields(self):
 
@@ -134,7 +136,7 @@ class AddUserDialog(BaseDialog):
 
     def user_exists(self, username):
         try:
-            response = requests.get(f"http://127.0.0.1:8000/users/exists/{username}")
+            response = requests.get(f"{self.api_base_url}/users/exists/{username}")
             if response.status_code == 400:
                 return True  # User exists
             return False
@@ -149,7 +151,7 @@ class AddUserDialog(BaseDialog):
 
         try:
             new_user_response = requests.post(
-                "http://127.0.0.1:8000/users/",
+                f"{self.api_base_url}/users/",
                 json={
                     "username": username,
                     "password": hashed_password,
@@ -162,7 +164,7 @@ class AddUserDialog(BaseDialog):
 
             # Log audit entry for new debt
             audit_response = requests.post(
-                "http://127.0.0.1:8000/audit_logs/",
+                f"{self.api_base_url}/audit_logs/",
                 json={
                     "table_name": TranslationManager.tr("Utilisateurs"),
                     "operation": TranslationManager.tr("INSERTION"),

@@ -11,6 +11,7 @@ from dialogs.base_dialog import BaseDialog
 
 
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class WithdrawDepositDialog(BaseDialog):
@@ -19,6 +20,7 @@ class WithdrawDepositDialog(BaseDialog):
         self.setGeometry(250, 250, 300, 400)
         self.user_id = parent.user_id
         self.customer_id = customer_id
+        self.api_base_url = API_BASE_URL
 
     def create_form_fields(self):
         # Input for withdrawal amount
@@ -51,7 +53,7 @@ class WithdrawDepositDialog(BaseDialog):
 
         try:
             deposit_response = requests.get(
-                f"http://127.0.0.1:8000/deposits/by-customer-id/{self.customer_id}"
+                f"{self.api_base_url}/deposits/by-customer-id/{self.customer_id}"
             )
             deposit_response.raise_for_status()
             deposit = deposit_response.json()
@@ -64,7 +66,7 @@ class WithdrawDepositDialog(BaseDialog):
                 return
 
             customer_response = requests.get(
-                f"http://127.0.0.1:8000/customers/{deposit["customer_id"]}"
+                f"{self.api_base_url}/customers/{deposit["customer_id"]}"
             )
             customer_response.raise_for_status()
             customer = customer_response.json()
@@ -92,13 +94,13 @@ class WithdrawDepositDialog(BaseDialog):
             deposit.released_deposit += amount
             """
             updated_deposit_response = requests.put(
-                f"http://127.0.0.1:8000/deposits/{deposit["id"]}", json=updated_data
+                f"{self.api_base_url}/deposits/{deposit["id"]}", json=updated_data
             )
 
             updated_deposit_response.raise_for_status()
             updated_deposit = updated_deposit_response.json()
             audit_response = requests.post(
-                "http://127.0.0.1:8000/audit_logs/",
+                f"{self.api_base_url}/audit_logs/",
                 json={
                     "table_name": TranslationManager.tr("Depot"),
                     "operation": TranslationManager.tr("RETRAIT"),
@@ -125,7 +127,7 @@ class WithdrawDepositDialog(BaseDialog):
             # if current_debt is 0, delete the deposit
             if deposit["current_debt"] == 0:
                 delete_response = requests.delete(
-                    f"http://127.0.0.1:8000/deposits/{deposit["id"]}"
+                    f"{self.api_base_url}/deposits/{deposit["id"]}"
                 )
                 delete_response.raise_for_status()
 

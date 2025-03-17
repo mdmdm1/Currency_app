@@ -18,6 +18,7 @@ from pathlib import Path
 
 from utils.language_switcher import LanguageSwitcher
 from utils.translation_manager import TranslationManager
+from config import API_BASE_URL
 
 
 class LoginPage(QMainWindow):
@@ -29,8 +30,7 @@ class LoginPage(QMainWindow):
         self.translation_manager = TranslationManager()
 
         # API base URL
-        self.api_base_url = "http://127.0.0.1:8000"
-
+        self.api_base_url = API_BASE_URL
         self.setWindowTitle(TranslationManager.tr("GestiFin Pro - Connexion"))
         self.setFixedSize(400, 500)
 
@@ -74,7 +74,7 @@ class LoginPage(QMainWindow):
 
         layout.addSpacing(20)
 
-        # Username input with fallback icon
+        # Username input
         self.username_container = self.create_input_with_fallback(
             placeholder=TranslationManager.tr("Nom d'utilisateur"),
             icon_name="user-icon.png",
@@ -83,7 +83,7 @@ class LoginPage(QMainWindow):
         self.username_input = self.username_container.input_field
         layout.addWidget(self.username_container)
 
-        # Password input with fallback icon
+        # Password input
         self.password_container = self.create_input_with_fallback(
             placeholder=TranslationManager.tr("Mot de passe"),
             icon_name="lock-icon2.png",
@@ -120,11 +120,21 @@ class LoginPage(QMainWindow):
         layout.addWidget(self.login_button)
 
         layout.addWidget(self.language_switcher)
+
         # Status message
         self.status_label = QLabel("")
         self.status_label.setStyleSheet("color: #e74c3c; font-size: 13px;")
         self.status_label.setAlignment(Qt.AlignCenter)
         layout.addWidget(self.status_label)
+
+        # Add stretch to push the signature to the bottom
+        layout.addStretch()
+
+        # Company signature
+        signature_label = QLabel("© 2025 ITDEVGiant")
+        signature_label.setObjectName("signatureLabel")  # For styling
+        signature_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(signature_label)
 
         # Window style
         self.setStyleSheet(
@@ -142,6 +152,10 @@ class LoginPage(QMainWindow):
             }
             QLineEdit:focus {
                 border: 2px solid #3498db;
+            }
+            #signatureLabel {
+                color: #7f8c8d;
+                font-size: 12px;
             }
         """
         )

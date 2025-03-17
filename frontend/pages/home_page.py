@@ -24,13 +24,14 @@ from database.models import (
 )
 from utils.translation_manager import TranslationManager
 from pages.base_page import BasePage
+from config import API_BASE_URL
 
 
 class HomePage(BasePage):
     def __init__(self, parent):
         super().__init__(parent, title=TranslationManager.tr("page d'accueil"))
         self.user_id = parent.user_id
-
+        self.api_base_url = API_BASE_URL
         # Remove BasePage elements not needed in HomePage
         self.layout.removeWidget(self.table)
         self.layout.removeWidget(self.total_amount_label)
@@ -218,7 +219,7 @@ class HomePage(BasePage):
         """Load and display all dashboard data"""
         try:
             # Currency statistics
-            currency_response = requests.get("http://127.0.0.1:8000/currencies/total")
+            currency_response = requests.get(f"{self.api_base_url}/currencies/total")
             currency_total = currency_response.json().get("total_currencies", 0)
             self.update_stat_widget(
                 self.stats_widgets["currency"],
@@ -226,7 +227,7 @@ class HomePage(BasePage):
             )
 
             # Debt statistics
-            debt_response = requests.get("http://127.0.0.1:8000/debts/total")
+            debt_response = requests.get(f"{self.api_base_url}/debts/total")
             debt_total = debt_response.json().get("total_debts", 0)
             self.update_stat_widget(
                 self.stats_widgets["debt"],
@@ -234,7 +235,7 @@ class HomePage(BasePage):
             )
 
             # Deposit statistics
-            deposit_response = requests.get("http://127.0.0.1:8000/deposits/total")
+            deposit_response = requests.get(f"{self.api_base_url}/deposits/total")
             deposit_total = deposit_response.json().get("total_deposits", 0)
             self.update_stat_widget(
                 self.stats_widgets["deposit"],
@@ -242,14 +243,14 @@ class HomePage(BasePage):
             )
 
             # Customer count
-            customer_response = requests.get("http://127.0.0.1:8000/customers/total")
+            customer_response = requests.get(f"{self.api_base_url}/customers/total")
             customer_count = customer_response.json().get("total_customers", 0)
             self.update_stat_widget(
                 self.stats_widgets["customers"], str(customer_count)
             )
 
             # Recent activities
-            response = requests.get("http://127.0.0.1:8000/audit_logs/recent")
+            response = requests.get(f"{self.api_base_url}/audit_logs/recent")
             recent_logs = response.json() if response.status_code == 200 else []
 
             # Clear existing activities
