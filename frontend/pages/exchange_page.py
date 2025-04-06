@@ -1,9 +1,11 @@
+import json
 from PyQt5.QtWidgets import (
     QComboBox,
     QLineEdit,
     QPushButton,
     QFormLayout,
     QVBoxLayout,
+    QHBoxLayout,
     QDialog,
     QLabel,
     QInputDialog,
@@ -12,14 +14,16 @@ from PyQt5.QtWidgets import (
     QWidget,
     QHeaderView,
 )
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QDoubleValidator
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QDoubleValidator, QIcon
 import requests
-
+from pathlib import Path
 from dialogs.exchange_confirm_dialog import ExchangeConfirmationDialog
 from pages.base_page import BasePage
 from utils.translation_manager import TranslationManager
 from config import API_BASE_URL
+import re
+from PyQt5.QtGui import QValidator
 
 
 class CurrencyExchangePage(BasePage):
@@ -49,6 +53,51 @@ class CurrencyExchangePage(BasePage):
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.Stretch)
+
+        # Create refresh button
+        self.refresh_button = QPushButton()
+        icon_dir = Path(__file__).parent.parent / "icons" / "refresh-icon.ico"
+        self.refresh_button.setIcon(QIcon(str(icon_dir)))
+        self.refresh_button.setIconSize(QSize(18, 18))
+        self.refresh_button.setText(TranslationManager.tr("Actualiser"))
+        self.refresh_button.setToolTip(
+            TranslationManager.tr("Actualiser les taux et les soldes")
+        )
+        self.refresh_button.setFixedSize(140, 60)
+        self.refresh_button.setStyleSheet(
+            """
+            QPushButton {
+                
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 5px;
+                margin-right:8px;
+                text-align: center;
+            }
+            QPushButton:hover {
+                background-color: #0056b3;
+            }
+            QPushButton:pressed {
+                background-color: #004494;
+            }
+            """
+        )
+        self.refresh_button.clicked.connect(self.refresh_page)
+
+        # Create layout for refresh button at the bottom of the table
+        refresh_layout = QHBoxLayout()
+        refresh_layout.addStretch()
+        refresh_layout.addWidget(self.refresh_button)
+        refresh_layout.setContentsMargins(0, 10, 0, 20)  # Add some padding
+
+        # Add the refresh layout right after the table in the main layout
+        # First, get the index of the table in the main layout
+        table_index = self.layout.indexOf(self.table)
+        # Insert the refresh layout after the table
+        self.layout.insertLayout(table_index + 1, refresh_layout)
 
         # Create converter widget
         converter_widget = QWidget()
@@ -81,9 +130,30 @@ class CurrencyExchangePage(BasePage):
 
         # Convert button
         self.convert_button = QPushButton(TranslationManager.tr("Convertir"))
-        self.convert_button.setFixedWidth(200)
+        self.convert_button.setFixedWidth(120)
         self.convert_button.clicked.connect(self.perform_conversion)
 
+        self.convert_button.setStyleSheet(
+            """
+            QPushButton {
+                
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 11px;
+                font-weight: bold;
+                padding: 5px;
+                margin-right:5px;
+                text-align: center;
+            }
+            QPushButton:hover {
+                background-color: #0056b3;
+            }
+            QPushButton:pressed {
+                background-color: #004494;
+            }
+            """
+        )
         # Result Label
         self.result_label = QLabel(TranslationManager.tr("Résultat : "))
         self.result_label.setStyleSheet("font-weight: bold; font-size: 14px;")
@@ -101,6 +171,10 @@ class CurrencyExchangePage(BasePage):
         self.load_currencies_from_db()
         self.load_conversion_rates()
 
+    def refresh_page(self):
+        self.load_currencies_from_db()
+        self.load_conversion_rates()
+
     def load_currencies_from_db(self):
         """Load currencies into the combo boxes."""
         try:
@@ -113,6 +187,8 @@ class CurrencyExchangePage(BasePage):
             for currency in currencies:
                 self.source_currency_combo.addItem(currency["code"])
                 self.target_currency_combo.addItem(currency["code"])
+            self.source_currency_combo.repaint()
+            self.target_currency_combo.repaint()
 
         except requests.exceptions.RequestException as e:
             self.show_error_message(
@@ -203,7 +279,7 @@ class CurrencyExchangePage(BasePage):
             )
             dialog.setTextValue(str(currency["rate"]))
 
-            validator = CustomDoubleValidator(0.000001, 1000000.0, 6, self)
+            validator = FlexibleDecimalValidator(0.000001, 1.0, 6, self)
             line_edit = dialog.findChild(QLineEdit)
             if line_edit:
                 line_edit.setValidator(validator)
@@ -215,6 +291,17 @@ class CurrencyExchangePage(BasePage):
                 try:
                     new_rate_text = new_rate_text.replace(",", ".")
                     new_rate = float(new_rate_text)
+
+                    # Validate that the rate is between 0 and 1
+                    if new_rate <= 0 or new_rate > 1:
+                        QMessageBox.warning(
+                            self,
+                            TranslationManager.tr("Erreur"),
+                            TranslationManager.tr(
+                                "Le taux doit être compris entre 0 et 1."
+                            ),
+                        )
+                        return  # Exit the function if the rate is invalid
 
                     # Send API request with all required fields
                     update_data = {
@@ -232,6 +319,7 @@ class CurrencyExchangePage(BasePage):
                     )
 
                     update_response.raise_for_status()
+                    print(update_response)
 
                     # Log audit entry
                     audit_response = requests.post(
@@ -241,16 +329,18 @@ class CurrencyExchangePage(BasePage):
                             "operation": TranslationManager.tr("MISE A JOUR"),
                             "record_id": currency_id,
                             "user_id": self.user_id,
-                            "changes": {
-                                "old": {
-                                    TranslationManager.tr("name"): currency["code"],
-                                    TranslationManager.tr("taux"): currency["rate"],
-                                },
-                                "new": {
-                                    TranslationManager.tr("name"): currency["code"],
-                                    TranslationManager.tr("taux"): new_rate,
-                                },
-                            },
+                            "changes": json.dumps(
+                                {
+                                    "old": {
+                                        TranslationManager.tr("name"): currency["code"],
+                                        TranslationManager.tr("taux"): currency["rate"],
+                                    },
+                                    "new": {
+                                        TranslationManager.tr("name"): currency["code"],
+                                        TranslationManager.tr("taux"): new_rate,
+                                    },
+                                }
+                            ),
                         },
                     )
                     audit_response.raise_for_status()
@@ -258,14 +348,6 @@ class CurrencyExchangePage(BasePage):
                     # Reload UI after successful update
                     self.load_conversion_rates()
 
-                    """
-                    self.show_message(
-                        TranslationManager.tr("Succès"),
-                        TranslationManager.tr(
-                            "Taux pour {0} mis à jour avec succès !"
-                        ).format(currency_id),
-                    )
-                    """
                     QMessageBox.information(
                         self,
                         TranslationManager.tr("Succès"),
@@ -469,8 +551,43 @@ class CurrencyExchangePage(BasePage):
 
 
 # a custom validator to allow both dot and comma as decimal separators
-class CustomDoubleValidator(QDoubleValidator):
+
+
+class FlexibleDecimalValidator(QValidator):
+    def __init__(self, bottom, top, decimals, parent=None):
+        super().__init__(parent)
+        self.bottom = bottom
+        self.top = top
+        self.decimals = decimals
+
     def validate(self, input_str, pos):
-        # Replace comma with dot for validation
-        input_str = input_str.replace(",", ".")
-        return super().validate(input_str, pos)
+        # Allow empty or partial input
+        if input_str == "":
+            return (QValidator.Intermediate, input_str, pos)
+
+        # Reject if both comma and dot are present
+        if "," in input_str and "." in input_str:
+            return (QValidator.Invalid, input_str, pos)
+
+        # Build regex pattern for valid numbers with optional sign and one decimal separator
+        # This pattern allows either a dot or a comma, but not both.
+        pattern = r"^-?\d*(?:[.,]\d{0," + str(self.decimals) + "})?$"
+        if not re.fullmatch(pattern, input_str):
+            return (QValidator.Invalid, input_str, pos)
+
+        # Normalize input to use dot for conversion
+        normalized = input_str.replace(",", ".")
+        try:
+            value = float(normalized)
+        except ValueError:
+            return (QValidator.Invalid, input_str, pos)
+
+        # Check if the value is within the allowed range
+        if self.bottom <= value <= self.top:
+            return (QValidator.Acceptable, input_str, pos)
+        else:
+            return (QValidator.Intermediate, input_str, pos)
+
+    def fixup(self, input_str):
+        # Optionally normalize input: here we replace commas with dots.
+        return input_str.replace(",", ".")

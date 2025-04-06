@@ -59,10 +59,20 @@ def update_currency(
         raise HTTPException(status_code=404, detail="Currency not found")
 
     # Update amounts
-    currency.input += currency_data.input
-    currency.output += currency_data.output
-    currency.balance = currency.balance + currency_data.input - currency_data.output
 
+    if currency_data.input is not None:
+        currency.input += currency_data.input
+
+    if currency_data.output is not None:
+        currency.output += currency_data.output
+
+    if currency_data.input is not None or currency_data.output is not None:
+        currency.balance = (
+            currency.balance + (currency_data.input or 0) - (currency_data.output or 0)
+        )
+
+    if currency_data.rate is not None:
+        currency.rate = currency_data.rate
     db.commit()
     db.refresh(currency)
     return currency
