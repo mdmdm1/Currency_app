@@ -60,11 +60,16 @@ class CurrencyPage(BasePage):
             TranslationManager.tr("Entrez le code de la devise (ex. : EUR)")
         )
 
+        # Add new rate input field
+        self.new_rate_input = QLineEdit()
+        self.new_rate_input.setPlaceholderText(TranslationManager.tr("1 pour MRU"))
+
         add_button = QPushButton(TranslationManager.tr("Ajouter une Devise"))
         add_button.clicked.connect(self.add_new_currency)
 
         top_layout.addWidget(self.new_currency_input)
         top_layout.addWidget(self.new_code_input)
+        top_layout.addWidget(self.new_rate_input)  # Add the rate field to the layout
         top_layout.addWidget(add_button)
 
         self.layout.insertWidget(0, top_container)
@@ -141,11 +146,14 @@ class CurrencyPage(BasePage):
     def add_new_currency(self):
         currency_name = self.new_currency_input.text().strip().upper()
         currency_code = self.new_code_input.text().strip().upper()
+        currency_rate_text = self.new_rate_input.text().strip()
 
-        if not currency_name or not currency_code:
+        if not currency_name or not currency_code or not currency_rate_text:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
-                TranslationManager.tr("Veuillez entrer un nom et un code de devise"),
+                TranslationManager.tr(
+                    "Veuillez entrer un nom, un code et un taux de devise"
+                ),
             )
             return
         if len(currency_code) != 3:
@@ -156,6 +164,17 @@ class CurrencyPage(BasePage):
             return
 
         try:
+            # Parse and validate the rate
+            currency_rate = 1 / float(currency_rate_text)
+            if currency_rate <= 0:
+                self.show_error_message(
+                    TranslationManager.tr("Erreur"),
+                    TranslationManager.tr(
+                        "Le taux de change doit être un nombre positif"
+                    ),
+                )
+                return
+
             # headers = self.get_auth_headers()
             payload = {
                 "name": currency_name,
@@ -163,6 +182,7 @@ class CurrencyPage(BasePage):
                 "balance": 0,
                 "input": 0,
                 "output": 0,
+                "rate": currency_rate,
             }
 
             # Make API call to add a new currency
@@ -184,8 +204,14 @@ class CurrencyPage(BasePage):
             # Clear input fields and reload data
             self.new_currency_input.clear()
             self.new_code_input.clear()
+            self.new_rate_input.clear()  # Clear the rate field
             self.load_currency_data()
 
+        except ValueError:
+            self.show_error_message(
+                TranslationManager.tr("Erreur"),
+                TranslationManager.tr("Veuillez entrer un taux de change valide"),
+            )
         except requests.exceptions.RequestException as e:
             self.show_error_message(
                 TranslationManager.tr("Erreur"),
@@ -345,9 +371,12 @@ class CurrencyPage(BasePage):
         self.new_code_input.setPlaceholderText(
             TranslationManager.tr("Entrez le code de la devise (ex. : EUR)")
         )
+        self.new_rate_input.setPlaceholderText(TranslationManager.tr("1 pour MRU"))
 
         # Update the "Add Currency" button text
-        self.layout.itemAt(0).widget().layout().itemAt(2).widget().setText(
+        self.layout.itemAt(0).widget().layout().itemAt(
+            3
+        ).widget().setText(  # Index changed from 2 to 3
             TranslationManager.tr("Ajouter une Devise")
         )
 

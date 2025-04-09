@@ -38,7 +38,7 @@ class MainWindow(QWidget):
         self.access_token = user.access_token
 
         self.pages = {}
-        self.is_admin = self.check_user_admin()
+        self.role = self.check_user_role()
 
         self.active_button = None
         self.icons_dir = Path(__file__).parent / "icons"
@@ -114,17 +114,28 @@ class MainWindow(QWidget):
             (TranslationManager.tr("Accueil"), "home.svg", self.show_home),
             (TranslationManager.tr("Devises"), "currency.svg", self.show_currency),
             (TranslationManager.tr("Échanges"), "exchange.svg", self.show_transactions),
-            (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
-            (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
         ]
 
-        if self.is_admin:
-            nav_buttons.append(
-                (
-                    TranslationManager.tr("Gestion des employés"),
-                    "users.svg",
-                    self.show_employees,
-                )
+        if self.role == "admin":
+            # Add admin-specific buttons
+            nav_buttons.extend(
+                [
+                    (
+                        TranslationManager.tr("Gestion des employés"),
+                        "users.svg",
+                        self.show_employees,
+                    ),
+                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
+                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                ]
+            )
+        elif self.role == "sous admin":
+            # Add admin-specific buttons
+            nav_buttons.extend(
+                [
+                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
+                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                ]
             )
 
         # Create navigation buttons
@@ -186,13 +197,28 @@ class MainWindow(QWidget):
             (tr("Accueil"), "home.svg", self.show_home),
             (tr("Devises"), "currency.svg", self.show_currency),
             (tr("Échanges"), "exchange.svg", self.show_transactions),
-            (tr("Dette"), "debt.svg", self.show_debt),
-            (tr("Dépôt"), "deposit.svg", self.show_deposit),
         ]
 
-        if self.is_admin:
-            nav_button_data.append(
-                (tr("Gestion des employés"), "users.svg", self.show_employees)
+        if self.role == "admin":
+            # Add admin-specific buttons
+            nav_button_data.extend(
+                [
+                    (
+                        TranslationManager.tr("Gestion des employés"),
+                        "users.svg",
+                        self.show_employees,
+                    ),
+                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
+                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                ]
+            )
+        elif self.role == "sous admin":
+            # Add admin-specific buttons
+            nav_button_data.extend(
+                [
+                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
+                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                ]
             )
 
         # Recreate navigation buttons
@@ -249,13 +275,15 @@ class MainWindow(QWidget):
             "home": HomePage(self),
             "currency": CurrencyPage(self),
             "transactions": CurrencyExchangePage(self),
-            "debt": DebtPage(self),
-            "deposit": DepositPage(self),
         }
 
-        if self.is_admin:
+        if self.role == "admin":
+            self.pages["debt"] = DebtPage(self)
+            self.pages["deposit"] = DepositPage(self)
             self.pages["employees"] = UserManagementPage(self)
-
+        elif self.role == "sous admin":
+            self.pages["deposit"] = DepositPage(self)
+            self.pages["debt"] = DebtPage(self)
         # Add pages to stack
         for page in self.pages.values():
             self.stack.addWidget(page)
@@ -273,16 +301,18 @@ class MainWindow(QWidget):
         self.stack.setCurrentWidget(self.pages["transactions"])
 
     def show_debt(self):
-        self.stack.setCurrentWidget(self.pages["debt"])
+        if "debt" in self.pages:
+            self.stack.setCurrentWidget(self.pages["debt"])
 
     def show_deposit(self):
-        self.stack.setCurrentWidget(self.pages["deposit"])
+        if "deposit" in self.pages:
+            self.stack.setCurrentWidget(self.pages["deposit"])
 
     def show_employees(self):
-        if self.is_admin and "employees" in self.pages:
+        if "employees" in self.pages:
             self.stack.setCurrentWidget(self.pages["employees"])
 
-    def check_user_admin(self) -> bool:
+    def check_user_role(self):
         try:
             headers = self.get_auth_headers()
             response = requests.get(
@@ -290,12 +320,11 @@ class MainWindow(QWidget):
             )
             if response.status_code == 200:
                 user_data = response.json()
-                is_admin = user_data.get("role") == "admin"
-                return is_admin
-            return False
+                role = user_data.get("role")
+                print(role)
+                return role
         except requests.RequestException as e:
             print(f"Error checking admin status: {e}")
-            return False
 
     def get_auth_headers(self):
         """Get headers with authentication token"""

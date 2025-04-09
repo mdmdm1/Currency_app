@@ -25,9 +25,9 @@ class EditUserDialog(BaseDialog):
         self.role_combobox = QComboBox()
         self.role_combobox.addItems(
             [
-                TranslationManager.tr("Admin"),
-                TranslationManager.tr("User"),
-                TranslationManager.tr("Visitor"),
+                TranslationManager.tr("admin"),
+                TranslationManager.tr("sous admin"),
+                TranslationManager.tr("employer"),
             ]
         )
         self.create_input_row(TranslationManager.tr("Rôle:"), self.role_combobox)

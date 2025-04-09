@@ -81,6 +81,9 @@ class LoginPage(QMainWindow):
             fallback_text="👤",
         )
         self.username_input = self.username_container.input_field
+        self.username_input.returnPressed.connect(
+            self.focus_password
+        )  # Connect Enter key
         layout.addWidget(self.username_container)
 
         # Password input
@@ -91,6 +94,7 @@ class LoginPage(QMainWindow):
             is_password=True,
         )
         self.password_input = self.password_container.input_field
+        self.password_input.returnPressed.connect(self.handle_login)
         layout.addWidget(self.password_container)
 
         # Login button
@@ -159,6 +163,9 @@ class LoginPage(QMainWindow):
             }
         """
         )
+
+    def focus_password(self):
+        self.password_input.setFocus()
 
     def create_input_with_fallback(
         self, placeholder, icon_name, fallback_text, is_password=False

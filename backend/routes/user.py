@@ -75,6 +75,9 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
+    if user.username.lower() == "admin":
+        raise HTTPException(status_code=403, detail="Cannot delete the main admin user")
+
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}

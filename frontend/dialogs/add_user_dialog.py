@@ -39,8 +39,8 @@ class AddUserDialog(BaseDialog):
         self.role_dropdown.addItems(
             [
                 TranslationManager.tr("admin"),
-                TranslationManager.tr("utilisateur"),
-                TranslationManager.tr("auditeur"),
+                TranslationManager.tr("sous admin"),
+                TranslationManager.tr("employer"),
             ]
         )
         self.is_active_input = QComboBox()
