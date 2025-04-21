@@ -3,7 +3,6 @@
 <TS version="2.1" language="ar" sourcelanguage="fr">
 <context>
     <name>TranslationManager</name>
-    
     <message>
         <location filename="../pages/currency_page.py" line="25"/>
         <source>Gestion des Devises</source>
@@ -23,6 +22,11 @@
         <location filename="../pages/currency_page.py" line="31"/>
         <source>Montant Disponible</source>
         <translation>المبلغ المتاح</translation>
+    </message>
+    <message>
+        <location filename="../pages/currency_page.py" line="65"/>
+        <source>1 pour MRU</source>
+        <translation>1 مقابل الاوقية</translation>
     </message>
     <message>
         <location filename="../pages/currency_page.py" line="31"/>
@@ -70,14 +74,24 @@
         <translation>تحديث</translation>
     </message>
     <message>
+        <location filename="../pages/currency_page.py" line="135"/>
+        <source>Total Disponible</source>
+        <translation>إجمالي المتاح</translation>
+    </message>
+    <message>
         <location filename="../pages/user_management_page.py" line="90"/>
         <source>Supprimer</source>
         <translation>حذف</translation>
     </message>
     <message>
-        <location filename="../pages/exchange_page.py" line="156"/>
-        <source>Total Disponible</source>
-        <translation>إجمالي المتاح</translation>
+        <location filename="../pages/user_management_page.py" line="138"/>
+        <source>oui</source>
+        <translation>نعم</translation>
+    </message>
+    <message>
+        <location filename="../pages/user_management_page.py" line="141"/>
+        <source>non</source>
+        <translation>لا</translation>
     </message>
     <message>
         <location filename="../dialogs/edit_debt_dialog.py" line="129"/>
@@ -202,7 +216,7 @@
     <message>
         <location filename="../dialogs/add_user_dialog.py" line="38"/>
         <source>utilisateur</source>
-        <translation>مستخدم</translation>    
+        <translation>مستخدم</translation>
     </message>
     <message>
         <location filename="../dialogs/add_user_dialog.py" line="39"/>
@@ -218,8 +232,7 @@
         <location filename="../dialogs/add_user_dialog.py" line="45"/>
         <source>Inactif</source>
         <translation>معطل</translation>
-
-    </message>    
+    </message>
     <message>
         <location filename="../pages/add_user_dialog.py" line="52"/>
         <source>Nom d&apos;utilisateur</source>
@@ -233,17 +246,17 @@
     <message>
         <location filename="../pages/add_user_dialog.py" line="53"/>
         <source>Statut du compte:</source>
-        <translation>وضعية الحساب</translation>
+        <translation type="unfinished">وضعية الحساب</translation>
     </message>
     <message>
         <location filename="../dialogs/add_user_dialog.py" line="54"/>
         <source>Rôle:</source>
-        <translation>الدور:</translation> 
+        <translation>الدور:</translation>
     </message>
     <message>
         <location filename="../dialogs/add_user_dialog.py" line="55"/>
         <source>Status du compte:</source>
-        <translation>:وضع الحساب</translation> 
+        <translation>:وضع الحساب</translation>
     </message>
     <message>
         <location filename="../pages/user_management_page.py" line="124"/>
@@ -511,16 +524,6 @@
         <translation>مرحبًا! الرجاء تسجيل الدخول إلى حسابك.</translation>
     </message>
     <message>
-        <location filename="../pages/user_management_page.py" line="31"/>
-        <source>Nom d&apos;utilisateur</source>
-        <translation>اسم المستخدم</translation>
-    </message>
-    <message>
-        <location filename="../pages/login_page.py" line="70"/>
-        <source>Nom d&apos;utilisateur</source>
-        <translation>اسم المستخدم</translation>
-    </message>
-    <message>
         <location filename="../pages/login_page.py" line="80"/>
         <source>Mot de passe</source>
         <translation>كلمة المرور</translation>
@@ -736,11 +739,6 @@
         <translation>المستخدم غير موجود.</translation>
     </message>
     <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="109"/>
-        <source>Succès</source>
-        <translation>نجاح</translation>
-    </message>
-    <message>
         <location filename="../dialogs/edit_user_dialog.py" line="52"/>
         <source>Les modifications ont été enregistrées avec succès.</source>
         <translation>تم تحديث المستخدم بنجاح.</translation>
@@ -771,11 +769,6 @@
         <translation>العملة الهدف:</translation>
     </message>
     <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="37"/>
-        <source>Montant:</source>
-        <translation>المبلغ:</translation>
-    </message>
-    <message>
         <location filename="../dialogs/exchange_confirm_dialog.py" line="43"/>
         <source>Montant converti:</source>
         <translation>المبلغ المحول:</translation>
@@ -804,11 +797,6 @@
         <location filename="../dialogs/pay_debt_dialog.py" line="27"/>
         <source>Montant à payer:</source>
         <translation>المبلغ المطلوب دفعه:</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/pay_debt_dialog.py" line="150"/>
-        <source>Erreur</source>
-        <translation>خطأ</translation>
     </message>
     <message>
         <location filename="../dialogs/pay_debt_dialog.py" line="74"/>
@@ -912,26 +900,6 @@
     </message>
     <message>
         <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Nom</source>
-        <translation>الاسم</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Dépôt libéré</source>
-        <translation>الإيداع المفرج عنه</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Dette actuelle</source>
-        <translation>الدين الحالي</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
-        <source>Dépôt</source>
-        <translation>الإيداع</translation>
-    </message>
-    <message>
-        <location filename="../dialogs/withdraw_deposit_dialog.py" line="84"/>
         <source>RETRAIT</source>
         <translation>سحب</translation>
     </message>
@@ -971,11 +939,6 @@
         <translation>تسجيل الخروج</translation>
     </message>
     <message>
-        <location filename="../dialogs/add_debt_dialog.py" line="61"/>
-        <source>Annuler</source>
-        <translation>إلغاء</translation>
-    </message>
-    <message>
         <location filename="../dialogs/add_debt_dialog.py" line="62"/>
         <source>Effectuer</source>
         <translation>تنفيذ</translation>
@@ -1001,16 +964,6 @@
         <translation>عدد العملاء</translation>
     </message>
     <message>
-        <location filename="../pages/home_page.py" line="136"/>
-        <source>Activités Récentes</source>
-        <translation>الأنشطة الأخيرة</translation>
-    </message>
-    <message>
-        <location filename="../pages/home_page.py" line="137"/>
-        <source>Chargement des activités récentes...</source>
-        <translation>جارٍ تحميل الأنشطة الأخيرة...</translation>
-    </message>
-    <message>
         <location filename="../pages/home_page.py" line="138"/>
         <source>Erreur lors du chargement des données.</source>
         <translation>حدث خطأ أثناء تحميل البيانات.</translation>
@@ -1019,11 +972,6 @@
         <location filename="../pages/home_page.py" line="139"/>
         <source>Aucune activité récente</source>
         <translation>لا توجد أنشطة حديثة</translation>
-    </message>
-    <message>
-        <location filename="../pages/home_page.py" line="140"/>
-        <source>Erreur lors du chargement de l&apos;activité</source>
-        <translation>حدث خطأ أثناء تحميل النشاط</translation>
     </message>
     <message>
         <location filename="../pages/home_page.py" line="246"/>

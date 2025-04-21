@@ -86,7 +86,7 @@ class PayDebtDialog(BaseDialog):
                 return
 
             response = requests.get(
-                f"{self.api_base_url}/customers/{debt["customer_id"]}"
+                f"{self.api_base_url}/customers/{debt['customer_id']}"
             )
             if response.status_code == 404:
                 customer = None
@@ -121,7 +121,7 @@ class PayDebtDialog(BaseDialog):
             }
 
             updated_debt_response = requests.put(
-                f"{self.api_base_url}/debts/{debt["id"]}", json=updated_data
+                f"{self.api_base_url}/debts/{debt['id']}", json=updated_data
             )
 
             updated_debt_response.raise_for_status()
@@ -163,9 +163,9 @@ class PayDebtDialog(BaseDialog):
                 TranslationManager.tr("La dette a été mise à jour avec succès:")
                 + "\n"
                 + TranslationManager.tr("Dette actuelle:")
-                + f" {debt["current_debt"]:.2f}\n"
+                + f" {debt['current_debt']:.2f}\n"
                 + TranslationManager.tr("Montant payé:")
-                + f" {debt["paid_debt"]:.2f}",
+                + f" {debt['paid_debt']:.2f}",
             )
             self.accept()
 

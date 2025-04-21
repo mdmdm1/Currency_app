@@ -59,7 +59,7 @@ class DepositPage(BasePage):
 
             for row_idx, deposit in enumerate(deposits):
                 customer_response = requests.get(
-                    f"{self.api_base_url}/customers/{deposit["customer_id"]}"
+                    f"{self.api_base_url}/customers/{deposit['customer_id']}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()

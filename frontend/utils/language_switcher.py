@@ -14,7 +14,7 @@ class LanguageSwitcher(QComboBox):
         super().__init__(parent)
         self.translation_manager = translation_manager
         self.lang_code = translation_manager.current_language
-        self.languages = {"English": "en", "Français": "fr", "العربية": "ar"}
+        self.languages = {"العربية": "ar", "English": "en", "Français": "fr"}
 
         # Add language options to combo box
         for lang_name in self.languages.keys():

@@ -185,7 +185,7 @@ class AddDebtDialog(BaseDialog):
                 }
 
                 updated_debt_response = requests.put(
-                    f"{self.api_base_url}/debts/{debt["id"]}", json=updated_data
+                    f"{self.api_base_url}/debts/{debt['id']}", json=updated_data
                 )
 
                 updated_debt_response.raise_for_status()

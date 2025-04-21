@@ -59,7 +59,7 @@ class DebtPage(BasePage):
 
             for row_idx, debt in enumerate(debts):
                 customer_response = requests.get(
-                    f"{self.api_base_url}/customers/{debt["customer_id"]}"
+                    f"{self.api_base_url}/customers/{debt['customer_id']}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()
@@ -153,7 +153,7 @@ class DebtPage(BasePage):
                 debt = debt_response.json()
 
                 customer_response = requests.get(
-                    f"{self.api_base_url}/customers/{debt["customer_id"]}"
+                    f"{self.api_base_url}/customers/{debt['customer_id']}"
                 )
                 customer_response.raise_for_status()
                 customer = customer_response.json()

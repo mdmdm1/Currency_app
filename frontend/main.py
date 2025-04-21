@@ -27,6 +27,7 @@ from database.database import SessionLocal
 from database.models import User
 from utils.translation_manager import TranslationManager
 from utils.verify_admin import is_user_admin
+from config import API_BASE_URL
 
 
 class MainWindow(QWidget):
@@ -34,7 +35,7 @@ class MainWindow(QWidget):
         super().__init__()
         self.user = user
         self.user_id = user.id
-        self.api_base_url = "http://127.0.0.1:8000"
+        self.api_base_url = API_BASE_URL
         self.access_token = user.access_token
 
         self.pages = {}
@@ -44,7 +45,12 @@ class MainWindow(QWidget):
         self.icons_dir = Path(__file__).parent / "icons"
         self.translation_manager = TranslationManager()
 
-        # self.translation_manager.load_language("fr")
+        if self.translation_manager.current_language == "ar":
+
+            self.setLayoutDirection(Qt.RightToLeft)
+            self.translation_manager.load_language("ar")
+        else:
+            self.setLayoutDirection(Qt.LeftToRight)
 
         self.setup_language_switcher()
 
@@ -90,10 +96,28 @@ class MainWindow(QWidget):
 
         # Profile image
         profile_image = QLabel()
-        profile_pixmap = QPixmap("icons/profile.png").scaled(
-            80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
-        )
-        profile_image.setPixmap(profile_pixmap)
+
+        # Get the correct path for profile.png
+        if getattr(sys, "frozen", False):
+            # Running as compiled executable
+            profile_path = Path(sys._MEIPASS) / "icons" / "profile.png"
+        else:
+            # Running in development
+            profile_path = self.icons_dir / "profile.png"
+
+        print(f"Loading profile image from: {profile_path}")  # Debug print
+        if profile_path.exists():
+            profile_pixmap = QPixmap(str(profile_path))
+            if not profile_pixmap.isNull():
+                profile_pixmap = profile_pixmap.scaled(
+                    80, 80, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+                profile_image.setPixmap(profile_pixmap)
+            else:
+                print(f"Failed to load profile image: {profile_path}")
+        else:
+            print(f"Profile image not found at: {profile_path}")
+
         profile_image.setAlignment(Qt.AlignCenter)
         profile_image.setObjectName("profile-image")
 
@@ -157,7 +181,7 @@ class MainWindow(QWidget):
 
         # Add language switcher before logout button
         sidebar_layout.addStretch()
-        sidebar_layout.addWidget(self.language_switcher)
+        # sidebar_layout.addWidget(self.language_switcher)
 
         # Logout button
         logout_btn = QPushButton(TranslationManager.tr("Logout"))
@@ -188,7 +212,18 @@ class MainWindow(QWidget):
         """Update all UI texts when language changes"""
         print("Retranslating UI...")
         tr = TranslationManager.tr
+        # Set layout direction based on language
+        if self.translation_manager.current_language == "ar":
 
+            self.setLayoutDirection(Qt.RightToLeft)
+            # Propagate to all child widgets
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.RightToLeft)
+            self.translation_manager.load_language("ar")
+        else:
+            self.setLayoutDirection(Qt.LeftToRight)
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.LeftToRight)
         # Update window title
         self.setWindowTitle(tr("GestiFin Pro"))
 
@@ -204,20 +239,20 @@ class MainWindow(QWidget):
             nav_button_data.extend(
                 [
                     (
-                        TranslationManager.tr("Gestion des employés"),
+                        tr("Gestion des employés"),
                         "users.svg",
                         self.show_employees,
                     ),
-                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
-                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                    (tr("Dette"), "debt.svg", self.show_debt),
+                    (tr("Dépôt"), "deposit.svg", self.show_deposit),
                 ]
             )
         elif self.role == "sous admin":
             # Add admin-specific buttons
             nav_button_data.extend(
                 [
-                    (TranslationManager.tr("Dette"), "debt.svg", self.show_debt),
-                    (TranslationManager.tr("Dépôt"), "deposit.svg", self.show_deposit),
+                    (tr("Dette"), "debt.svg", self.show_debt),
+                    (tr("Dépôt"), "deposit.svg", self.show_deposit),
                 ]
             )
 
@@ -232,7 +267,6 @@ class MainWindow(QWidget):
             logout_btn.setText(tr("Déconnexion"))
 
         # Update username label
-
         username_label = self.findChild(QLabel, "username-label")
         if username_label:
             username_label.setText(tr("Bienvenue, ") + self.get_user_name())
@@ -242,8 +276,19 @@ class MainWindow(QWidget):
             if hasattr(page, "retranslate_ui"):
                 page.retranslate_ui()
 
-        # Set layout direction based on language
-        if self.translation_manager.current_language == "ar":
+    def setup_language_switcher(self):
+        """Initialize the language switcher"""
+        self.language_switcher = LanguageSwitcher(self.translation_manager)
+        self.language_switcher.language_changed.connect(self.handle_language_change)
+
+    def handle_language_change(self, language_code):
+        """Handle language change and update layout direction"""
+        self.retranslate_ui()
+        self.update_layout_direction(language_code)
+
+    def update_layout_direction(self, language_code):
+        """Update layout direction based on language"""
+        if language_code == "ar":
             self.setLayoutDirection(Qt.RightToLeft)
             # Propagate to all child widgets
             for child in self.findChildren(QWidget):
@@ -252,12 +297,6 @@ class MainWindow(QWidget):
             self.setLayoutDirection(Qt.LeftToRight)
             for child in self.findChildren(QWidget):
                 child.setLayoutDirection(Qt.LeftToRight)
-
-    def setup_language_switcher(self):
-        """Initialize the language switcher"""
-        self.language_switcher = LanguageSwitcher(self.translation_manager, self)
-
-        self.language_switcher.language_changed.connect(self.retranslate_ui)
 
     """
     def on_language_changed(self, lang_code):
@@ -352,9 +391,28 @@ class MainWindow(QWidget):
 
 
 def load_stylesheet():
+    """Load the stylesheet from the correct location"""
+    try:
+        # First try to load from the current directory (development)
+        css_path = Path("style.css")
+        if css_path.exists():
+            with open(css_path, "r", encoding="utf-8") as file:
+                return file.read()
 
-    with open("style.css", "r") as file:
-        return file.read()
+        # If not found, try to load from the packaged location
+        if getattr(sys, "frozen", False):
+            # Running as compiled executable
+            base_path = Path(sys._MEIPASS)
+            css_path = base_path / "style.css"
+            if css_path.exists():
+                with open(css_path, "r", encoding="utf-8") as file:
+                    return file.read()
+
+        print(f"Warning: style.css not found at {css_path}")
+        return ""
+    except Exception as e:
+        print(f"Error loading stylesheet: {e}")
+        return ""
 
 
 if __name__ == "__main__":
@@ -363,17 +421,20 @@ if __name__ == "__main__":
     translation_manager = TranslationManager(app)
 
     # Load stylesheet
-    try:
-        with open("style.css", "r") as file:
-            stylesheet = file.read()
-            app.setStyleSheet(stylesheet)
-    except FileNotFoundError:
-        print("Warning: style.css not found")
+    stylesheet = load_stylesheet()
+    if stylesheet:
+        app.setStyleSheet(stylesheet)
+    else:
+        print("Warning: Could not load stylesheet")
 
     # Set the application icon
     icons_dir = Path(__file__).parent / "icons"
-    icon_path = icons_dir / "app-icon.png"
+    if getattr(sys, "frozen", False):
+        # Running as compiled executable
+        base_path = Path(sys._MEIPASS)
+        icons_dir = base_path / "icons"
 
+    icon_path = icons_dir / "app-icon.png"
     if icon_path.exists():
         app_icon = QIcon(str(icon_path))
         app.setWindowIcon(app_icon)

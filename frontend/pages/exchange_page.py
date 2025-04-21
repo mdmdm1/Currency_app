@@ -513,7 +513,34 @@ class CurrencyExchangePage(BasePage):
             )
 
     def retranslate_ui(self):
-        """Retranslate the UI elements for the CurrencyExchangePage."""
+        """Update UI text when language changes"""
+        tr = TranslationManager.tr
+        try:
+            # Update converter widget labels
+            converter_widget = self.findChild(QWidget, "converter-widget")
+            if converter_widget:
+                form_layout = converter_widget.layout()
+                if form_layout:
+                    # Update form labels
+                    for i in range(form_layout.rowCount()):
+                        label = form_layout.itemAt(i, QFormLayout.LabelRole).widget()
+                        if label:
+                            if i == 0:
+                                label.setText(tr("Montant"))
+                            elif i == 1:
+                                label.setText(tr("De"))
+                            elif i == 2:
+                                label.setText(tr("À"))
+                            elif i == 3:
+                                label.setText(tr("Résultat"))
+
+            # Update other UI elements
+            # self.title_label.setText(tr("Convertisseur de Devises"))
+            self.convert_button.setText(tr("Convertir"))
+
+        except Exception as e:
+            print(f"Warning: Could not update form labels: {str(e)}")
+
         # Update page title
         self.setWindowTitle(TranslationManager.tr("Échange de Devises"))
 
@@ -533,17 +560,8 @@ class CurrencyExchangePage(BasePage):
         self.convert_button.setText(TranslationManager.tr("Convertir"))
         self.result_label.setText(TranslationManager.tr("Résultat : "))
 
-        """         # Update form layout labels
-        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
-            0
-        ).widget().setText(TranslationManager.tr("Montant :"))
-        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
-            2
-        ).widget().setText(TranslationManager.tr("De devise :"))
-        self.layout().itemAt(0).widget().layout().itemAt(0).layout().itemAt(
-            4
-        ).widget().setText(TranslationManager.tr("À devise :"))
-        """
+        # Update the total prefix
+        self.total_prefix = TranslationManager.tr("Total Disponible")
 
         # Update any dynamically populated content
         self.load_currencies_from_db()

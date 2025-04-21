@@ -66,7 +66,7 @@ class WithdrawDepositDialog(BaseDialog):
                 return
 
             customer_response = requests.get(
-                f"{self.api_base_url}/customers/{deposit["customer_id"]}"
+                f"{self.api_base_url}/customers/{deposit['customer_id']}"
             )
             customer_response.raise_for_status()
             customer = customer_response.json()
@@ -94,7 +94,7 @@ class WithdrawDepositDialog(BaseDialog):
             deposit.released_deposit += amount
             """
             updated_deposit_response = requests.put(
-                f"{self.api_base_url}/deposits/{deposit["id"]}", json=updated_data
+                f"{self.api_base_url}/deposits/{deposit['id']}", json=updated_data
             )
 
             updated_deposit_response.raise_for_status()
@@ -127,7 +127,7 @@ class WithdrawDepositDialog(BaseDialog):
             # if current_debt is 0, delete the deposit
             if deposit["current_debt"] == 0:
                 delete_response = requests.delete(
-                    f"{self.api_base_url}/deposits/{deposit["id"]}"
+                    f"{self.api_base_url}/deposits/{deposit['id']}"
                 )
                 delete_response.raise_for_status()
 
@@ -143,5 +143,5 @@ class WithdrawDepositDialog(BaseDialog):
         except requests.exceptions.RequestException as e:
 
             self.show_error(
-                f"{TranslationManager.tr('Erreur lors de l\'accès à la base de données:')} {str(e)}"
+                f"{TranslationManager.tr('Erreur lors de l''accès à la base de données:')} {str(e)}"
             )

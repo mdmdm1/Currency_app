@@ -1,5 +1,6 @@
 from PyQt5.QtCore import QTranslator, QCoreApplication, pyqtSignal
 from pathlib import Path
+import sys
 
 
 class TranslationManager:
@@ -17,8 +18,16 @@ class TranslationManager:
 
         self.app = app  # Ensure this is the QApplication instance
         self.translator = QTranslator()
-        self.current_language = "fr"  # Default language
-        self.translations_dir = Path("translations")
+        self.current_language = "ar"  # Default language
+
+        # Set translations directory based on environment
+        if getattr(sys, "frozen", False):
+            # Running as compiled executable
+            self.translations_dir = Path(sys._MEIPASS) / "translations"
+        else:
+            # Running in development
+            self.translations_dir = Path(__file__).parent.parent / "translations"
+
         self._initialized = True
 
         # Initialize translation

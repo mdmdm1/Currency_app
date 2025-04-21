@@ -2,7 +2,11 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Correct DATABASE_URL format for Oracle with service name
-DATABASE_URL = "oracle+cx_oracle://admin:2024@localhost:1521/?service_name=MANAGEMENT4"
+# DATABASE_URL = "oracle+cx_oracle://admin:2024@localhost:1521/?service_name=MANAGEMENT4"
+# - DATABASE_URL = "oracle+cx_oracle://admin:2024@localhost:1521/?service_name=MANAGEMENT4"
+DATABASE_URL = (
+    "oracle+cx_oracle://admin:2024@host.docker.internal:1521/?service_name=MANAGEMENT4"
+)
 
 # Create SQLAlchemy engine
 engine = create_engine(DATABASE_URL, echo=True)

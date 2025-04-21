@@ -1,5 +1,5 @@
 from logging.config import fileConfig
-from database.models import Base
+from database_file import Base
 from sqlalchemy import create_engine, pool
 from alembic import context
 import os
@@ -19,7 +19,9 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 # Database URL
-DATABASE_URL = "oracle+cx_oracle://admin:2024@localhost:1521/?service_name=MANAGEMENT4"
+DATABASE_URL = (
+    "oracle+cx_oracle://admin:2024@host.docker.internal:1521/?service_name=MANAGEMENT4"
+)
 
 
 def run_migrations_offline() -> None:

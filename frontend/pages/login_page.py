@@ -12,7 +12,6 @@ from PyQt5.QtWidgets import (
 )
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
 from PyQt5.QtGui import QPixmap
-import bcrypt
 import requests
 from pathlib import Path
 
@@ -23,6 +22,7 @@ from config import API_BASE_URL
 
 class LoginPage(QMainWindow):
     login_successful = pyqtSignal(object)
+    language_direction_changed = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
@@ -280,7 +280,22 @@ class LoginPage(QMainWindow):
     def setup_language_switcher(self):
         """Initialize the language switcher"""
         self.language_switcher = LanguageSwitcher(self.translation_manager)
-        self.language_switcher.language_changed.connect(self.retranslate_ui)
+        self.language_switcher.language_changed.connect(self.handle_language_change)
+
+    def handle_language_change(self, language_code):
+        """Handle language change and notify about direction change"""
+        self.retranslate_ui()
+        # Update layout direction for login page
+        if language_code == "ar":
+            self.setLayoutDirection(Qt.RightToLeft)
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.RightToLeft)
+        else:
+            self.setLayoutDirection(Qt.LeftToRight)
+            for child in self.findChildren(QWidget):
+                child.setLayoutDirection(Qt.LeftToRight)
+        # Emit signal with the new language code
+        self.language_direction_changed.emit(language_code)
 
     def show_error(self, message: str):
         self.status_label.setText(message)

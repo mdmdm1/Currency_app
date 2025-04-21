@@ -233,7 +233,7 @@ class AddDepositDialog(BaseDialog):
                 }
 
                 updated_deposit_response = requests.put(
-                    f"{self.api_base_url}/deposits/{deposit["id"]}", json=updated_data
+                    f"{self.api_base_url}/deposits/{deposit['id']}", json=updated_data
                 )
 
                 updated_deposit_response.raise_for_status()
@@ -267,7 +267,7 @@ class AddDepositDialog(BaseDialog):
                 QMessageBox.information(
                     self,
                     TranslationManager.tr("Dépôt mis à jour"),
-                    f"{TranslationManager.tr('Le dépôt a été augmenté de')} {amount:.2f}. {TranslationManager.tr('Nouveau total:')} {deposit["amount"]:.2f}",
+                    f"{TranslationManager.tr('Le dépôt a été augmenté de')} {amount:.2f}. {TranslationManager.tr('Nouveau total:')} {deposit['amount']:.2f}",
                 )
                 self.accept()
             else:
