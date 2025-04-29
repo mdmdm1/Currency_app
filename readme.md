@@ -49,11 +49,48 @@ cd currency_app
 
 ### 2. Configure environment
 
-Copy `.env.example` to `.env` and update:
+Copy `.env.example` to `.env` and update your Oracle database credentials if needed:
 
 ```env
-default user: username: admin password: admin123
+DATABASE_URL=oracle+cx_oracle://admin:2024@host.docker.internal:1521/?service_name=management4
+
+
 ```
+
+default app user: username: admin password: admin123
+
+2.1 Create Oracle Database (if not yet created)
+Ensure you have an Oracle database instance available. You can create one locally using Oracle XE or any edition.
+
+To create a service named management4 with user admin and password 2024:
+
+Log into Oracle SQLPlus or use any Oracle client:
+
+sql
+Copier
+Modifier
+-- Connect as system user
+sqlplus sys as sysdba
+Create a user and service:
+
+sql
+Copier
+Modifier
+-- Create user
+CREATE USER admin IDENTIFIED BY 2024;
+
+-- Grant privileges
+GRANT CONNECT, RESOURCE, DBA TO admin;
+
+-- (Optional) Create a pluggable database or service alias if using Oracle XE:
+-- You may need to configure tnsnames.ora to reflect a SERVICE_NAME = management4
+📝 If you're using Docker for Oracle, make sure to expose port 1521 and allow remote access. Then verify your service_name is set to management4 inside your container's database setup.
+
+yaml
+Copier
+Modifier
+
+---
 
 ### 3. Build & Run Backend
 
@@ -101,10 +138,10 @@ python -m PyInstaller --name "GestiFin Pro" --onefile --windowed `
     --hidden-import pages `
     --hidden-import dialogs `
     launcher.py
-# put dist/launcher.exe and dist/frontend.exe plus icons/ in a folder
+
 ```
 
-Double‑click `launcher.exe` to:
+Double‑click `GestiFin Pro.exe` to:
 
 1. Ensure the backend container is running
 2. Launch the GUI
@@ -113,7 +150,8 @@ Double‑click `launcher.exe` to:
 
 ## Usage
 
-- **Login** with an existing user or create one via the GUI.
+- **Login** with an existing user.
+  username:admin, password:admin123
 - Navigate tabs: Currencies, Deposits, Debts, Users, Audit Logs.
 - All actions are logged in the audit table and visible under "Recent Activities".
 
